@@ -14,11 +14,6 @@ pub struct IDGenerator {
 }
 
 impl IDGenerator {
-	/// Create new IDGenerator starting count form 1
-	pub fn new() -> Self {
-		Default::default()
-	}
-
 	/// Return the next unique ID
 	pub fn next(&self) -> u64 {
 		let mut ptr = self.counter.lock().unwrap();
@@ -59,7 +54,7 @@ pub struct Pulse;
 /// Mutably dereferencing MessageCacher clears the cached message
 //
 // TODO: bind to specific MessageType, when const generics stabilize,
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MessageCacher<T: Serialize> {
 	val: T,
 	cached: Option<(MessageType, Message)>,
@@ -86,12 +81,23 @@ impl<T: Serialize> MessageCacher<T> {
 			}
 		})
 	}
+
+	/// Consume message cacher and return inner value
+	pub fn get(self) -> T {
+		self.val
+	}
 }
 
 impl<T: Serialize> Deref for MessageCacher<T> {
 	type Target = T;
 
 	fn deref(&self) -> &Self::Target {
+		&self.val
+	}
+}
+
+impl<T: Serialize> AsRef<T> for MessageCacher<T> {
+	fn as_ref(&self) -> &T {
 		&self.val
 	}
 }
@@ -115,4 +121,102 @@ pub fn now() -> u32 {
 		.duration_since(std::time::UNIX_EPOCH)
 		.unwrap()
 		.as_secs() as u32
+}
+
+/// Versioned copy on write snapshotable container.
+///
+/// Must not be modified concurrently to maintain version consistency.
+#[derive(Debug, Default)]
+pub struct SnapshotSource<T: Clone + Sync>(Snapshot<T>);
+
+impl<T: Clone + Sync> SnapshotSource<T> {
+	/// Create new SnapshotSource initialized with val
+	pub fn new(val: T) -> Self {
+		Self(Snapshot::<T> {
+			// Start at 1 because 0 is the default state
+			update_counter: 1,
+			value: val.into(),
+		})
+	}
+
+	/// Create new snapshot of the current state of SnapshotSource
+	pub fn snapshot(&self) -> Snapshot<T> {
+		self.0.clone()
+	}
+
+	/// Set new value of SnapshotSource
+	pub fn set(&mut self, val: T) {
+		self.0.update_counter += 1;
+		self.0.value = val.into();
+	}
+
+	/// Modify the current value of SnapshotSource
+	pub fn modify(&mut self, f: impl FnOnce(&mut T)) {
+		let mut v = (*self.0.value).clone();
+		f(&mut v);
+		self.set(v);
+	}
+}
+
+impl<T: Clone + Sync> From<T> for SnapshotSource<T> {
+	fn from(val: T) -> Self {
+		Self::new(val)
+	}
+}
+
+impl<T: Clone + Sync> PartialEq<Snapshot<T>> for SnapshotSource<T> {
+	fn eq(&self, other: &Snapshot<T>) -> bool {
+		&self.0 == other
+	}
+}
+
+impl<T: Clone + Sync> Deref for SnapshotSource<T> {
+	type Target = T;
+
+	fn deref(&self) -> &T {
+		&self.0
+	}
+}
+
+/// Immutable snapshot of SnapshotSource
+#[derive(Debug, Clone, Default)]
+pub struct Snapshot<T: Clone + Sync> {
+	/// Incremented on any modification to clients for cheap comparison
+	update_counter: usize,
+
+	/// Contained value
+	value: Arc<T>,
+}
+
+impl<T: Clone + Sync> actix::Message for Snapshot<T> {
+	type Result = ();
+}
+
+impl<T: Clone + Sync> PartialEq<Snapshot<T>> for Snapshot<T> {
+	fn eq(&self, other: &Snapshot<T>) -> bool {
+		self.update_counter == other.update_counter
+	}
+}
+
+impl<T: Clone + Sync> Eq for Snapshot<T> {}
+
+impl<T: Clone + Sync> Deref for Snapshot<T> {
+	type Target = T;
+
+	fn deref(&self) -> &T {
+		&self.value
+	}
+}
+
+/// Run function in the Rayon thread pool and return its result
+pub async fn run_in_rayon<F, R>(f: F) -> DynResult<R>
+where
+	F: FnOnce() -> R + Send + 'static,
+	R: Send + 'static,
+{
+	let (send, receive) = tokio::sync::oneshot::channel();
+	rayon::spawn(move || {
+		std::mem::drop(send.send(f()));
+	});
+	receive.await.map_err(|e| e.to_string().into())
 }

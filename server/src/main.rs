@@ -4,6 +4,7 @@ mod config;
 mod db;
 mod feeds;
 mod message;
+mod mt_context;
 mod registry;
 mod util;
 
@@ -50,9 +51,11 @@ async fn main() -> Result<(), std::io::Error> {
         stderrlog::new().init()?;
         db::open().await?;
 
-        // TODO: spawn global pulsar, registry and body flusher instances
+        // Spawn registry on it's own thread to reduce contention
         let threads = db::get_all_threads_short().await?;
-        let registry = Registry::create(|ctx| Registry::new(ctx, threads));
+        let registry = Registry::start_in_arbiter(&Arbiter::new(), |ctx| {
+            Registry::new(ctx, threads)
+        });
 
         HttpServer::new(move || {
             App::new().app_data(registry.clone()).service(connect)

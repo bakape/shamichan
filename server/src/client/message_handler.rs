@@ -16,6 +16,8 @@ use common::{
 use serde::Serialize;
 use std::rc::Rc;
 
+// TODO: port as Actor to execute on Tokio thread pool
+
 macro_rules! log_msg_in {
 	($type:expr, $msg:expr) => {
 		debug_log!(format!(">>> {:?}: {:?}", $type, $msg))
@@ -156,16 +158,17 @@ impl MessageHandler {
 					use MessageType::*;
 
 					#[rustfmt::skip]
-							macro_rules! expect {
-								($type:tt) => {
-									if t != $type {
-										str_err!(concat!(
-											"expected ",
-											stringify!($type)
-										));
-									}
-								};
+					macro_rules! expect {
+						($type:tt) => {
+							if t != $type {
+								str_err!(
+									"expected message type {:?}, got {:?}",
+									$type,
+									t,
+								);
 							}
+						};
+					}
 
 					first = false;
 					match &self.mut_state.conn_state {
@@ -180,16 +183,9 @@ impl MessageHandler {
 							let pk = pub_key.clone();
 							self.handle_reshake(&mut dec, &pk)?;
 						}
-						AcceptedHandshake => {
-							expect!(Synchronize);
-							let feed = Self::decode(t, &mut dec)?;
-							self.synchronize(feed).await?;
-						}
-						Synchronized { .. } => {
-							self.handle_messages_after_synchronizing(
-								t, &mut dec,
-							)
-							.await?;
+						AcceptedHandshake | Synchronized { .. } => {
+							self.handle_messages_after_handshake(t, &mut dec)
+								.await?;
 						}
 					}
 				}
@@ -198,19 +194,18 @@ impl MessageHandler {
 	}
 
 	/// Handle a received message after a successful handshake
-	async fn handle_messages_after_synchronizing(
+	async fn handle_messages_after_handshake(
 		&mut self,
 		t: MessageType,
 		dec: &mut Decoder,
 	) -> DynResult {
 		use MessageType::*;
 
-		#[rustfmt::skip]
-			macro_rules! decode {
-				() => {
-					Self::decode(t, dec)?
-				};
-			}
+		macro_rules! decode {
+			() => {
+				Self::decode(t, dec)?
+			};
+		}
 
 		macro_rules! decode_empty {
 			() => {
@@ -258,20 +253,20 @@ impl MessageHandler {
 
 	/// Synchronize to a specific thread or board index
 	async fn synchronize(&mut self, feed: u64) -> DynResult {
-		// TODO: attempt to reclaim an open post lost to disconnection, if any
-		//  specified by client
-
-		// Thread init data will be sent on the next feed pulse
-		let ref s = *self.state;
 		self.mut_state.conn_state = ConnState::Synchronized {
 			id: feed,
-			feed: s
+			feed: self
+				.state
 				.registry
-				.send(registry::SetFeed { client: s.id, feed })
+				.send(registry::SetFeed {
+					client: self.state.id,
+					feed,
+				})
 				.await??,
 		};
 
-		self.send(MessageType::Synchronize, &feed)?;
+		// TODO: attempt to reclaim an open post lost to disconnection, if any
+		//  specified by client
 
 		Ok(())
 	}
@@ -411,7 +406,7 @@ impl MessageHandler {
 					.await??
 			}
 		};
-		feed.send(feeds::InsertPost {
+		feed.do_send(feeds::InsertPost {
 			id,
 			thread: req.thread,
 			page,
@@ -423,8 +418,7 @@ impl MessageHandler {
 					flag: None, // TODO
 				},
 			},
-		})
-		.await?;
+		});
 
 		self.send(MessageType::InsertPostAck, &id)?;
 		self.mut_state.open_post = Some(OpenPost {
@@ -478,12 +472,10 @@ impl MessageHandler {
 					str_err!("body length exceeds bounds")
 				}
 
-				p.feed
-					.send(feeds::SetBody {
-						loc: p.loc.clone(),
-						body: p.body.clone(),
-					})
-					.await?;
+				p.feed.do_send(feeds::SetBody {
+					loc: p.loc.clone(),
+					body: p.body.clone(),
+				});
 				// TODO: port spam scores to Rust
 				// bindings::increment_spam_score(
 				// 	self.pub_key.priv_id,

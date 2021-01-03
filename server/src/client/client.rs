@@ -1,12 +1,13 @@
 use super::str_err;
 use crate::{
+	message::Message as Msg,
 	registry::{self, Registry},
 	util::{self, DynResult},
 };
 use actix::prelude::*;
 use actix_web_actors::ws;
 use bytes::Bytes;
-use std::{collections::VecDeque, net::IpAddr, rc::Rc};
+use std::{collections::VecDeque, net::IpAddr, rc::Rc, sync::Arc};
 
 /// Current state of handling or not handling messages by Client
 #[derive(Debug)]
@@ -16,7 +17,7 @@ enum MessageHandling {
 
 	/// Currently handling a message and can't handle another one till this
 	/// one finishes
-	Handling(SpawnHandle),
+	Handling,
 }
 
 /// Client instance controller
@@ -121,6 +122,67 @@ impl Handler<super::WrappedMessageProcessingResult> for Client {
 	}
 }
 
+/// Disconnect client with provided error
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Disconnect(pub util::Err);
+
+impl Handler<Disconnect> for Client {
+	type Result = ();
+
+	fn handle(
+		&mut self,
+		msg: Disconnect,
+		ctx: &mut Self::Context,
+	) -> Self::Result {
+		self.fail(ctx, &msg.0);
+	}
+}
+
+/// Send message to client
+#[derive(Message, Clone)]
+#[rtype(result = "()")]
+pub struct SendMessage(pub Msg);
+
+impl Handler<SendMessage> for Client {
+	type Result = ();
+
+	fn handle(
+		&mut self,
+		msg: SendMessage,
+		ctx: &mut Self::Context,
+	) -> Self::Result {
+		ctx.binary(msg.0);
+	}
+}
+
+/// Send a batch of messages to client.
+///
+/// Wrapped in an Arc to reduce RC load on the individual messages.
+#[derive(Message, Clone)]
+#[rtype(result = "()")]
+pub struct SendMessageBatch(Arc<Vec<Msg>>);
+
+impl SendMessageBatch {
+	pub fn new(messages: Vec<Msg>) -> Self {
+		Self(messages.into())
+	}
+}
+
+impl Handler<SendMessageBatch> for Client {
+	type Result = ();
+
+	fn handle(
+		&mut self,
+		msg: SendMessageBatch,
+		ctx: &mut Self::Context,
+	) -> Self::Result {
+		for m in msg.0.iter() {
+			ctx.binary(m.clone());
+		}
+	}
+}
+
 impl Client {
 	/// Create fresh unconnected client
 	pub fn new(ip: IpAddr, registry: Addr<Registry>) -> Self {
@@ -161,19 +223,18 @@ impl Client {
 	/// Process a buffered received message, if not already processing one
 	fn process_received(&mut self, ctx: &mut <Self as Actor>::Context) {
 		match &mut self.message_handling {
-			MessageHandling::Handling(_) => (),
+			MessageHandling::Handling => (),
 			MessageHandling::NotHandling(s) => {
 				if let Some(msg) = self.received_buffer.pop_front() {
-					self.message_handling = MessageHandling::Handling(
-						ctx.spawn(
-							super::message_handler::MessageHandler::new(
-								self.state.clone(),
-								std::mem::take(s),
-							)
-							.handle_message(ctx.address(), msg)
-							.into_actor(self),
-						),
+					ctx.spawn(
+						super::message_handler::MessageHandler::new(
+							self.state.clone(),
+							std::mem::take(s),
+						)
+						.handle_message(ctx.address(), msg)
+						.into_actor(self),
 					);
+					self.message_handling = MessageHandling::Handling;
 				}
 			}
 		}

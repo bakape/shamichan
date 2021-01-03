@@ -49,6 +49,32 @@ pub enum MessageType {
 	/// Request or send a page of a thread
 	Page,
 
-	// Send configs from the server
+	/// Send configs from the server
 	Config,
+
+	/// Signals the beginning of a sequence of posts, part of a partitioned page
+	/// response
+	PartitionedPageStart,
+
+	/// Signals the end of a sequence of post messages, part of a partitioned page
+	/// response
+	PartitionedPageEnd,
+
+	/// Signals the beginning of a sequence of threads, part of a partitioned
+	/// page thread index response
+	PartitionedThreadIndexStart,
+
+	/// Signals the end of a sequence of threads, part of a partitioned
+	/// page thread index response
+	PartitionedThreadIndexEnd,
+
+	/// Request or send an individual post
+	Post,
+
+	/// Thread metainformation sent from the server
+	ThreadMeta,
+
+	/// Thread metainformation together with OP and the last 5 posts sent from
+	/// the server
+	ThreadAbbreviated,
 }
