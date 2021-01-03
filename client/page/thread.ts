@@ -33,7 +33,7 @@ export default function () {
     bump_time = data.bump_time
     if (data.moderation) {
         for (let { type } of data.moderation) {
-            if (type === ModerationAction.banPost) {
+            if (type === ModerationAction.deletePost) {
                 isDeleted = true;
                 break;
             }
