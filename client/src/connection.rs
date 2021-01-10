@@ -486,7 +486,7 @@ impl Connection {
 						Self::send_handshake_req(kp);
 					} else {
 						util::with_logging(|| {
-							self.state = State::HandshakeComplete;
+							self.set_state(State::HandshakeComplete);
 							for msg in std::mem::take(&mut self.deferred) {
 								self.send(msg, false)?;
 							}
