@@ -515,7 +515,7 @@ impl Connection {
 								posts.push(decode(Post, &mut dec)?);
 							}
 							Some(PartitionedPageEnd) => {
-								decode(Post, &mut dec)? as ();
+								decode(PartitionedPageEnd, &mut dec)? as ();
 								send(Request::RegisterPage(posts));
 								break;
 							}
@@ -543,7 +543,8 @@ impl Connection {
 									.push(decode(ThreadAbbreviated, &mut dec)?);
 							}
 							Some(PartitionedThreadIndexEnd) => {
-								decode(Post, &mut dec)? as ();
+								decode(PartitionedThreadIndexEnd, &mut dec)?
+									as ();
 								send(Request::RegisterThreads(threads));
 								break;
 							}
