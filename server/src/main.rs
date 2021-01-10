@@ -12,6 +12,7 @@ use actix::prelude::*;
 use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
 use askama_actix::Template;
+use cfg_if::cfg_if;
 use dotenv;
 use registry::Registry;
 use std::sync::Arc;
@@ -75,8 +76,30 @@ async fn main() -> Result<(), std::io::Error> {
                 normalize::TrailingSlash, Compress, Logger, NormalizePath,
             };
 
-            App::new()
-                .wrap(Logger::default())
+            cfg_if! {
+                if #[cfg(debug_assertions)] {
+                    let app = App::new().wrap_fn(|req, srv| {
+                        use actix_service::Service;
+                        use actix_web::http::{
+                            header::CACHE_CONTROL,
+                            HeaderValue,
+                        };
+
+                        let fut = srv.call(req);
+                        async {
+                            let mut res = fut.await?;
+                            res.headers_mut().insert(
+                                CACHE_CONTROL,
+                                HeaderValue::from_static("no-store"),
+                            );
+                            Ok(res)
+                        }
+                    });
+                } else {
+                    let app = App::new();
+                }
+            };
+            app.wrap(Logger::default())
                 .wrap(NormalizePath::new(TrailingSlash::Trim))
                 .wrap(Compress::default())
                 .service(web::resource("/").to(|| async {
