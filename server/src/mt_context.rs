@@ -428,8 +428,8 @@ where
 		// No events processing yet, so will never fail to lock
 		self.actor.try_lock().unwrap().started(&mut self.ctx(ctx));
 
-		// Remove any mailbox limits to make messages undroppable
-		ctx.set_mailbox_capacity(std::usize::MAX);
+		// Remove practically any mailbox limits to make messages undroppable
+		ctx.set_mailbox_capacity(1 << 20);
 	}
 
 	fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
