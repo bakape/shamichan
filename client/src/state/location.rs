@@ -4,15 +4,20 @@ use serde::{Deserialize, Serialize};
 /// Identifies a global index or thread feed
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum FeedID {
-	Unset,
 	Index,
 	Catalog,
-	Thread { id: u64, page: i32 },
+	Thread {
+		/// Thread ID
+		id: u64,
+
+		/// Page currently navigated to
+		page: i32,
+	},
 }
 
 impl Default for FeedID {
-	fn default() -> FeedID {
-		FeedID::Unset
+	fn default() -> Self {
+		Self::Index
 	}
 }
 
@@ -22,9 +27,6 @@ impl FeedID {
 		use FeedID::*;
 
 		match self {
-			// Should never match anything unless this instance runs for
-			// decades unchanged
-			Unset => std::u64::MAX,
 			Index | Catalog => 0,
 			Thread { id, .. } => *id,
 		}
@@ -46,7 +48,7 @@ impl Default for Focus {
 }
 
 /// Location the app can navigate to
-#[derive(Default, Serialize, Deserialize, Clone, Eq, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct Location {
 	pub feed: FeedID,
 
@@ -103,7 +105,7 @@ impl Location {
 		use Focus::*;
 
 		let mut w: String = match &self.feed {
-			Unset | Index => "/".into(),
+			Index => "/".into(),
 			Catalog => "/catalog".into(),
 			Thread { id, page } => format!("/threads/{}/{}", id, page),
 		};

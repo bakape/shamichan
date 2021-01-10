@@ -606,7 +606,7 @@ where
 					}
 				}
 				<a
-					href=source_path(c.app, img)
+					href=source_path(img)
 					download=name
 					ref=self.image_download_button.clone()
 				>
@@ -681,7 +681,7 @@ where
 			return html! {};
 		}
 
-		let src = source_path(c.app, img);
+		let src = source_path(img);
 		let thumb: Html;
 		let is_audio = match img.file_type {
 			MP3 | FLAC => true,
@@ -710,7 +710,7 @@ where
 				// Animated GIF thumbnails
 				(img.thumb_width, img.thumb_height, src.clone())
 			} else {
-				(img.thumb_width, img.thumb_height, thumb_path(c.app, img))
+				(img.thumb_width, img.thumb_height, thumb_path(img))
 			}
 		} else {
 			(img.width, img.height, src.clone())
@@ -824,31 +824,19 @@ where
 	}
 }
 
-/// Returns root url for storing images
-fn image_root(s: &State) -> &str {
-	let over = &s.configs.image_root_override;
-	if over.is_empty() {
-		"/assets/images"
-	} else {
-		over
-	}
-}
-
 /// Get the thumbnail path of an upload
-fn thumb_path(s: &State, img: &Image) -> String {
+fn thumb_path(img: &Image) -> String {
 	format!(
-		"{}/thumb/{}.{}",
-		image_root(s),
+		"/assets/images/thumb/{}.{}",
 		hex::encode(&img.sha1),
 		img.thumb_type.extension()
 	)
 }
 
 /// Resolve the path to the source file of an upload
-fn source_path(s: &State, img: &Image) -> String {
+fn source_path(img: &Image) -> String {
 	format!(
-		"{}/thumb/{}.{}",
-		image_root(s),
+		"/assets/images/thumb/{}.{}",
 		hex::encode(&img.sha1),
 		img.file_type.extension()
 	)

@@ -17,7 +17,7 @@ client_watch:
 		-e modify,delete \
 		-q \
 		-r \
-		client/src protocol/src less; \
+		client/src common/src less; \
 	do \
 		DEBUG=1 NO_DEPS=1 $(MAKE) css client; \
 	done

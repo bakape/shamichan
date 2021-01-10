@@ -11,7 +11,21 @@ mod util;
 use actix::prelude::*;
 use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
+use askama_actix::Template;
+use dotenv;
 use registry::Registry;
+use std::sync::Arc;
+
+// TODO: asset routes
+// TODO: /robots.txt
+// TODO: /health-check
+
+// TODO: ETag support via hashing the source HTML and configuration
+#[derive(Template)]
+#[template(path = "index.html")]
+struct Index {
+    config: Arc<common::config::Public>,
+}
 
 #[get("/api/socket")]
 async fn connect(
@@ -39,12 +53,10 @@ async fn connect(
     )
 }
 
-// TODO: asset routes
-// TODO: /robots.txt
-// TODO: /health-check
-
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
+    dotenv::dotenv().ok();
+
     // TODO: Censor DB connection string in args, if any
 
     async fn inner() -> util::DynResult {
@@ -58,7 +70,23 @@ async fn main() -> Result<(), std::io::Error> {
         });
 
         HttpServer::new(move || {
-            App::new().app_data(registry.clone()).service(connect)
+            use actix_files::Files;
+            use actix_web::middleware::{
+                normalize::TrailingSlash, Compress, Logger, NormalizePath,
+            };
+
+            App::new()
+                .wrap(Logger::default())
+                .wrap(NormalizePath::new(TrailingSlash::Trim))
+                .wrap(Compress::default())
+                .service(web::resource("/").to(|| async {
+                    Index {
+                        config: config::get().public.clone(),
+                    }
+                }))
+                .data(registry.clone())
+                .service(connect)
+                .service(Files::new("/assets", "./www"))
         })
         .bind(&config::SERVER.address)?
         .run()

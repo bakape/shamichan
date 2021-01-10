@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<meta name="application-name" content="meguca">
+		<meta name="description" content="Realtime imageboard">
+		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
+		<title id="page-title">meguca</title>
+		<link rel="stylesheet" href="/assets/css/base.css" type="text/css">
+		<link rel="stylesheet" id="theme-css" href="/assets/css/{{ config.default_theme }}.css" type="text/css">
+		<style id="user-background-style"></style>
+		<script>
+			if (localStorage.theme
+				&& localStorage.theme !== "{{ config.default_theme }}"
+			) {
+				document.getElementById('theme-css').href =
+					`/assets/css/${localStorage.theme}.css`;
+			}
+
+			window.language_pack = new Promise((resolve, reject) => {
+				let lang = localStorage.lang || "{{ config.default_lang }}";
+				fetch(`/assets/lang/${lang}.json`)
+					.then(r => r.text())
+					.then(resolve)
+					.catch(reject)
+			});
+		</script>
+		<script id="config-data" type="application/json">{{ config|json }}</script>
+		<script src="/assets/client/index.js"></script>
+	</head>
+	<body></body>
+</html>

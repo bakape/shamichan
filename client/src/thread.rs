@@ -1,4 +1,5 @@
 use super::{buttons, comp_util, post::posting, state};
+use std::collections::HashSet;
 use yew::{html, Html, Properties};
 
 /// Central thread container
@@ -13,8 +14,8 @@ pub enum PostSet {
 	/// Display OP + last 5 posts
 	Last5Posts,
 
-	/// Display OP + selected page
-	Page(u32),
+	/// Display OP + selected pages
+	Pages(HashSet<u32>),
 }
 
 impl Default for PostSet {
@@ -54,13 +55,13 @@ impl comp_util::Inner for Inner {
 		use PostSet::*;
 
 		// TODO: Filter hidden posts
-		let posts: Vec<u64> = state::read(|s| match c.props().pages {
+		let posts: Vec<u64> = state::read(|s| match &c.props().pages {
 			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count = s
 					.threads
 					.get(&c.props().id)
-					.map(|t| t.last_page + 1)
+					.map(|t| t.page_count)
 					.unwrap_or(1);
 				self.read_page_posts(&mut v, c.props().id, page_count - 1, s);
 				if v.len() < 5 && page_count > 1 {
@@ -78,9 +79,11 @@ impl comp_util::Inner for Inner {
 					v
 				}
 			}
-			Page(page) => {
+			Pages(pages) => {
 				let mut v = Vec::with_capacity(300);
-				self.read_page_posts(&mut v, c.props().id, page, s);
+				for p in pages.iter() {
+					self.read_page_posts(&mut v, c.props().id, *p, s);
+				}
 				v.sort_unstable();
 				v
 			}

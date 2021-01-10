@@ -448,52 +448,55 @@ impl yew::agent::Agent for Agent {
 	}
 
 	fn update(&mut self, msg: Self::Message) {
-		use connection::State as CS;
 		use Message::*;
-		use State as S;
 
 		match msg {
 			ConnStateUpdate(cs) => {
 				self.conn_state = cs;
-				match self.state {
-					S::Locked => match cs {
-						CS::Synced => self.set_state(S::Ready),
-						_ => (),
-					},
-					S::Ready => match cs {
-						CS::Synced | CS::Syncing => (),
-						_ => self.set_state(S::Locked),
-					},
-					S::Allocating(thread) => match cs {
-						CS::Synced | CS::Syncing => (),
-						_ => self.set_state(S::Draft(thread)),
-					},
-					S::Allocated => match cs {
-						CS::Syncing => (),
-						CS::Synced => {
-							// TODO: resend body and try to resend any missing
-							// buffered image, if a disconnect happened
-						}
-						_ => self.set_state(S::Stalled),
-					},
-					S::Stalled => match cs {
-						CS::Synced => {
-							// TODO: resend body and try to resend any buffered
-							// image, if none yet set
-							self.set_state(S::Allocated);
-						}
-						_ => (),
-					},
-					S::Draft(_) => match cs {
-						CS::Synced => self.commit_pending(),
-						_ => (),
-					},
-					S::NeedCaptcha(thread) => match cs {
-						CS::Synced => (),
-						_ => self.set_state(S::Draft(thread)),
-					},
-					_ => (),
-				}
+				// TODO: port to work with message buffering
+				//
+				// use State as S;
+				// use connection::State as CS;
+				//
+				// match self.state {
+				// 	S::Locked => match cs {
+				// 		CS::Synced => self.set_state(S::Ready),
+				// 		_ => (),
+				// 	},
+				// 	S::Ready => match cs {
+				// 		CS::Synced | CS::Syncing => (),
+				// 		_ => self.set_state(S::Locked),
+				// 	},
+				// 	S::Allocating(thread) => match cs {
+				// 		CS::Synced | CS::Syncing => (),
+				// 		_ => self.set_state(S::Draft(thread)),
+				// 	},
+				// 	S::Allocated => match cs {
+				// 		CS::Syncing => (),
+				// 		CS::Synced => {
+				// 			// TODO: resend body and try to resend any missing
+				// 			// buffered image, if a disconnect happened
+				// 		}
+				// 		_ => self.set_state(S::Stalled),
+				// 	},
+				// 	S::Stalled => match cs {
+				// 		CS::Synced => {
+				// 			// TODO: resend body and try to resend any buffered
+				// 			// image, if none yet set
+				// 			self.set_state(S::Allocated);
+				// 		}
+				// 		_ => (),
+				// 	},
+				// 	S::Draft(_) => match cs {
+				// 		CS::Synced => self.commit_pending(),
+				// 		_ => (),
+				// 	},
+				// 	S::NeedCaptcha(thread) => match cs {
+				// 		CS::Synced => (),
+				// 		_ => self.set_state(S::Draft(thread)),
+				// 	},
+				// 	_ => (),
+				// }
 			}
 			SelectionChange => util::with_logging(|| {
 				fn closest_el(

@@ -16,16 +16,16 @@ lazy_static::lazy_static! {
 #[derive(Clap)]
 pub struct Server {
 	/// Database address to connect to
-	#[clap(short, long)]
+	#[clap(short, long, env = "DATABASE_URL")]
 	pub database: String,
 
 	/// Address for the server to listen on
-	#[clap(short, long, default_value = "127.0.0.1:8000")]
+	#[clap(short, long, default_value = "127.0.0.1:8000", env = "ADDRESS")]
 	pub address: String,
 
 	/// Indicates this server is behind a reverse proxy and can honour
 	/// X-Forwarded-For and similar headers
-	#[clap(short, long)]
+	#[clap(short, long, env = "REVERSE_PROXIED")]
 	pub reverse_proxied: bool,
 }
 
@@ -55,8 +55,10 @@ impl Default for SpamScores {
 /// Global server configurations
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
-	/// Global server configurations exposed to the client
-	pub public: common::config::Public,
+	/// Global server configurations exposed to the client.
+	///
+	/// Wrapped in it's own Arc to be passable around without copying.
+	pub public: Arc<common::config::Public>,
 
 	/// Instruct bots to not access the site
 	pub disable_robots: bool,

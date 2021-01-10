@@ -57,6 +57,24 @@ impl Default for Language {
 	}
 }
 
+impl std::fmt::Display for Language {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
+			Self::en_GB => "en_GB",
+			Self::es_ES => "es_ES",
+			Self::fr_FR => "fr_FR",
+			Self::nl_NL => "nl_NL",
+			Self::pl_PL => "pl_PL",
+			Self::pt_BR => "pt_BR",
+			Self::ru_RU => "ru_RU",
+			Self::sk_SK => "sk_SK",
+			Self::tr_TR => "tr_TR",
+			Self::uk_UA => "uk_UA",
+			Self::zh_TW => "zh_TW",
+		})
+	}
+}
+
 /// Available user interface themes
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -82,6 +100,29 @@ pub enum Theme {
 impl Default for Theme {
 	fn default() -> Self {
 		Self::moe
+	}
+}
+
+impl std::fmt::Display for Theme {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(match self {
+			Self::ashita => "ashita",
+			Self::console => "console",
+			Self::egophobe => "egophobe",
+			Self::gar => "gar",
+			Self::glass => "glass",
+			Self::gowno => "gowno",
+			Self::higan => "higan",
+			Self::inumi => "inumi",
+			Self::mawaru => "mawaru",
+			Self::moe => "moe",
+			Self::moon => "moon",
+			Self::ocean => "ocean",
+			Self::rave => "rave",
+			Self::tavern => "tavern",
+			Self::tea => "tea",
+			Self::win95 => "win95",
+		})
 	}
 }
 

@@ -98,8 +98,10 @@ impl AsyncHandler<Pulse> for ThreadFeed {
 	) -> Result<(), Self::Error> {
 		self.pending_pulse = false;
 
-		// Send any deferred page fetches before anything else to maintain
-		// chronology
+		// Send any deferred page fetches first to maintain chronology.
+		// The pages will still be sent only after the clients have received
+		// thread metainformation, so they can perform negative page number
+		// deduction.
 		for (page, clients) in std::mem::take(&mut self.deferred_page_fetches) {
 			use PageRecord::*;
 
@@ -144,7 +146,7 @@ impl AsyncHandler<WakeUp> for ThreadFeed {
 pub struct FetchPage {
 	/// Page ID to fetch.
 	/// Negative numbers count from the end.
-	pub id: i64,
+	pub id: i32,
 
 	/// Client to send the page to
 	pub client: Addr<Client>,
@@ -162,10 +164,10 @@ impl AsyncHandler<FetchPage> for ThreadFeed {
 		use PageRecord::*;
 
 		if id < 0 {
-			id = self.thread_meta.page_count as i64 - id;
+			id = self.thread_meta.page_count as i32 - id;
 		}
 		{
-			let max = self.thread_meta.page_count as i64 - 1;
+			let max = self.thread_meta.page_count as i32 - 1;
 			if id < 0 || id > max {
 				client.do_send(Disconnect(
 					format!("requested page out of bounds: {}", id).into(),
@@ -173,7 +175,7 @@ impl AsyncHandler<FetchPage> for ThreadFeed {
 				return Ok(());
 			}
 		}
-		if id > std::u32::MAX as i64 {
+		if id as u64 > (std::u32::MAX << 1) as u64 {
 			return Err("page ID overflow".into());
 		}
 		let id = id as u32;
@@ -377,6 +379,22 @@ impl AsyncHandler<TryMakePagesImmutable> for ThreadFeed {
 	}
 }
 
+#[async_trait]
+impl AsyncHandler<FetchFeedData> for ThreadFeed {
+	type Error = util::Err;
+
+	async fn handle(
+		&mut self,
+		FetchFeedData(client): FetchFeedData,
+		_: &mut <Self as Actor>::Context,
+	) -> Result<(), Self::Error> {
+		client.do_send(SendMessage(
+			self.thread_meta.get_message(MessageType::ThreadMeta)?,
+		));
+		Ok(())
+	}
+}
+
 impl ThreadFeed {
 	/// Create a new ThreadFeed.
 	///
@@ -540,22 +558,6 @@ impl ThreadFeed {
 			self.body_flusher.do_send(req);
 		}
 
-		Ok(())
-	}
-}
-
-#[async_trait]
-impl AsyncHandler<FetchFeedData> for ThreadFeed {
-	type Error = util::Err;
-
-	async fn handle(
-		&mut self,
-		FetchFeedData(client): FetchFeedData,
-		_: &mut <Self as Actor>::Context,
-	) -> Result<(), Self::Error> {
-		client.do_send(SendMessage(
-			self.thread_meta.get_message(MessageType::ThreadMeta)?,
-		));
 		Ok(())
 	}
 }

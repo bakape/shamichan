@@ -1,4 +1,4 @@
-use super::{str_err, ConnState, OpenPost};
+use super::{client::Client, str_err, ConnState, OpenPost};
 use crate::{
 	config, db, feeds, registry,
 	util::{self, DynResult},
@@ -76,6 +76,9 @@ pub struct MessageHandler {
 	/// Mutable client state part
 	mut_state: super::MutState,
 
+	/// Calling Client address
+	client: Addr<Client>,
+
 	/// Message being written to
 	message: Option<Encoder>,
 }
@@ -85,10 +88,12 @@ impl MessageHandler {
 	pub(super) fn new(
 		state: Rc<super::State>,
 		mut_state: super::MutState,
+		client: Addr<Client>,
 	) -> Self {
 		Self {
 			state,
 			mut_state,
+			client,
 			message: None,
 		}
 	}
@@ -104,17 +109,10 @@ impl MessageHandler {
 	}
 
 	/// Handle received message and send result back to parent client
-	pub(super) async fn handle_message(
-		self,
-		client: Addr<super::Client>,
-		buf: Bytes,
-	) {
-		async fn inner(
-			mut this: MessageHandler,
-			client: Addr<super::Client>,
-			buf: Bytes,
-		) -> DynResult {
-			client
+	pub(super) async fn handle_message(self, buf: Bytes) {
+		async fn inner(mut this: MessageHandler, buf: Bytes) -> DynResult {
+			this.client
+				.clone()
 				.send(super::WrappedMessageProcessingResult(
 					match this.handle_message_inner(buf).await {
 						Ok(_) => Ok(super::MessageProcessingResult {
@@ -132,7 +130,7 @@ impl MessageHandler {
 			Ok(())
 		}
 
-		if let Err(err) = inner(self, client, buf).await {
+		if let Err(err) = inner(self, buf).await {
 			// The client will be stuck unable to process messages and
 			// eventually get disconnected with a buffer overflow.
 			// That's fine, because this happening means the system itself
@@ -234,6 +232,7 @@ impl MessageHandler {
 				.await
 			}
 			PatchPostBody => self.patch_body(decode!()).await,
+			Page => self.fetch_page(decode!()),
 			_ => str_err!("unhandled message type: {:?}", t),
 		}
 	}
@@ -269,6 +268,29 @@ impl MessageHandler {
 		//  specified by client
 
 		Ok(())
+	}
+
+	/// Fetch a page from a currently synced to feed
+	fn fetch_page(&mut self, page: i32) -> DynResult {
+		use feeds::{AnyFeed, FetchPage};
+
+		match &self.mut_state.conn_state {
+			ConnState::Synchronized { feed, .. } => match feed {
+				AnyFeed::Index(_) => {
+					str_err!("can not fetch pages on index feed")
+				}
+				AnyFeed::Thread(f) => {
+					f.do_send(FetchPage {
+						id: page,
+						client: self.client.clone(),
+					});
+					Ok(())
+				}
+			},
+			_ => {
+				str_err!("need to be synchronized to a thread to request pages")
+			}
+		}
 	}
 
 	/// Validates a solved captcha
@@ -492,7 +514,7 @@ impl MessageHandler {
 		let req: HandshakeReq = dec.read_next()?;
 		log_msg_in!(MessageType::Handshake, req);
 		if req.protocol_version != common::VERSION {
-			str_err!("common version mismatch: {}", req.protocol_version);
+			str_err!("protocol version mismatch: {}", req.protocol_version);
 		}
 		Ok(req)
 	}
@@ -535,7 +557,13 @@ impl MessageHandler {
 				nonce,
 				signature,
 			} => {
-				let (priv_id, pub_key) = db::get_public_key(&pub_id).await?;
+				let (priv_id, pub_key) =
+					db::get_public_key(&pub_id).await.map_err(|e| match e {
+						sqlx::Error::RowNotFound => {
+							"no such public key registered".to_string()
+						}
+						e @ _ => e.to_string(),
+					})?;
 				self.mut_state.pub_key = super::PubKeyDesc { priv_id, pub_id };
 				self.handle_auth_saved(nonce, signature, pub_key.as_ref())?;
 			}

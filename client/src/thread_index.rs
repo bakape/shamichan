@@ -39,7 +39,7 @@ impl Component for Threads {
 						<span>{"TODO"}</span>
 					}
 				}
-				FeedID::Unset | FeedID::Index => {
+				FeedID::Index => {
 					let mut threads: Vec<&Thread> =
 						s.threads.values().collect();
 					// TODO: Different sort orders
@@ -68,11 +68,20 @@ impl Component for Threads {
 					}
 				}
 				FeedID::Thread { id, page } => {
-					html! {
-						<view::Thread
-							id=id
-							pages=view::PostSet::Page(*page as u32)
-						/>
+					if page < &0 {
+						html! {}
+					} else {
+						html! {
+							<view::Thread
+								id=id
+								pages=view::PostSet::Pages(
+									[*page as u32]
+									.iter()
+									.copied()
+									.collect(),
+								)
+							/>
+						}
 					}
 				}
 			}

@@ -18,22 +18,6 @@ use common::{
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-/// Exported public server configurations
-//
-// TODO: Get config updates though websocket
-#[derive(Serialize, Deserialize, Default)]
-pub struct Configs {
-	pub captcha: bool,
-	pub mature: bool,
-	pub prune_threads: bool,
-	pub thread_expiry: u32,
-	pub max_size: u64,
-	pub default_lang: String,
-	pub default_theme: String,
-	pub image_root_override: String,
-	pub links: HashMap<String, String>,
-}
-
 /// Optional flags and contents for creating new posts (including OPs)
 #[derive(Default)]
 pub struct NewPostOpts {
@@ -52,7 +36,9 @@ pub struct State {
 	pub location: Location,
 
 	/// Exported public server configurations
-	pub configs: Configs,
+	//
+	// TODO: Get config updates though websocket
+	pub configs: common::config::Public,
 
 	/// All registered threads
 	pub threads: HashMap<u64, Thread>,
@@ -63,6 +49,9 @@ pub struct State {
 	/// Map for quick lookup of post IDs by a (thread, page) tuple and vice
 	/// versa
 	pub posts_by_thread_page: DoubleSetMap<(u64, u32), u64>,
+
+	/// Pages loaded for the current thread
+	pub loaded_pages: HashSet<u32>,
 
 	/// Authentication key pair
 	pub key_pair: KeyPair,
@@ -87,21 +76,25 @@ pub struct State {
 
 impl State {
 	/// Insert a post into the registry
-	pub fn register_post(&mut self, p: Post) {
-		self.register_post_location(&p);
+	pub(self) fn register_post(&mut self, p: Post) {
+		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
 		self.posts.insert(p.id, p);
 	}
 
-	/// Register which page and thread a post belongs to
-	pub fn register_post_location(&mut self, p: &Post) {
-		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
+	/// Get metainformation of a thread that must be synced.
+	/// Panics on no thread found.
+	pub(self) fn get_synced_thread(&self, id: &u64) -> &Thread {
+		self.threads
+			.get(id)
+			.ok_or("no meta for synced thread")
+			.unwrap()
 	}
 }
 
 common::gen_global! {
 	State {
 		pub fn read();
-		pub fn write();
+		fn write();
 	}
 }
 

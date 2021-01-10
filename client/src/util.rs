@@ -171,6 +171,7 @@ pub fn log_error(err: &impl std::fmt::Display) {
 }
 
 /// Log a warning Message
+#[allow(unused)]
 pub fn log_warn(msg: impl AsRef<str>) {
 	web_sys::console::warn_1(&msg.as_ref().into());
 }
@@ -244,24 +245,4 @@ where
 		arr.push(&i.into());
 	}
 	arr
-}
-
-/// Fetch json from the server
-pub async fn fetch_json<T>(url: impl AsRef<str>) -> Result<T>
-where
-	T: for<'d> serde::Deserialize<'d>,
-{
-	use wasm_bindgen_futures::JsFuture;
-
-	Ok(serde_json::from_str(
-		&JsFuture::from(
-			JsFuture::from(window().fetch_with_str(url.as_ref()))
-				.await?
-				.dyn_into::<web_sys::Response>()?
-				.text()?,
-		)
-		.await?
-		.as_string()
-		.ok_or("could not decode response string")?,
-	)?)
 }

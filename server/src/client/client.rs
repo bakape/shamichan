@@ -230,8 +230,9 @@ impl Client {
 						super::message_handler::MessageHandler::new(
 							self.state.clone(),
 							std::mem::take(s),
+							ctx.address(),
 						)
-						.handle_message(ctx.address(), msg)
+						.handle_message(msg)
 						.into_actor(self),
 					);
 					self.message_handling = MessageHandling::Handling;

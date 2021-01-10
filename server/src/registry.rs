@@ -201,10 +201,8 @@ impl Handler<UnregisterClient> for Registry {
 		// NOP, if client already removed
 		if let Some(mut desc) = self.clients.remove(&client) {
 			if let Some(feed) = desc.feed.take() {
-				if let Some(snapshot) = self.feed_clients.get_mut(&feed) {
-					snapshot.modify(|s| {
-						s.remove(&client);
-					});
+				if let Some(s) = self.feed_clients.get_mut(&feed) {
+					s.remove(&client);
 				}
 				self.wake_up_feed(feed);
 			}
@@ -243,9 +241,7 @@ impl Handler<SetFeed> for Registry {
 				return Ok(new_feed);
 			}
 			if let Some(s) = self.feed_clients.get_mut(old_feed) {
-				s.modify(|s| {
-					s.remove(&msg.client);
-				});
+				s.remove(&msg.client);
 			}
 			wake_up_feed!(self, *old_feed);
 		}
@@ -254,9 +250,7 @@ impl Handler<SetFeed> for Registry {
 		desc.feed = msg.feed.into();
 		match self.feed_clients.entry(msg.feed) {
 			Occupied(mut e) => {
-				e.get_mut().modify(|s| {
-					s.insert(msg.client, desc.addr.clone());
-				});
+				e.get_mut().insert(msg.client, desc.addr.clone());
 			}
 			Vacant(e) => {
 				e.insert(SnapshotSource::new({
@@ -389,7 +383,7 @@ impl Handler<SnapshotClients> for Registry {
 		_: &mut Self::Context,
 	) -> Self::Result {
 		self.feed_clients
-			.get(&req.0)
+			.get_mut(&req.0)
 			.map(|s| s.snapshot())
 			.unwrap_or_default()
 	}

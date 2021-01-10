@@ -148,7 +148,7 @@ impl Inner {
 	/// Fetch and set new page count value for thread from global state
 	fn fetch_page_count(&mut self, thread: u64) {
 		self.page_count = state::read(|s| {
-			s.threads.get(&thread).map(|t| t.last_page + 1).unwrap_or(1)
+			s.threads.get(&thread).map(|t| t.page_count).unwrap_or(1)
 		});
 	}
 }

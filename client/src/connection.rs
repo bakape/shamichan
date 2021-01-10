@@ -3,7 +3,7 @@ use super::{
 	util,
 };
 use common::{debug_log, Decoder, Encoder, MessageType};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::{collections::HashSet, fmt::Debug};
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
@@ -16,6 +16,13 @@ use yew::{
 };
 
 // TODO: break up into submodules
+
+// TODO: after a disconnect, the first message must be a sync message
+
+// TODO: send open post reclamation request with a full text body for any open
+// post on reconnect (via notification). Server-side it should be handled as
+// Client -> ThreadFeed -> Client -> websocket response (confirmation or
+// failure)
 
 fn encode_msg<T>(
 	enc: &mut Encoder,
@@ -49,8 +56,7 @@ pub enum State {
 	Loading,
 	Connecting,
 	Handshaking,
-	Syncing,
-	Synced,
+	HandshakeComplete,
 	Dropped,
 }
 
@@ -86,6 +92,9 @@ pub struct Connection {
 
 	/// Active subscribers to connection state change
 	subscribers: HashSet<HandlerId>,
+
+	/// Messages deferred till after handshake completion
+	deferred: Vec<Vec<u8>>,
 }
 
 pub enum Event {
@@ -102,12 +111,6 @@ pub enum Event {
 	KeyPairChanged,
 }
 
-pub enum MessageCategory {
-	Handshake,
-	Synchronize,
-	Regular,
-}
-
 /// Request to send a message
 pub enum Request {
 	/// Send a regular message
@@ -116,14 +119,11 @@ pub enum Request {
 	/// Send a handshake message
 	Handshake {
 		/// Send key used to generate message to prevent async race conditions
-		with_key_pair: KeyPair,
+		key_pair: KeyPair,
 
 		/// Message to send
 		message: Vec<u8>,
 	},
-
-	/// Synchronize to a different feed
-	Synchronize(u64),
 }
 
 impl Agent for Connection {
@@ -146,6 +146,7 @@ impl Agent for Connection {
 			reconn_timer: None,
 			socket: None,
 			subscribers: HashSet::new(),
+			deferred: vec![],
 		};
 
 		s.connect();
@@ -223,12 +224,12 @@ impl Agent for Connection {
 					|| !util::window().navigator().on_line()
 				{
 					match self.state {
-						State::Synced => {
+						State::HandshakeComplete => {
 							// Ensure still connected, in case the computer went
 							// to sleep or hibernate or the mobile browser tab
 							// was suspended.
 
-							// TODO: Send ping to server
+							// TODO: Send "ping" to server
 						}
 						_ => self.connect(),
 					}
@@ -252,28 +253,19 @@ impl Agent for Connection {
 		util::with_logging(|| {
 			match req {
 				Request::Send(msg) => {
-					self.send(MessageCategory::Regular, msg)?;
+					self.send(msg, false)?;
 				}
-				Request::Handshake {
-					with_key_pair,
-					message,
-				} => {
+				Request::Handshake { key_pair, message } => {
 					// Prevent async race conditions on key pair change
-					if state::read(|s| s.key_pair != with_key_pair) {
+					if state::read(|s| s.key_pair != key_pair) {
 						return Ok(());
 					}
 
-					self.send(MessageCategory::Handshake, message)?;
+					self.send(message, true)?;
 
 					// Set state here, because the handshake message is
 					// generated async and thus does not have access to self
 					self.set_state(State::Handshaking);
-				}
-				Request::Synchronize(feed) => {
-					match self.state {
-State::Synced | State::Syncing => util::log_error_res(self.synchronize(feed)),
-	_ => util::log_warn(format!("attempted to sync to feed {} while not synchronized", feed)),
-					};
 				}
 			};
 			Ok(())
@@ -333,15 +325,13 @@ impl Connection {
 		self.reset_reconn_timer();
 	}
 
-	fn send(&self, cat: MessageCategory, mut msg: Vec<u8>) -> util::Result {
-		use MessageCategory::*;
+	fn send(&mut self, mut msg: Vec<u8>, is_handshake: bool) -> util::Result {
 		use State::*;
 
 		match (
 			match self.state {
-				Connecting => matches!(cat, Handshake),
-				Handshaking => matches!(cat, Handshake | Synchronize),
-				Synced | Syncing => true,
+				Connecting | Handshaking => is_handshake,
+				HandshakeComplete => true,
 				_ => false,
 			},
 			self.socket.as_ref(),
@@ -350,18 +340,7 @@ impl Connection {
 				soc.send_with_u8_array(&mut msg)?;
 			}
 			_ => {
-				return Err(format!(
-					concat!(
-						"sending message when connection not ready: ",
-						"state={:?} socket_state={}"
-					),
-					self.state,
-					self.socket
-						.as_ref()
-						.map(|s| s.ready_state() as isize)
-						.unwrap_or(-1)
-				)
-				.into());
+				self.deferred.push(msg);
 			}
 		}
 		Ok(())
@@ -441,149 +420,148 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
-		use MessageType::*;
-
-		/// Helper to make message handling through route!() more terse
-		struct HandlerResult(util::Result);
-
-		impl From<()> for HandlerResult {
-			fn from(_: ()) -> HandlerResult {
-				HandlerResult(Ok(()))
-			}
-		}
-
-		impl From<util::Result> for HandlerResult {
-			fn from(v: util::Result) -> HandlerResult {
-				HandlerResult(v)
-			}
-		}
-
-		impl Into<util::Result> for HandlerResult {
-			fn into(self) -> util::Result {
-				self.0
-			}
-		}
-
-		// Separate function to enable type inference of payload type from
-		// lambda argument type
-		#[allow(unused_variables)]
-		fn _route<'de, T, R>(
-			dec: &'de mut Decoder,
-			typ: MessageType,
-			mut handler: impl FnMut(T) -> R,
-		) -> util::Result
+		fn decode<T>(t: MessageType, dec: &mut Decoder) -> util::Result<T>
 		where
-			T: Deserialize<'de> + Debug,
-			R: Into<HandlerResult>,
+			T: for<'de> serde::Deserialize<'de> + std::fmt::Debug,
 		{
 			let payload: T = dec.read_next()?;
-			debug_log!(format!(">>> {:?}", typ), payload);
-			(handler(payload).into() as HandlerResult).into()
+			debug_log!(format!(">>> {:?}", t), payload);
+			Ok(payload)
 		}
 
 		let mut dec = Decoder::new(&data)?;
 
-		macro_rules! route {
-			($type:expr, $($msg_type:tt => $handler:expr)+) => {
-				match $type {
-					$(
-						$msg_type => {
-							_route(&mut dec, $msg_type, $handler)?
-						}
-					)+
-					_ => {
-						return Err(util::Error::new(format!(
-							"unhandled message type: {:?}",
-							$type
-						)))
+		// TODO: thread page and meta handlers
+		// TODO: index thread handler
+
+		while let Some(t) = dec.peek_type() {
+			use common::payloads::HandshakeRes;
+			use state::Request;
+			use MessageType::*;
+
+			macro_rules! decode {
+				() => {
+					decode(t, &mut dec)?
+				};
+			}
+
+			macro_rules! decode_empty {
+				() => {
+					decode!() as ();
+				};
+			}
+
+			macro_rules! error {
+				($err:expr) => {
+					return Err($err.into())
+				};
+				($fmt:literal, $($arg:expr),*$(,)?) => {
+					return Err(
+						format!($fmt, $($arg)*).into()
+					)
+				};
+			}
+
+			// Send a request to the app state agent
+			fn send(req: Request) {
+				state::Agent::dispatcher().send(req);
+			}
+
+			match t {
+				Handshake => {
+					let req: HandshakeRes = decode!();
+					self.authed_with = Some(req.id.clone());
+					if state::read(|s| s.key_pair.id.is_none()) {
+						state::Agent::dispatcher().send(
+							state::Request::SetKeyID(req.id.clone().into()),
+						);
 					}
-				}
-			};
-		}
 
-		// TODO: port
-		// Buffer feed data to send in one batch
-		// let mut feed_data = std::collections::HashMap::<u64, FeedData>::new();
-		loop {
-			use common::payloads::{HandshakeRes, ThreadCreationNotice};
-
-			// TODO: Handle version mismatch with a localized alert and reload
-			match dec.peek_type() {
-				Some(t) => route! { t,
-					Synchronize => |id: u64| {
-						// Guard against rapid successive feed changes
-						if id == state::read(|s| s.location.feed.as_u64()) {
-							self.set_state(State::Synced);
-						}
-					}
-					Handshake => |req: HandshakeRes| {
-						self.authed_with = Some(req.id.clone());
-						if state::read(|s| s.key_pair.id.is_none()) {
-							state::Agent::dispatcher()
-								.send(state::Request::SetKeyID(
-									req
-									.id
-									.clone()
-									.into(),
-								));
-						}
-
-						if req.need_resend {
-							// Key already saved in database. Need to confirm
-							// it's the same private key by sending a
-							// HandshakeReq with Authentication::Saved.
-							let mut kp = state::read(|s| s.key_pair.clone());
-							kp.id = req.id.into();
-							Self::send_handshake_req(kp);
-						} else {
-							util::log_error_res(
-								self.synchronize(
-									state::read(|s| s.location.feed.as_u64()),
-								),
-							);
-						}
-					}
-					// TODO: port
-					// FeedInit => |d: FeedData| {
-					// 	feed_data.insert(d.thread, d);
-					// }
-					InsertThreadAck => |id: u64| {
-						use state::{Request, Agent};
-
-						let mut d = Agent::dispatcher();
-						d.send(Request::SetMine(id));
-						d.send(Request::SetOpenPostID(id.into()));
-						state::navigate_to(state::Location{
-							feed: state::FeedID::Thread{
-								id,
-								page: 0,
-							},
-							focus: None,
+					if req.need_resend {
+						// Key already saved in database. Need to confirm
+						// it's the same private key by sending a
+						// HandshakeReq with Authentication::Saved.
+						let mut kp = state::read(|s| s.key_pair.clone());
+						kp.id = req.id.into();
+						Self::send_handshake_req(kp);
+					} else {
+						util::with_logging(|| {
+							self.state = State::HandshakeComplete;
+							for msg in std::mem::take(&mut self.deferred) {
+								self.send(msg, false)?;
+							}
+							Ok(())
 						});
 					}
-					InsertThread => |n: ThreadCreationNotice| {
-						state::Agent::dispatcher()
-							.send(state::Request::InsertThread(n))
-					}
-				},
-				None => {
-					// TODO: port
-					// if !feed_data.is_empty() {
-					// 	state::Agent::dispatcher().send(
-					// 		state::Request::StoreFeedInitData {
-					// 			feed: if feed_data.len() == 1 {
-					// 				feed_data.values().next().unwrap().thread
-					// 			} else {
-					// 				0
-					// 			},
-					// 			data: feed_data,
-					// 		},
-					// 	);
-					// }
-					return Ok(());
 				}
-			};
+				InsertThreadAck => {
+					let id: u64 = decode!();
+					send(Request::SetMine(id));
+					send(Request::SetOpenPostID(id.into()));
+					state::navigate_to(state::Location {
+						feed: state::FeedID::Thread { id, page: 0 },
+						focus: None,
+					});
+				}
+				InsertThread => {
+					send(Request::InsertThread(decode!()));
+				}
+				PartitionedPageStart => {
+					decode_empty!();
+					let mut posts = Vec::<common::payloads::Post>::new();
+					loop {
+						match dec.peek_type() {
+							Some(Post) => {
+								posts.push(decode(Post, &mut dec)?);
+							}
+							Some(PartitionedPageEnd) => {
+								decode(Post, &mut dec)? as ();
+								send(Request::RegisterPage(posts));
+								break;
+							}
+							Some(t @ _) => error!(
+								"unexpected message in page stream: {:?}",
+								t
+							),
+							None => {
+								error!("incomplete partitioned page stream")
+							}
+						}
+					}
+				}
+				ThreadMeta => {
+					send(Request::RegisterThread(decode!()));
+				}
+				PartitionedThreadIndexStart => {
+					decode_empty!();
+					let mut threads =
+						Vec::<common::payloads::ThreadWithPosts>::new();
+					loop {
+						match dec.peek_type() {
+							Some(ThreadAbbreviated) => {
+								threads
+									.push(decode(ThreadAbbreviated, &mut dec)?);
+							}
+							Some(PartitionedThreadIndexEnd) => {
+								decode(Post, &mut dec)? as ();
+								send(Request::RegisterThreads(threads));
+								break;
+							}
+							Some(t @ _) => error!(
+								"unexpected message in thread stream: {:?}",
+								t
+							),
+							None => {
+								error!("incomplete partitioned thread stream")
+							}
+						}
+					}
+				}
+				_ => error!("unhandled message type: {:?}", t),
+			}
 		}
+
+		Ok(())
 	}
 
 	/// Asynchronously generate and send a handshake request message
@@ -628,7 +606,7 @@ impl Connection {
 			)?;
 
 			Connection::dispatcher().send(Request::Handshake {
-				with_key_pair: key_pair,
+				key_pair,
 				message: enc.finish()?,
 			});
 
@@ -638,17 +616,6 @@ impl Connection {
 		wasm_bindgen_futures::spawn_local(util::with_logging_async(
 			inner, key_pair,
 		));
-	}
-
-	/// Send request to synchronize with a feed
-	fn synchronize(&mut self, feed: u64) -> util::Result {
-		let mut enc = common::Encoder::new(Vec::new());
-		encode_msg(&mut enc, MessageType::Synchronize, &feed)?;
-		self.send(MessageCategory::Synchronize, enc.finish()?)?;
-
-		self.set_state(State::Syncing);
-
-		Ok(())
 	}
 }
 
@@ -685,11 +652,9 @@ impl Component for SyncCounter {
 					localize! {
 						match self.current {
 							Loading => "loading",
-							Connecting => "connecting",
+							Connecting | Handshaking => "connecting",
+							HandshakeComplete => "connected",
 							Dropped => "disconnected",
-							Synced => "synced",
-							Syncing => "syncing",
-							Handshaking => "handshaking"
 						}
 					}
 				}

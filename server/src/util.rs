@@ -127,34 +127,43 @@ pub fn now() -> u32 {
 ///
 /// Must not be modified concurrently to maintain version consistency.
 #[derive(Debug, Default)]
-pub struct SnapshotSource<T: Clone + Sync>(Snapshot<T>);
+pub struct SnapshotSource<T: Clone + Sync> {
+	/// Mutable data for snapshot generation
+	val: T,
+
+	/// ID for tracking snapshot versions
+	snapshot_version: u64,
+
+	/// Snapshot generated for the current iteration of src, if any
+	last_snapshot: Option<Snapshot<T>>,
+}
 
 impl<T: Clone + Sync> SnapshotSource<T> {
 	/// Create new SnapshotSource initialized with val
 	pub fn new(val: T) -> Self {
-		Self(Snapshot::<T> {
-			// Start at 1 because 0 is the default state
-			update_counter: 1,
-			value: val.into(),
-		})
+		Self {
+			val,
+			snapshot_version: 0,
+			last_snapshot: None,
+		}
 	}
 
 	/// Create new snapshot of the current state of SnapshotSource
-	pub fn snapshot(&self) -> Snapshot<T> {
-		self.0.clone()
-	}
-
-	/// Set new value of SnapshotSource
-	pub fn set(&mut self, val: T) {
-		self.0.update_counter += 1;
-		self.0.value = val.into();
-	}
-
-	/// Modify the current value of SnapshotSource
-	pub fn modify(&mut self, f: impl FnOnce(&mut T)) {
-		let mut v = (*self.0.value).clone();
-		f(&mut v);
-		self.set(v);
+	pub fn snapshot(&mut self) -> Snapshot<T> {
+		// Crate a new snapshot lazily to avoid copying on mutations between
+		// snapshots
+		match &self.last_snapshot {
+			Some(s) => s.clone(),
+			None => {
+				self.snapshot_version += 1;
+				let s = Snapshot {
+					snapshot_version: self.snapshot_version,
+					val: Arc::new(self.val.clone()),
+				};
+				self.last_snapshot = Some(s.clone());
+				s
+			}
+		}
 	}
 }
 
@@ -166,7 +175,8 @@ impl<T: Clone + Sync> From<T> for SnapshotSource<T> {
 
 impl<T: Clone + Sync> PartialEq<Snapshot<T>> for SnapshotSource<T> {
 	fn eq(&self, other: &Snapshot<T>) -> bool {
-		&self.0 == other
+		self.last_snapshot.is_some()
+			&& self.snapshot_version == other.snapshot_version
 	}
 }
 
@@ -174,18 +184,26 @@ impl<T: Clone + Sync> Deref for SnapshotSource<T> {
 	type Target = T;
 
 	fn deref(&self) -> &T {
-		&self.0
+		&self.val
+	}
+}
+
+impl<T: Clone + Sync> DerefMut for SnapshotSource<T> {
+	fn deref_mut(&mut self) -> &mut T {
+		// Invalidate any saved snapshots because val might be modified
+		self.last_snapshot = None;
+		&mut self.val
 	}
 }
 
 /// Immutable snapshot of SnapshotSource
 #[derive(Debug, Clone, Default)]
 pub struct Snapshot<T: Clone + Sync> {
-	/// Incremented on any modification to clients for cheap comparison
-	update_counter: usize,
+	/// Snapshot version for cheap comparison
+	snapshot_version: u64,
 
 	/// Contained value
-	value: Arc<T>,
+	val: Arc<T>,
 }
 
 impl<T: Clone + Sync> actix::Message for Snapshot<T> {
@@ -194,7 +212,7 @@ impl<T: Clone + Sync> actix::Message for Snapshot<T> {
 
 impl<T: Clone + Sync> PartialEq<Snapshot<T>> for Snapshot<T> {
 	fn eq(&self, other: &Snapshot<T>) -> bool {
-		self.update_counter == other.update_counter
+		self.snapshot_version == other.snapshot_version
 	}
 }
 
@@ -204,7 +222,7 @@ impl<T: Clone + Sync> Deref for Snapshot<T> {
 	type Target = T;
 
 	fn deref(&self) -> &T {
-		&self.value
+		&self.val
 	}
 }
 
