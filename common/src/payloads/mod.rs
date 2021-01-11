@@ -49,13 +49,26 @@ pub struct HandshakeReq {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HandshakeRes {
+pub enum PubKeyStatus {
+	/// Key accepted. Handshake complete.
+	Accepted,
+
 	/// Key already saved in database. Need to confirm it's the same private key
 	/// by sending a HandshakeReq with Authentication::Saved.
-	pub need_resend: bool,
+	NeedResend,
 
+	/// Key not found in database. Need to send Authentication::NewPubKey to
+	/// register it.
+	NotFound,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HandshakeRes {
 	/// ID of key on the server
 	pub id: uuid::Uuid,
+
+	/// Public key status on the server
+	pub status: PubKeyStatus,
 }
 
 /// Request for creating a new thread

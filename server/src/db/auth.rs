@@ -46,14 +46,14 @@ pub async fn register_public_key(
 /// Get public key's private ID and key buffer by its public ID
 pub async fn get_public_key(
 	pub_id: &Uuid,
-) -> Result<(u64, Vec<u8>), sqlx::Error> {
+) -> Result<Option<(u64, Vec<u8>)>, sqlx::Error> {
 	sqlx::query!(
 		"select id, public_key
 		from public_keys
 		where public_id = $1",
 		pub_id,
 	)
-	.fetch_one(&pool())
+	.fetch_optional(&pool())
 	.await
-	.map(|r| (r.id as u64, r.public_key))
+	.map(|r| r.map(|r| (r.id as u64, r.public_key)))
 }

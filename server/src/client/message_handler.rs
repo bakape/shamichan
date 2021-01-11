@@ -520,6 +520,8 @@ impl MessageHandler {
 	}
 
 	async fn handle_handshake(&mut self, dec: &mut Decoder) -> DynResult {
+		use common::payloads::{HandshakeRes, PubKeyStatus};
+
 		match Self::decode_handshake(dec)?.auth {
 			Authorization::NewPubKey(pub_key) => {
 				check_len!(pub_key, 1 << 10);
@@ -546,9 +548,13 @@ impl MessageHandler {
 
 				self.send(
 					MessageType::Handshake,
-					&common::payloads::HandshakeRes {
-						need_resend: !fresh,
+					&HandshakeRes {
 						id: pub_id,
+						status: if fresh {
+							PubKeyStatus::Accepted
+						} else {
+							PubKeyStatus::NeedResend
+						},
 					},
 				)?;
 			}
@@ -557,15 +563,26 @@ impl MessageHandler {
 				nonce,
 				signature,
 			} => {
-				let (priv_id, pub_key) =
-					db::get_public_key(&pub_id).await.map_err(|e| match e {
-						sqlx::Error::RowNotFound => {
-							"no such public key registered".to_string()
-						}
-						e @ _ => e.to_string(),
-					})?;
-				self.mut_state.pub_key = super::PubKeyDesc { priv_id, pub_id };
-				self.handle_auth_saved(nonce, signature, pub_key.as_ref())?;
+				match db::get_public_key(&pub_id).await? {
+					Some((priv_id, pub_key)) => {
+						self.mut_state.pub_key =
+							super::PubKeyDesc { priv_id, pub_id };
+						self.handle_auth_saved(
+							nonce,
+							signature,
+							pub_key.as_ref(),
+						)?;
+					}
+					None => {
+						self.send(
+							MessageType::Handshake,
+							&HandshakeRes {
+								id: pub_id,
+								status: PubKeyStatus::NotFound,
+							},
+						)?;
+					}
+				};
 			}
 		}
 		Ok(())
@@ -578,6 +595,8 @@ impl MessageHandler {
 		signature: Signature,
 		pub_key: &[u8],
 	) -> DynResult {
+		use common::payloads::{HandshakeRes, PubKeyStatus};
+
 		let pk = openssl::pkey::PKey::from_rsa(
 			openssl::rsa::Rsa::public_key_from_der(pub_key)?,
 		)?;
@@ -593,9 +612,9 @@ impl MessageHandler {
 
 		self.send(
 			MessageType::Handshake,
-			&common::payloads::HandshakeRes {
-				need_resend: false,
+			&HandshakeRes {
 				id: self.mut_state.pub_key.pub_id,
+				status: PubKeyStatus::Accepted,
 			},
 		)?;
 		self.mut_state.conn_state = ConnState::AcceptedHandshake;

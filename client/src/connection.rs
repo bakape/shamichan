@@ -435,7 +435,7 @@ impl Connection {
 		// TODO: index thread handler
 
 		while let Some(t) = dec.peek_type() {
-			use common::payloads::HandshakeRes;
+			use common::payloads::{HandshakeRes, PubKeyStatus};
 			use state::Request;
 			use MessageType::*;
 
@@ -477,22 +477,31 @@ impl Connection {
 						);
 					}
 
-					if req.need_resend {
-						// Key already saved in database. Need to confirm
-						// it's the same private key by sending a
-						// HandshakeReq with Authentication::Saved.
-						let mut kp = state::read(|s| s.key_pair.clone());
-						kp.id = req.id.into();
-						Self::send_handshake_req(kp);
-					} else {
-						util::with_logging(|| {
-							self.set_state(State::HandshakeComplete);
-							for msg in std::mem::take(&mut self.deferred) {
-								self.send(msg, false)?;
-							}
-							Ok(())
-						});
-					}
+					match req.status {
+						PubKeyStatus::Accepted => {
+							util::with_logging(|| {
+								self.set_state(State::HandshakeComplete);
+								for msg in std::mem::take(&mut self.deferred) {
+									self.send(msg, false)?;
+								}
+								Ok(())
+							});
+						}
+						PubKeyStatus::NeedResend => {
+							// Key already saved in database. Need to confirm
+							// it's the same private key by sending a
+							// HandshakeReq with Authentication::Saved.
+							let mut kp = state::read(|s| s.key_pair.clone());
+							kp.id = req.id.into();
+							Self::send_handshake_req(kp);
+						}
+						PubKeyStatus::NotFound => {
+							send(Request::SetKeyID(None));
+							let mut kp = state::read(|s| s.key_pair.clone());
+							kp.id = req.id.into();
+							Self::send_handshake_req(kp);
+						}
+					};
 				}
 				InsertThreadAck => {
 					let id: u64 = decode!();
