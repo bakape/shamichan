@@ -451,68 +451,76 @@ func StreamModLog(qw422016 *qt422016.Writer, log []auth.ModLogEntry) {
 //line auth.html:146
 			qw422016.E().S(ln.UI["purgePost"])
 //line auth.html:147
-		}
-//line auth.html:147
-		qw422016.N().S(`</td><td>`)
+		case common.RedirectIP:
+//line auth.html:148
+			qw422016.E().S(ln.UI["redirectIP"])
 //line auth.html:149
-		qw422016.E().S(l.By)
-//line auth.html:149
-		qw422016.N().S(`</td><td>`)
+		case common.RedirectThread:
+//line auth.html:150
+			qw422016.E().S(ln.UI["redirectThread"])
 //line auth.html:151
+		}
+//line auth.html:151
+		qw422016.N().S(`</td><td>`)
+//line auth.html:153
+		qw422016.E().S(l.By)
+//line auth.html:153
+		qw422016.N().S(`</td><td>`)
+//line auth.html:155
 		if l.ID != 0 {
-//line auth.html:152
+//line auth.html:156
 			streamstaticPostLink(qw422016, l.ID)
-//line auth.html:153
+//line auth.html:157
 		}
-//line auth.html:153
+//line auth.html:157
 		qw422016.N().S(`</td><td>`)
-//line auth.html:155
-		qw422016.E().S(l.Created.Format(time.UnixDate))
-//line auth.html:155
-		qw422016.N().S(`</td><td>`)
-//line auth.html:156
-		qw422016.E().S(l.Data)
-//line auth.html:156
-		qw422016.N().S(`</td><td>`)
-//line auth.html:158
-		if l.Length != 0 {
 //line auth.html:159
+		qw422016.E().S(l.Created.Format(time.UnixDate))
+//line auth.html:159
+		qw422016.N().S(`</td><td>`)
+//line auth.html:160
+		qw422016.E().S(l.Data)
+//line auth.html:160
+		qw422016.N().S(`</td><td>`)
+//line auth.html:162
+		if l.Length != 0 {
+//line auth.html:163
 			qw422016.E().S((time.Second * time.Duration(l.Length)).String())
-//line auth.html:160
+//line auth.html:164
 		}
-//line auth.html:160
+//line auth.html:164
 		qw422016.N().S(`</td></tr>`)
-//line auth.html:163
+//line auth.html:167
 	}
-//line auth.html:163
+//line auth.html:167
 	qw422016.N().S(`</table>`)
-//line auth.html:165
+//line auth.html:169
 	streamhtmlEnd(qw422016)
-//line auth.html:166
+//line auth.html:170
 }
 
-//line auth.html:166
+//line auth.html:170
 func WriteModLog(qq422016 qtio422016.Writer, log []auth.ModLogEntry) {
-//line auth.html:166
+//line auth.html:170
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:166
+//line auth.html:170
 	StreamModLog(qw422016, log)
-//line auth.html:166
+//line auth.html:170
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:166
+//line auth.html:170
 }
 
-//line auth.html:166
+//line auth.html:170
 func ModLog(log []auth.ModLogEntry) string {
-//line auth.html:166
+//line auth.html:170
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:166
+//line auth.html:170
 	WriteModLog(qb422016, log)
-//line auth.html:166
+//line auth.html:170
 	qs422016 := string(qb422016.B)
-//line auth.html:166
+//line auth.html:170
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:166
+//line auth.html:170
 	return qs422016
-//line auth.html:166
+//line auth.html:170
 }

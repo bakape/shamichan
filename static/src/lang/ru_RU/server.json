@@ -505,6 +505,8 @@
 		"ownNoBoards": "Вы не владеете ни одной доской",
 		"post": "Пост",
 		"purgePost": "Purge post/image",
+		"redirectIP": "Redirect by IP",
+		"redirectThread": "Redirect by thread",
 		"searchTooltip": "Фильтровать треды по теме, содержанию и имени доски (обрамлённую бэкслэшами), допустимы регулярные выражения",
 		"setBanners": "Добавить баннеры",
 		"setLoading": "Set loading animation",

@@ -23,6 +23,8 @@ export const enum ModerationAction {
 	meidoVision,
 	purgePost,
 	shadowBinPost,
+	redirectIP,
+	redirectThread,
 }
 
 // Contains fields of a post moderation log entry

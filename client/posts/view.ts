@@ -322,6 +322,12 @@ export default class PostView extends ImageHandler {
                 case ModerationAction.unbanPost:
                     s = this.format('unbanned', by);
                     break;
+                case ModerationAction.redirectIP:
+                    s = this.format("redirectIP", data, by);
+                    break;
+                case ModerationAction.redirectThread:
+                    s = this.format("redirectThread", data, by);
+                    break;
                 default:
                     continue;
             }

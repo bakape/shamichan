@@ -834,6 +834,9 @@ func redirectByIP(w http.ResponseWriter, r *http.Request) {
 		for _, c := range feeds.GetByIP(ip) {
 			c.Send(msg)
 		}
+
+		// Write to modlog
+		err = db.Redirect(id, common.RedirectIP, url)
 		return
 	}()
 	if err != nil {
@@ -856,6 +859,9 @@ func redirectByThread(w http.ResponseWriter, r *http.Request) {
 		for _, c := range feeds.GetByThread(id) {
 			c.Send(msg)
 		}
+
+		// Write to modlog
+		err = db.Redirect(id, common.RedirectThread, url)
 		return
 	}()
 	if err != nil {
