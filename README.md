@@ -121,6 +121,7 @@ Documentation for this file is available under `docs/config.jsonc`.
 It is recommended to serve meguca behind a reverse proxy like NGINX or Apache
 with properly configured TLS settings. A sample NGINX configuration file can be
 found in `docs/`.
+Meguca needs to use HTTPS to work outside of localhost.
 
 ### Initial instance configuration
 

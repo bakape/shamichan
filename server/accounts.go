@@ -11,6 +11,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -65,7 +66,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		return commitLogin(w, "", req.ID)
+		return commitLogin(w, r, "", req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
@@ -82,7 +83,11 @@ func validateUserID(w http.ResponseWriter, r *http.Request, id string) error {
 
 // If login successful, generate a session token and commit to DB. Otherwise
 // write error message to client.
-func commitLogin(w http.ResponseWriter, ip, userID string) (err error) {
+func commitLogin(
+	w http.ResponseWriter, r *http.Request, ip, userID string,
+) (
+	err error,
+) {
 	token, err := auth.RandomID(128)
 	if err != nil {
 		return
@@ -101,22 +106,24 @@ func commitLogin(w http.ResponseWriter, ip, userID string) (err error) {
 	// deleted
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "loginID",
-		Value:    url.QueryEscape(userID),
-		Path:     "/",
-		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+	err = util.SetCookie(w, r, &http.Cookie{
+		Name:    "loginID",
+		Value:   url.QueryEscape(userID),
+		Path:    "/",
+		Expires: expires,
 	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    token,
-		Path:     "/",
-		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+	if err != nil {
+		return
+	}
+	err = util.SetCookie(w, r, &http.Cookie{
+		Name:    "session",
+		Value:   token,
+		Path:    "/",
+		Expires: expires,
 	})
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -172,7 +179,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		default:
 			return
 		}
-		return commitLogin(w, ip, req.ID)
+		return commitLogin(w, r, ip, req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
