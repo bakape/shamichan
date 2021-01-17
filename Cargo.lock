@@ -1576,6 +1576,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "meguca"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-files",
+ "actix-rt",
+ "actix-service",
+ "actix-web",
+ "actix-web-actors",
+ "askama",
+ "askama_actix",
+ "async-trait",
+ "backtrace",
+ "bytes",
+ "cfg-if 1.0.0",
+ "cfg-match",
+ "clap",
+ "common",
+ "dotenv",
+ "futures",
+ "futures-channel",
+ "htmlescape",
+ "include_dir",
+ "lazy_static",
+ "libc",
+ "log",
+ "memmap",
+ "openssl",
+ "rand 0.7.3",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "stderrlog",
+ "syntect",
+ "tokio 0.3.6",
+ "tripcode",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "memchr"
 version = "2.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2355,49 +2398,6 @@ dependencies = [
  "itoa",
  "serde",
  "url",
-]
-
-[[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-files",
- "actix-rt",
- "actix-service",
- "actix-web",
- "actix-web-actors",
- "askama",
- "askama_actix",
- "async-trait",
- "backtrace",
- "bytes",
- "cfg-if 1.0.0",
- "cfg-match",
- "clap",
- "common",
- "dotenv",
- "futures",
- "futures-channel",
- "htmlescape",
- "include_dir",
- "lazy_static",
- "libc",
- "log",
- "memmap",
- "openssl",
- "rand 0.7.3",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "sqlx",
- "stderrlog",
- "syntect",
- "tokio 0.3.6",
- "tripcode",
- "url",
- "uuid",
 ]
 
 [[package]]
