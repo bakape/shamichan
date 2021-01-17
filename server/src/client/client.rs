@@ -1,6 +1,8 @@
 use super::str_err;
 use crate::{
+	feeds::IndexFeed,
 	message::Message as Msg,
+	mt_context::MTAddr,
 	registry::{self, Registry},
 	util::{self, DynResult},
 };
@@ -185,7 +187,11 @@ impl Handler<SendMessageBatch> for Client {
 
 impl Client {
 	/// Create fresh unconnected client
-	pub fn new(ip: IpAddr, registry: Addr<Registry>) -> Self {
+	pub fn new(
+		ip: IpAddr,
+		registry: Addr<Registry>,
+		index_feed: MTAddr<IndexFeed>,
+	) -> Self {
 		lazy_static::lazy_static! {
 			static ref ID_GEN: util::IDGenerator = Default::default();
 		}
@@ -194,6 +200,7 @@ impl Client {
 			state: Rc::new(super::State {
 				ip,
 				registry,
+				index_feed,
 				id: ID_GEN.next(),
 			}),
 			received_buffer: Default::default(),

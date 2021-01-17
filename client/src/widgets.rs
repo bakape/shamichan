@@ -7,9 +7,7 @@ use crate::{
 };
 use yew::{
 	agent::{Bridge, Bridged},
-	html,
-	services::fetch::FetchTask,
-	Component, ComponentLink, Html, InputData, NodeRef, Properties,
+	html, Component, ComponentLink, Html, InputData, NodeRef, Properties,
 };
 
 pub struct AsideRow {
@@ -141,7 +139,6 @@ struct NewThreadForm {
 	el: NodeRef,
 	link: ComponentLink<Self>,
 	expanded: bool,
-	available_tags: Vec<String>,
 	selected_tags: Vec<String>,
 
 	// TODO: remove sending and sync to postform Draft and allocating flow
@@ -150,9 +147,9 @@ struct NewThreadForm {
 	post_form_state: posting::State,
 
 	#[allow(unused)]
-	fetch_task: Option<FetchTask>,
-	#[allow(unused)]
 	posting: Box<dyn Bridge<posting::Agent>>,
+	#[allow(unused)]
+	bridge: state::HookBridge,
 }
 
 enum Msg {
@@ -162,7 +159,7 @@ enum Msg {
 	AddTag,
 	Submit,
 	PostFormState(posting::State),
-	FetchedUsedTags(Vec<String>),
+	Rerender,
 	NOP,
 }
 
@@ -171,8 +168,8 @@ impl Component for NewThreadForm {
 	type Message = Msg;
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use yew::format::{Json, Nothing};
-		use yew::services::fetch::{FetchService, Request, Response};
+		// Get a fresh list of used thread tags
+		connection::send(common::MessageType::UsedTags, &());
 
 		Self {
 			posting: posting::Agent::bridge(link.callback(|msg| match msg {
@@ -180,22 +177,12 @@ impl Component for NewThreadForm {
 				_ => Msg::NOP,
 			})),
 			el: NodeRef::default(),
-			fetch_task: FetchService::fetch(
-				Request::get("/api/json/used-tags").body(Nothing).unwrap(),
-				link.callback(
-					|res: Response<
-						Json<Result<Vec<String>, anyhow::Error>>,
-					>| match res.into_body() {
-						Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
-						_ => Msg::NOP,
-					},
-				),
-			)
-			.ok(),
+			bridge: state::hook(&link, vec![state::Change::UsedTags], |_| {
+				Msg::Rerender
+			}),
 			link,
 			expanded: false,
 			sending: false,
-			available_tags: vec![],
 			selected_tags: vec!["".into()],
 			post_form_state: Default::default(),
 		}
@@ -292,10 +279,7 @@ impl Component for NewThreadForm {
 				true
 			}
 			Msg::NOP => false,
-			Msg::FetchedUsedTags(tags) => {
-				self.available_tags = tags;
-				true
-			}
+			Msg::Rerender => true,
 		}
 	}
 
@@ -365,10 +349,9 @@ impl NewThreadForm {
 						disabled=self.sending
 					/>
 				</span>
-				<datalist id="available-tags">
+				<datalist id="used-tags">
 					{
-						for self
-							.available_tags
+						for state::read(|s| s.used_tags.clone())
 							.iter()
 							.filter(|t|
 								!self.selected_tags.iter().any(|s| &s == t)
@@ -412,7 +395,7 @@ impl NewThreadForm {
 					minlength="1"
 					value=tag
 					name="tag"
-					list="available-tags"
+					list="used-tags"
 					oninput=self.link.callback(move |e: InputData|
 						Msg::InputTag(id, e.value)
 					)

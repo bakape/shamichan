@@ -95,7 +95,7 @@ impl Registry {
 		ctx: &mut Context<Self>,
 		mut threads: Vec<ThreadWithPosts>,
 	) -> Self {
-		let feed_init: Vec<_> = threads
+		let feed_init_data: Vec<_> = threads
 			.iter_mut()
 			.map(|t| {
 				(
@@ -113,7 +113,7 @@ impl Registry {
 			by_pub_key: Default::default(),
 			index_feed: index_feed.clone(),
 			body_flusher: body_flusher.clone(),
-			feeds: feed_init
+			feeds: feed_init_data
 				.into_iter()
 				.map(move |(t, last_5)| {
 					(
@@ -386,5 +386,37 @@ impl Handler<SnapshotClients> for Registry {
 			.get_mut(&req.0)
 			.map(|s| s.snapshot())
 			.unwrap_or_default()
+	}
+}
+
+/// Returns the address of the IndexFeed
+pub struct GetIndexFeed;
+
+impl Message for GetIndexFeed {
+	type Result = MTAddr<IndexFeed>;
+}
+
+// Implemented here because it's not derivable
+impl MessageResponse<Registry, GetIndexFeed> for MTAddr<IndexFeed> {
+	fn handle<R: ResponseChannel<GetIndexFeed>>(
+		self,
+		_: &mut <Registry as Actor>::Context,
+		tx: Option<R>,
+	) {
+		if let Some(tx) = tx {
+			tx.send(self);
+		}
+	}
+}
+
+impl Handler<GetIndexFeed> for Registry {
+	type Result = MTAddr<IndexFeed>;
+
+	fn handle(
+		&mut self,
+		_: GetIndexFeed,
+		_: &mut Self::Context,
+	) -> Self::Result {
+		self.index_feed.clone()
 	}
 }

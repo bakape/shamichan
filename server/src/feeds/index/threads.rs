@@ -2,7 +2,7 @@ use crate::{message::Message, util::MessageCacher};
 use common::{payloads::ThreadWithPosts, Encoder, MessageType};
 use rayon::prelude::*;
 use std::{
-	collections::HashMap,
+	collections::{HashMap, HashSet},
 	ops::{Deref, DerefMut},
 };
 
@@ -10,6 +10,7 @@ use std::{
 #[derive(Debug, Default)]
 pub struct Threads {
 	cache: Option<Message>,
+	used_tags: Option<Message>,
 	threads: HashMap<u64, MessageCacher<ThreadWithPosts>>,
 }
 
@@ -18,6 +19,7 @@ impl Threads {
 		Self {
 			threads,
 			cache: None,
+			used_tags: None,
 		}
 	}
 
@@ -66,6 +68,30 @@ impl Threads {
 	pub fn get_cached_message(&self) -> Option<Message> {
 		self.cache.clone()
 	}
+
+	/// Return set of used tags across all active threads
+	pub fn used_tags(&mut self) -> std::io::Result<Message> {
+		Ok(match &self.used_tags {
+			Some(m) => m.clone(),
+			None => {
+				let mut tags = self
+					.threads
+					.values()
+					.flat_map(|t| t.thread_data.tags.iter())
+					.cloned()
+					.collect::<HashSet<String>>()
+					.into_iter()
+					.collect::<Vec<String>>();
+				tags.sort_unstable();
+				let msg = Message::new(Encoder::encode(
+					MessageType::UsedTags,
+					&tags,
+				)?);
+				self.used_tags = msg.clone().into();
+				msg
+			}
+		})
+	}
 }
 
 impl Deref for Threads {
@@ -79,6 +105,7 @@ impl Deref for Threads {
 impl DerefMut for Threads {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.cache = None;
+		self.used_tags = None;
 		&mut self.threads
 	}
 }

@@ -224,6 +224,23 @@ impl AsyncHandler<FetchFeedData> for IndexFeed {
 	}
 }
 
+/// Send set of used tags across all threads to client
+pub struct UsedTags(pub Addr<Client>);
+
+#[async_trait]
+impl AsyncHandler<UsedTags> for IndexFeed {
+	type Error = std::io::Error;
+
+	async fn handle(
+		&mut self,
+		UsedTags(client): UsedTags,
+		_: &mut <Self as Actor>::Context,
+	) -> Result<(), Self::Error> {
+		client.do_send(SendMessage(self.threads.used_tags()?));
+		Ok(())
+	}
+}
+
 impl IndexFeed {
 	pub fn new(
 		threads: Vec<ThreadWithPosts>,

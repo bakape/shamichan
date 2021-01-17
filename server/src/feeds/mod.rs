@@ -1,7 +1,7 @@
 mod index;
 mod thread;
 
-pub use index::IndexFeed;
+pub use index::*;
 pub use thread::*;
 
 use crate::{

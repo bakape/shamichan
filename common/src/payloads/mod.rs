@@ -109,6 +109,7 @@ pub struct ThreadCreationNotice {
 	pub subject: String,
 	pub tags: Vec<String>,
 	pub time: u32,
+	pub opts: PostCreationOpts,
 }
 
 /// Request to insert a new post into a thread

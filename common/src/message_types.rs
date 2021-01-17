@@ -77,4 +77,7 @@ pub enum MessageType {
 	/// Thread metainformation together with OP and the last 5 posts sent from
 	/// the server
 	ThreadAbbreviated,
+
+	/// Request or responds with all the currently used tags on the server
+	UsedTags,
 }

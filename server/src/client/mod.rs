@@ -3,7 +3,7 @@ mod message_handler;
 pub use client::{Client, Disconnect, SendMessage, SendMessageBatch};
 
 use crate::{
-	feeds::{self, AnyFeed, ThreadFeed},
+	feeds::{self, AnyFeed, IndexFeed, ThreadFeed},
 	message::Message,
 	mt_context::MTAddr,
 	registry::Registry,
@@ -65,6 +65,9 @@ struct State {
 
 	/// Address to the global registry
 	registry: Addr<Registry>,
+
+	/// Address of index feed
+	index_feed: MTAddr<IndexFeed>,
 }
 
 /// Result of asynchronously processing a message with possible error

@@ -14,6 +14,8 @@ use actix_web_actors::ws;
 use askama_actix::Template;
 use cfg_if::cfg_if;
 use dotenv;
+use feeds::IndexFeed;
+use mt_context::MTAddr;
 use registry::Registry;
 use std::sync::Arc;
 
@@ -33,6 +35,7 @@ async fn connect(
     req: HttpRequest,
     stream: web::Payload,
     registry: web::Data<Addr<Registry>>,
+    index_feed: web::Data<MTAddr<IndexFeed>>,
 ) -> Result<HttpResponse, Error> {
     let ci = req.connection_info();
     let ip = if config::SERVER.reverse_proxied {
@@ -48,7 +51,11 @@ async fn connect(
     ))?;
 
     ws::start(
-        client::Client::new(ip, registry.get_ref().clone()),
+        client::Client::new(
+            ip,
+            registry.get_ref().clone(),
+            index_feed.get_ref().clone(),
+        ),
         &req,
         stream,
     )
@@ -66,9 +73,11 @@ async fn main() -> Result<(), std::io::Error> {
 
         // Spawn registry on it's own thread to reduce contention
         let threads = db::get_all_threads_short().await?;
-        let registry = Registry::start_in_arbiter(&Arbiter::new(), |ctx| {
-            Registry::new(ctx, threads)
-        });
+        let registry =
+            Registry::start_in_arbiter(&Arbiter::new(), move |ctx| {
+                Registry::new(ctx, threads)
+            });
+        let index_feed = registry.send(registry::GetIndexFeed).await?;
 
         HttpServer::new(move || {
             use actix_files::Files;
@@ -108,6 +117,7 @@ async fn main() -> Result<(), std::io::Error> {
                     }
                 }))
                 .data(registry.clone())
+                .data(index_feed.clone())
                 .service(connect)
                 .service(Files::new("/assets", "./www"))
         })

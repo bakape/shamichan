@@ -567,6 +567,9 @@ impl Connection {
 						}
 					}
 				}
+				UsedTags => {
+					send(Request::SetUsedTags(decode!()));
+				}
 				_ => error!("unhandled message type: {:?}", t),
 			}
 		}

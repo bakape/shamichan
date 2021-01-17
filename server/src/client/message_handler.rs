@@ -233,6 +233,12 @@ impl MessageHandler {
 			}
 			PatchPostBody => self.patch_body(decode!()).await,
 			Page => self.fetch_page(decode!()),
+			UsedTags => {
+				self.state
+					.index_feed
+					.do_send(feeds::UsedTags(self.client.clone()));
+				Ok(())
+			}
 			_ => str_err!("unhandled message type: {:?}", t),
 		}
 	}

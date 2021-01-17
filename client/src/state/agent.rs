@@ -72,6 +72,9 @@ pub enum Request {
 
 	/// Register threads passed from the thread index feed
 	RegisterThreads(Vec<ThreadWithPosts>),
+
+	/// Set tags used on threads
+	SetUsedTags(Vec<String>),
 }
 
 /// Selective changes of global state to be notified on
@@ -88,6 +91,9 @@ pub enum Change {
 
 	/// Change to any field of the Configs
 	Configs,
+
+	/// Change in tags used on threads
+	UsedTags,
 
 	/// Subscribe to changes of the list of threads
 	ThreadList,
@@ -386,6 +392,12 @@ impl yew::agent::Agent for Agent {
 					}
 				});
 			}
+			SetUsedTags(tags) => {
+				write(|s| {
+					s.used_tags = tags.into();
+				});
+				self.trigger(&Change::UsedTags);
+			}
 		};
 
 		self.flush_triggers();
@@ -603,6 +615,11 @@ impl Agent {
 					for t in threads {
 						self.trigger(&Change::Thread(t.thread_data.id));
 						s.threads.insert(t.thread_data.id, t.thread_data);
+
+						for (_, p) in t.posts {
+							self.trigger(&Change::Post(p.id));
+							s.register_post(p);
+						}
 					}
 
 					self.set_location_no_sync(s, loc, flags);

@@ -15,8 +15,10 @@ use common::{
 	payloads::{Post, Thread},
 	util::DoubleSetMap,
 };
-use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::{
+	collections::{HashMap, HashSet},
+	rc::Rc,
+};
 
 /// Optional flags and contents for creating new posts (including OPs)
 #[derive(Default)]
@@ -72,6 +74,9 @@ pub struct State {
 
 	/// Optional flags and contents for creating new posts (including OPs)
 	pub new_post_opts: NewPostOpts,
+
+	/// Tags already used on threads
+	pub used_tags: Rc<Vec<String>>,
 }
 
 impl State {
