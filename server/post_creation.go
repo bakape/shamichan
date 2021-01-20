@@ -136,6 +136,7 @@ func parsePostCreationForm(
 	if token != "" {
 		req.Image = websockets.ImageRequest{
 			Spoiler: f.Get("spoiler") == "on",
+			Mask:    f.Get("mask") == "on",
 			Token:   token,
 			Name:    header.Filename,
 		}

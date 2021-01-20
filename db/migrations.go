@@ -1526,6 +1526,12 @@ var migrations = []func(*sql.Tx) error{
 			`truncate table sessions;`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return dropFunctions(tx, "insert_image")
+	},
+	func(tx *sql.Tx) (err error) {
+		return registerFunctions(tx, "insert_image")
+	},
 }
 
 func createIndex(table string, columns ...string) string {

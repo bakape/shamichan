@@ -510,212 +510,220 @@ func streamuploadForm(qw422016 *qt422016.Writer) {
 //line board.html:181
 	qw422016.N().S(lang.Get().Common.Posts["spoiler"])
 //line board.html:181
+	qw422016.N().S(`</label></span><span data-id="mask"><label title="`)
+//line board.html:185
+	qw422016.N().S(lang.Get().Common.Posts["maskTT"])
+//line board.html:185
+	qw422016.N().S(`"><input type="checkbox" name="mask">`)
+//line board.html:187
+	qw422016.N().S(lang.Get().Common.Posts["mask"])
+//line board.html:187
 	qw422016.N().S(`</label></span><br><input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain, application/pdf, video/quicktime, audio/x-flac"><br></span>`)
-//line board.html:188
+//line board.html:194
 }
 
-//line board.html:188
+//line board.html:194
 func writeuploadForm(qq422016 qtio422016.Writer) {
-//line board.html:188
+//line board.html:194
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line board.html:188
+//line board.html:194
 	streamuploadForm(qw422016)
-//line board.html:188
+//line board.html:194
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:188
+//line board.html:194
 }
 
-//line board.html:188
+//line board.html:194
 func uploadForm() string {
-//line board.html:188
+//line board.html:194
 	qb422016 := qt422016.AcquireByteBuffer()
-//line board.html:188
+//line board.html:194
 	writeuploadForm(qb422016)
-//line board.html:188
+//line board.html:194
 	qs422016 := string(qb422016.B)
-//line board.html:188
+//line board.html:194
 	qt422016.ReleaseByteBuffer(qb422016)
-//line board.html:188
+//line board.html:194
 	return qs422016
-//line board.html:188
+//line board.html:194
 }
 
 // Link to catalog or board page
 
-//line board.html:191
+//line board.html:197
 func streamcatalogLink(qw422016 *qt422016.Writer, catalog bool) {
-//line board.html:192
+//line board.html:198
 	ln := lang.Get().Common.UI
 
-//line board.html:192
+//line board.html:198
 	qw422016.N().S(`<aside class="act glass">`)
-//line board.html:194
+//line board.html:200
 	if catalog {
-//line board.html:194
+//line board.html:200
 		qw422016.N().S(`<a href=".">`)
-//line board.html:196
+//line board.html:202
 		qw422016.N().S(ln["return"])
-//line board.html:196
+//line board.html:202
 		qw422016.N().S(`</a>`)
-//line board.html:198
+//line board.html:204
 	} else {
-//line board.html:198
+//line board.html:204
 		qw422016.N().S(`<a href="catalog">`)
-//line board.html:200
+//line board.html:206
 		qw422016.N().S(ln["catalog"])
-//line board.html:200
+//line board.html:206
 		qw422016.N().S(`</a>`)
-//line board.html:202
+//line board.html:208
 	}
-//line board.html:202
+//line board.html:208
 	qw422016.N().S(`</aside>`)
-//line board.html:204
+//line board.html:210
 }
 
-//line board.html:204
+//line board.html:210
 func writecatalogLink(qq422016 qtio422016.Writer, catalog bool) {
-//line board.html:204
+//line board.html:210
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line board.html:204
+//line board.html:210
 	streamcatalogLink(qw422016, catalog)
-//line board.html:204
+//line board.html:210
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:204
+//line board.html:210
 }
 
-//line board.html:204
+//line board.html:210
 func catalogLink(catalog bool) string {
-//line board.html:204
+//line board.html:210
 	qb422016 := qt422016.AcquireByteBuffer()
-//line board.html:204
+//line board.html:210
 	writecatalogLink(qb422016, catalog)
-//line board.html:204
+//line board.html:210
 	qs422016 := string(qb422016.B)
-//line board.html:204
+//line board.html:210
 	qt422016.ReleaseByteBuffer(qb422016)
-//line board.html:204
+//line board.html:210
 	return qs422016
-//line board.html:204
+//line board.html:210
 }
 
 // Links to different pages of the board index
 
-//line board.html:207
-func streampagination(qw422016 *qt422016.Writer, page, total int) {
-//line board.html:207
-	qw422016.N().S(`<aside class="glass spaced">`)
-//line board.html:209
-	if page != 0 {
-//line board.html:210
-		if page-1 != 0 {
-//line board.html:211
-			streampageLink(qw422016, 0, "<<")
-//line board.html:212
-		}
 //line board.html:213
-		streampageLink(qw422016, page-1, "<")
-//line board.html:214
-	}
+func streampagination(qw422016 *qt422016.Writer, page, total int) {
+//line board.html:213
+	qw422016.N().S(`<aside class="glass spaced">`)
 //line board.html:215
-	for i := 0; i < total; i++ {
+	if page != 0 {
 //line board.html:216
-		if i != page {
+		if page-1 != 0 {
 //line board.html:217
-			streampageLink(qw422016, i, strconv.Itoa(i))
+			streampageLink(qw422016, 0, "<<")
 //line board.html:218
-		} else {
-//line board.html:218
-			qw422016.N().S(`<b>`)
-//line board.html:220
-			qw422016.N().D(i)
-//line board.html:220
-			qw422016.N().S(`</b>`)
-//line board.html:222
 		}
-//line board.html:223
+//line board.html:219
+		streampageLink(qw422016, page-1, "<")
+//line board.html:220
 	}
+//line board.html:221
+	for i := 0; i < total; i++ {
+//line board.html:222
+		if i != page {
+//line board.html:223
+			streampageLink(qw422016, i, strconv.Itoa(i))
 //line board.html:224
-	if page != total-1 {
-//line board.html:225
-		streampageLink(qw422016, page+1, ">")
+		} else {
+//line board.html:224
+			qw422016.N().S(`<b>`)
 //line board.html:226
-		if page+1 != total-1 {
-//line board.html:227
-			streampageLink(qw422016, total-1, ">>")
+			qw422016.N().D(i)
+//line board.html:226
+			qw422016.N().S(`</b>`)
 //line board.html:228
 		}
 //line board.html:229
 	}
-//line board.html:229
+//line board.html:230
+	if page != total-1 {
+//line board.html:231
+		streampageLink(qw422016, page+1, ">")
+//line board.html:232
+		if page+1 != total-1 {
+//line board.html:233
+			streampageLink(qw422016, total-1, ">>")
+//line board.html:234
+		}
+//line board.html:235
+	}
+//line board.html:235
 	qw422016.N().S(`</aside>`)
-//line board.html:231
+//line board.html:237
 }
 
-//line board.html:231
+//line board.html:237
 func writepagination(qq422016 qtio422016.Writer, page, total int) {
-//line board.html:231
+//line board.html:237
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line board.html:231
+//line board.html:237
 	streampagination(qw422016, page, total)
-//line board.html:231
+//line board.html:237
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:231
+//line board.html:237
 }
 
-//line board.html:231
+//line board.html:237
 func pagination(page, total int) string {
-//line board.html:231
+//line board.html:237
 	qb422016 := qt422016.AcquireByteBuffer()
-//line board.html:231
+//line board.html:237
 	writepagination(qb422016, page, total)
-//line board.html:231
+//line board.html:237
 	qs422016 := string(qb422016.B)
-//line board.html:231
+//line board.html:237
 	qt422016.ReleaseByteBuffer(qb422016)
-//line board.html:231
+//line board.html:237
 	return qs422016
-//line board.html:231
+//line board.html:237
 }
 
 // Link to a different paginated board page
 
-//line board.html:234
+//line board.html:240
 func streampageLink(qw422016 *qt422016.Writer, i int, text string) {
-//line board.html:234
+//line board.html:240
 	qw422016.N().S(`<a href="?page=`)
-//line board.html:235
+//line board.html:241
 	qw422016.N().D(i)
-//line board.html:235
+//line board.html:241
 	qw422016.N().S(`">`)
-//line board.html:236
+//line board.html:242
 	qw422016.N().S(text)
-//line board.html:236
+//line board.html:242
 	qw422016.N().S(`</a>`)
-//line board.html:238
+//line board.html:244
 }
 
-//line board.html:238
+//line board.html:244
 func writepageLink(qq422016 qtio422016.Writer, i int, text string) {
-//line board.html:238
+//line board.html:244
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line board.html:238
+//line board.html:244
 	streampageLink(qw422016, i, text)
-//line board.html:238
+//line board.html:244
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:238
+//line board.html:244
 }
 
-//line board.html:238
+//line board.html:244
 func pageLink(i int, text string) string {
-//line board.html:238
+//line board.html:244
 	qb422016 := qt422016.AcquireByteBuffer()
-//line board.html:238
+//line board.html:244
 	writepageLink(qb422016, i, text)
-//line board.html:238
+//line board.html:244
 	qs422016 := string(qb422016.B)
-//line board.html:238
+//line board.html:244
 	qt422016.ReleaseByteBuffer(qb422016)
-//line board.html:238
+//line board.html:244
 	return qs422016
-//line board.html:238
+//line board.html:244
 }

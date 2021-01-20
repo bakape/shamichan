@@ -11,6 +11,7 @@ export type FileData = {
     token: string
     name: string
     spoiler?: boolean
+    mask?: boolean
 }
 
 interface LoadProgress {
@@ -45,6 +46,7 @@ export default class UploadForm extends View<Post> {
     private isUploading: boolean;
 
     private spoiler: HTMLElement;
+    private mask: HTMLElement;
     private button: HTMLElement;
 
     private micButton: HTMLElement | null;
@@ -63,8 +65,25 @@ export default class UploadForm extends View<Post> {
             .querySelector(`span[data-id="spoiler"]`) as HTMLInputElement;
         this.hiddenInput = el
             .querySelector("input[name=image]") as HTMLInputElement;
+        this.mask = el
+            .querySelector(`span[data-id="mask"]`) as HTMLInputElement;
         this.button = el.querySelector("button");
 
+        // People who want to hide their filenames will probably want to do it
+        // a lot. Store their choice
+        this.inputElement("mask").checked =
+            (localStorage.getItem("mask") === "true");
+
+        this.mask.addEventListener(
+            "click",
+            () => {
+                localStorage.setItem(
+                    "mask",
+                    String(this.inputElement("mask").checked)
+                );
+            },
+            { passive: true },
+        );
         this.button.addEventListener(
             "click",
             () => {
@@ -201,6 +220,7 @@ export default class UploadForm extends View<Post> {
             token,
             name: file.name,
             spoiler: this.inputElement("spoiler").checked,
+            mask: this.inputElement("mask").checked,
         };
     }
 
@@ -269,6 +289,7 @@ export default class UploadForm extends View<Post> {
         const text = this.xhr.responseText;
         if (this.handleResponse(this.xhr.status, text)) {
             this.xhr = null;
+            this.mask.hidden = true;
             this.button.hidden = true;
             return text;
         }
@@ -290,6 +311,7 @@ export default class UploadForm extends View<Post> {
         this.cancel();
         this.displayStatus(status);
         this.spoiler.hidden = false;
+        this.mask.hidden = false;
         this.button.hidden = false;
 
         this.audioChunks = [];
@@ -302,6 +324,11 @@ export default class UploadForm extends View<Post> {
     // Hide the checkbox used to toggle spoilering the image
     public hideSpoilerToggle() {
         this.spoiler.hidden = true;
+    }
+
+    // Hide the checkbox used to toggle masking the filename
+    public hideMaskToggle() {
+        this.mask.hidden = true;
     }
 
     // Hide the upload and cancellation button
