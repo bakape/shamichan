@@ -1,4 +1,7 @@
-use super::str_err;
+use super::{
+	message_handler::{HandleMessage, MessageHandler, MessageResult},
+	str_err,
+};
 use crate::{
 	feeds::IndexFeed,
 	message::Message as Msg,
@@ -8,31 +11,16 @@ use crate::{
 };
 use actix::prelude::*;
 use actix_web_actors::ws;
-use bytes::Bytes;
-use std::{collections::VecDeque, net::IpAddr, rc::Rc, sync::Arc};
-
-/// Current state of handling or not handling messages by Client
-#[derive(Debug)]
-enum MessageHandling {
-	/// Not currently handling a message
-	NotHandling(super::MutState),
-
-	/// Currently handling a message and can't handle another one till this
-	/// one finishes
-	Handling,
-}
+use std::{net::IpAddr, sync::Arc};
 
 /// Client instance controller
 #[derive(Debug)]
 pub struct Client {
 	/// Immutable client state set on client creation
-	state: Rc<super::State>,
+	state: Arc<super::State>,
 
-	/// Buffered received messages
-	received_buffer: VecDeque<Bytes>,
-
-	/// Current state of handling or not handling messages by Client
-	message_handling: MessageHandling,
+	/// Actor handling messages on the tokio multithreaded runtime
+	message_handler: Option<MTAddr<MessageHandler>>,
 }
 
 impl Actor for Client {
@@ -72,11 +60,24 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Client {
 		if let Err(err) = (|| -> DynResult {
 			match msg? {
 				Binary(buf) => {
-					if self.received_buffer.len() >= 100 {
-						str_err!("received message buffer exceeded");
+					match &mut self.message_handler {
+						Some(h) => h,
+						None => {
+							self.message_handler = Some(
+								crate::mt_context::run(MessageHandler::new(
+									self.state.clone(),
+									ctx.address(),
+								)),
+							);
+							match &mut self.message_handler {
+								Some(h) => h,
+								None => unsafe {
+									std::hint::unreachable_unchecked()
+								},
+							}
+						}
 					}
-					self.received_buffer.push_back(buf);
-					self.process_received(ctx);
+					.do_send(HandleMessage(buf));
 				}
 				Text(_) => str_err!("non-binary message received"),
 				Continuation(_) => {
@@ -100,25 +101,17 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Client {
 	}
 }
 
-impl Handler<super::WrappedMessageProcessingResult> for Client {
+impl Handler<MessageResult> for Client {
 	type Result = ();
 
 	fn handle(
 		&mut self,
-		msg: super::WrappedMessageProcessingResult,
+		msg: MessageResult,
 		ctx: &mut Self::Context,
 	) -> Self::Result {
 		match msg.0 {
-			Ok(res) => {
-				if let Some(msg) = res.message {
-					ctx.binary(msg);
-				}
-				self.message_handling =
-					MessageHandling::NotHandling(res.mut_state);
-
-				// Process next message, if any
-				self.process_received(ctx);
-			}
+			Ok(Some(msg)) => ctx.binary(msg),
+			Ok(None) => (),
 			Err(e) => self.fail(ctx, &e),
 		};
 	}
@@ -197,18 +190,13 @@ impl Client {
 		}
 
 		Self {
-			state: Rc::new(super::State {
+			state: Arc::new(super::State {
 				ip,
 				registry,
 				index_feed,
 				id: ID_GEN.next(),
 			}),
-			received_buffer: Default::default(),
-			message_handling: MessageHandling::NotHandling(super::MutState {
-				conn_state: super::ConnState::Connected,
-				open_post: Default::default(),
-				pub_key: Default::default(),
-			}),
+			message_handler: None,
 		}
 	}
 
@@ -225,26 +213,5 @@ impl Client {
 		// TODO: does stopping right after issuing a close send the close
 		// message?
 		ctx.stop();
-	}
-
-	/// Process a buffered received message, if not already processing one
-	fn process_received(&mut self, ctx: &mut <Self as Actor>::Context) {
-		match &mut self.message_handling {
-			MessageHandling::Handling => (),
-			MessageHandling::NotHandling(s) => {
-				if let Some(msg) = self.received_buffer.pop_front() {
-					ctx.spawn(
-						super::message_handler::MessageHandler::new(
-							self.state.clone(),
-							std::mem::take(s),
-							ctx.address(),
-						)
-						.handle_message(msg)
-						.into_actor(self),
-					);
-					self.message_handling = MessageHandling::Handling;
-				}
-			}
-		}
 	}
 }

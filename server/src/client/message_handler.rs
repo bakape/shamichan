@@ -1,9 +1,14 @@
-use super::{client::Client, str_err, ConnState, OpenPost};
+use super::{client::Client, str_err};
 use crate::{
-	config, db, feeds, registry,
+	config, db,
+	feeds::{self, AnyFeed, ThreadFeed},
+	message::Message,
+	mt_context::{AsyncHandler, MTAddr, MTContext},
+	registry,
 	util::{self, DynResult},
 };
-use actix::prelude::*;
+use actix::{Actor, Addr};
+use async_trait::async_trait;
 use bytes::Bytes;
 use common::{
 	debug_log,
@@ -14,9 +19,7 @@ use common::{
 	Decoder, Encoder, MessageType,
 };
 use serde::Serialize;
-use std::rc::Rc;
-
-// TODO: port as Actor to execute on Tokio thread pool
+use std::sync::Arc;
 
 macro_rules! log_msg_in {
 	($type:expr, $msg:expr) => {
@@ -68,13 +71,55 @@ macro_rules! check_unicode_len {
 	}};
 }
 
-/// Handles incoming messages asynchronously
+/// Public key public and private ID set
+#[derive(Clone, Default, Debug)]
+struct PubKeyDesc {
+	/// Public key private ID used to sign messages by the client
+	priv_id: u64,
+
+	/// Public key public ID used to sign messages by the client
+	pub_id: uuid::Uuid,
+}
+
+#[derive(Debug)]
+struct OpenPost {
+	thread: u64,
+	loc: feeds::PostLocation,
+	body: Vec<char>,
+	feed: MTAddr<ThreadFeed>,
+}
+
+/// Client connection state
+#[derive(Debug)]
+enum ConnState {
+	/// Freshly established a WS connection
+	Connected,
+
+	/// Sent handshake message and it was accepted
+	AcceptedHandshake,
+
+	/// Public key already registered. Requested client to send a HandshakeReq
+	/// with Authorization::Saved.
+	RequestedReshake { pub_key: Vec<u8> },
+
+	/// Client synchronized to a feed
+	Synchronized { id: u64, feed: AnyFeed },
+}
+
+/// Handles incoming messages asynchronously\
+#[derive(Debug)]
 pub struct MessageHandler {
 	/// Immutable client state set on client creation
-	state: Rc<super::State>,
+	state: Arc<super::State>,
 
-	/// Mutable client state part
-	mut_state: super::MutState,
+	/// Client connection state
+	conn_state: ConnState,
+
+	/// Post the client is currently editing
+	open_post: Option<OpenPost>,
+
+	/// Public key public and private ID set
+	pub_key: PubKeyDesc,
 
 	/// Calling Client address
 	client: Addr<Client>,
@@ -83,18 +128,53 @@ pub struct MessageHandler {
 	message: Option<Encoder>,
 }
 
+impl Actor for MessageHandler {
+	type Context = MTContext<Self>;
+}
+
+/// Handle received message and send result back to parent client
+pub struct HandleMessage(pub Bytes);
+
+/// Result of asynchronously processing a message
+#[derive(actix::Message)]
+#[rtype(result = "()")]
+pub struct MessageResult(pub DynResult<Option<Message>>);
+
+#[async_trait]
+impl AsyncHandler<HandleMessage> for MessageHandler {
+	type Error = util::Err;
+
+	async fn handle(
+		&mut self,
+		HandleMessage(buf): HandleMessage,
+		_: &mut <Self as Actor>::Context,
+	) -> Result<(), Self::Error> {
+		let msg = match self.handle_message(buf).await {
+			Ok(_) => Ok(match self.message.take() {
+				Some(m) => Some(m.finish()?.into()),
+				None => {
+					// No need to respond, if no message or error to send.
+					// Saves so message handling and synchronization overhead.
+					return Ok(());
+				}
+			}),
+			Err(e) => Err(e),
+		};
+		self.client.do_send(MessageResult(msg));
+		Ok(())
+	}
+}
+
 impl MessageHandler {
 	/// Construct new handler for handling one specific message
-	pub(super) fn new(
-		state: Rc<super::State>,
-		mut_state: super::MutState,
-		client: Addr<Client>,
-	) -> Self {
+	pub(super) fn new(state: Arc<super::State>, client: Addr<Client>) -> Self {
 		Self {
 			state,
-			mut_state,
 			client,
+			conn_state: ConnState::Connected,
+			open_post: None,
 			message: None,
+			pub_key: Default::default(),
 		}
 	}
 
@@ -108,39 +188,8 @@ impl MessageHandler {
 		Ok(payload)
 	}
 
-	/// Handle received message and send result back to parent client
-	pub(super) async fn handle_message(self, buf: Bytes) {
-		async fn inner(mut this: MessageHandler, buf: Bytes) -> DynResult {
-			this.client
-				.clone()
-				.send(super::WrappedMessageProcessingResult(
-					match this.handle_message_inner(buf).await {
-						Ok(_) => Ok(super::MessageProcessingResult {
-							mut_state: this.mut_state,
-							message: this
-								.message
-								.map(|e| e.finish())
-								.transpose()?
-								.map(|v| v.into()),
-						}),
-						Err(e) => Err(e),
-					},
-				))
-				.await?;
-			Ok(())
-		}
-
-		if let Err(err) = inner(self, buf).await {
-			// The client will be stuck unable to process messages and
-			// eventually get disconnected with a buffer overflow.
-			// That's fine, because this happening means the system itself
-			// is working majorly wrong.
-			log::error!("failed to deliver message processing result: {}", err);
-		}
-	}
-
 	/// Handle received message
-	async fn handle_message_inner(&mut self, buf: Bytes) -> DynResult {
+	async fn handle_message(&mut self, buf: Bytes) -> DynResult {
 		let mut dec = Decoder::new(&buf)?;
 		let mut first = true;
 		loop {
@@ -152,7 +201,7 @@ impl MessageHandler {
 					return Ok(());
 				}
 				Some(t) => {
-					use super::ConnState::*;
+					use ConnState::*;
 					use MessageType::*;
 
 					#[rustfmt::skip]
@@ -169,7 +218,7 @@ impl MessageHandler {
 					}
 
 					first = false;
-					match &self.mut_state.conn_state {
+					match &self.conn_state {
 						Connected => {
 							expect!(Handshake);
 							self.handle_handshake(&mut dec).await?;
@@ -205,9 +254,10 @@ impl MessageHandler {
 			};
 		}
 
-		macro_rules! decode_empty {
+		macro_rules! skip_payload {
 			() => {
-				decode!() as ();
+				dec.skip_next();
+				log_msg_in!(t, ());
 			};
 		}
 
@@ -224,7 +274,7 @@ impl MessageHandler {
 				.await
 			}
 			Backspace => {
-				decode_empty!();
+				skip_payload!();
 				self.update_body(1, |b| {
 					b.pop();
 					Ok(())
@@ -234,6 +284,7 @@ impl MessageHandler {
 			PatchPostBody => self.patch_body(decode!()).await,
 			Page => self.fetch_page(decode!()),
 			UsedTags => {
+				skip_payload!();
 				self.state
 					.index_feed
 					.do_send(feeds::UsedTags(self.client.clone()));
@@ -249,16 +300,14 @@ impl MessageHandler {
 		T: Serialize + std::fmt::Debug,
 	{
 		debug_log!(format!("<<< {:?}: {:?}", t, payload));
-
-		if self.message.is_none() {
-			self.message = Some(Default::default());
-		}
-		self.message.as_mut().unwrap().write_message(t, payload)
+		self.message
+			.get_or_insert_with(|| Default::default())
+			.write_message(t, payload)
 	}
 
 	/// Synchronize to a specific thread or board index
 	async fn synchronize(&mut self, feed: u64) -> DynResult {
-		self.mut_state.conn_state = ConnState::Synchronized {
+		self.conn_state = ConnState::Synchronized {
 			id: feed,
 			feed: self
 				.state
@@ -278,15 +327,13 @@ impl MessageHandler {
 
 	/// Fetch a page from a currently synced to feed
 	fn fetch_page(&mut self, page: i32) -> DynResult {
-		use feeds::{AnyFeed, FetchPage};
-
-		match &self.mut_state.conn_state {
+		match &self.conn_state {
 			ConnState::Synchronized { feed, .. } => match feed {
 				AnyFeed::Index(_) => {
 					str_err!("can not fetch pages on index feed")
 				}
 				AnyFeed::Thread(f) => {
-					f.do_send(FetchPage {
+					f.do_send(feeds::FetchPage {
 						id: page,
 						client: self.client.clone(),
 					});
@@ -321,7 +368,7 @@ impl MessageHandler {
 
 	/// Assert client does not already have an open post
 	fn assert_no_open_post(&self) -> Result<(), String> {
-		if self.mut_state.open_post.is_some() {
+		if self.open_post.is_some() {
 			str_err!("already have an open post")
 		}
 		Ok(())
@@ -357,7 +404,7 @@ impl MessageHandler {
 			subject: &req.subject,
 			tags: &mut req.tags,
 			op: db::PostInsertParams {
-				public_key: self.mut_state.pub_key.priv_id.into(),
+				public_key: self.pub_key.priv_id.into(),
 				name: name.as_ref().map(AsRef::as_ref),
 				trip: trip.as_ref().map(AsRef::as_ref),
 				flag: None, // TODO
@@ -384,7 +431,7 @@ impl MessageHandler {
 			}))
 			.await?;
 		self.send(MessageType::InsertThreadAck, &id)?;
-		self.mut_state.open_post = Some(OpenPost {
+		self.open_post = Some(OpenPost {
 			loc: feeds::PostLocation { id, page: 0 },
 			thread: id,
 			body: Default::default(),
@@ -409,7 +456,7 @@ impl MessageHandler {
 			req.thread,
 			req.sage,
 			&db::PostInsertParams {
-				public_key: self.mut_state.pub_key.priv_id.into(),
+				public_key: self.pub_key.priv_id.into(),
 				name: name.as_ref().map(AsRef::as_ref),
 				trip: trip.as_ref().map(AsRef::as_ref),
 				flag: None, // TODO
@@ -422,7 +469,7 @@ impl MessageHandler {
 		crate::body::cache_location(id, req.thread, page);
 
 		// Don't fetch feed address, if open post in same feed as synced
-		let feed = match &self.mut_state.conn_state {
+		let feed = match &self.conn_state {
 			ConnState::Synchronized {
 				id,
 				feed: feeds::AnyFeed::Thread(f),
@@ -449,7 +496,7 @@ impl MessageHandler {
 		});
 
 		self.send(MessageType::InsertPostAck, &id)?;
-		self.mut_state.open_post = Some(OpenPost {
+		self.open_post = Some(OpenPost {
 			loc: feeds::PostLocation { id, page },
 			thread: req.thread,
 			body: Default::default(),
@@ -493,7 +540,7 @@ impl MessageHandler {
 		_affected: usize,
 		modify: impl Fn(&mut Vec<char>) -> Result<(), String>,
 	) -> DynResult {
-		match &mut self.mut_state.open_post {
+		match &mut self.open_post {
 			Some(p) => {
 				modify(&mut p.body)?;
 				if p.body.len() > 2000 {
@@ -534,7 +581,7 @@ impl MessageHandler {
 				let (priv_id, pub_id, fresh) =
 					db::register_public_key(&pub_key).await?;
 
-				self.mut_state.pub_key = super::PubKeyDesc {
+				self.pub_key = PubKeyDesc {
 					priv_id,
 					pub_id: pub_id.clone(),
 				};
@@ -546,10 +593,9 @@ impl MessageHandler {
 							pub_key: priv_id,
 						})
 						.await??;
-					self.mut_state.conn_state = ConnState::AcceptedHandshake;
+					self.conn_state = ConnState::AcceptedHandshake;
 				} else {
-					self.mut_state.conn_state =
-						ConnState::RequestedReshake { pub_key };
+					self.conn_state = ConnState::RequestedReshake { pub_key };
 				}
 
 				self.send(
@@ -571,8 +617,7 @@ impl MessageHandler {
 			} => {
 				match db::get_public_key(&pub_id).await? {
 					Some((priv_id, pub_key)) => {
-						self.mut_state.pub_key =
-							super::PubKeyDesc { priv_id, pub_id };
+						self.pub_key = PubKeyDesc { priv_id, pub_id };
 						self.handle_auth_saved(
 							nonce,
 							signature,
@@ -610,7 +655,7 @@ impl MessageHandler {
 			openssl::hash::MessageDigest::sha256(),
 			&pk,
 		)?;
-		v.update(self.mut_state.pub_key.pub_id.as_bytes())?;
+		v.update(self.pub_key.pub_id.as_bytes())?;
 		v.update(&nonce)?;
 		if !v.verify(&signature.0)? {
 			str_err!("invalid signature");
@@ -619,11 +664,11 @@ impl MessageHandler {
 		self.send(
 			MessageType::Handshake,
 			&HandshakeRes {
-				id: self.mut_state.pub_key.pub_id,
+				id: self.pub_key.pub_id,
 				status: PubKeyStatus::Accepted,
 			},
 		)?;
-		self.mut_state.conn_state = ConnState::AcceptedHandshake;
+		self.conn_state = ConnState::AcceptedHandshake;
 		Ok(())
 	}
 
@@ -639,7 +684,7 @@ impl MessageHandler {
 				nonce,
 				signature,
 			} => {
-				if pub_id != self.mut_state.pub_key.pub_id {
+				if pub_id != self.pub_key.pub_id {
 					str_err!("different public key public id in reshake");
 				}
 				self.handle_auth_saved(nonce, signature, pub_key)?;

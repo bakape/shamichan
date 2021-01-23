@@ -92,14 +92,9 @@ impl Writer {
 		t: MessageType,
 		payload: &impl Serialize,
 	) -> DynResult {
-		match &mut self.enc {
-			Some(e) => e,
-			None => {
-				self.enc = Some(Default::default());
-				self.enc.as_mut().unwrap()
-			}
-		}
-		.write_message(t, payload)?;
+		self.enc
+			.get_or_insert_with(|| Default::default())
+			.write_message(t, payload)?;
 		Ok(())
 	}
 

@@ -440,14 +440,21 @@ impl Connection {
 			use MessageType::*;
 
 			macro_rules! decode {
+				($t:expr) => {
+					decode($t, &mut dec)?
+				};
 				() => {
-					decode(t, &mut dec)?
+					decode!(t)
 				};
 			}
 
-			macro_rules! decode_empty {
+			macro_rules! skip_payload {
+				($t:expr) => {
+					dec.skip_next();
+					debug_log!(format!(">>> {:?}", $t), ());
+				};
 				() => {
-					decode!() as ();
+					skip_payload!(t);
 				};
 			}
 
@@ -516,15 +523,15 @@ impl Connection {
 					send(Request::InsertThread(decode!()));
 				}
 				PartitionedPageStart => {
-					decode_empty!();
+					skip_payload!();
 					let mut posts = Vec::<common::payloads::Post>::new();
 					loop {
 						match dec.peek_type() {
 							Some(Post) => {
-								posts.push(decode(Post, &mut dec)?);
+								posts.push(decode!(Post));
 							}
 							Some(PartitionedPageEnd) => {
-								decode(PartitionedPageEnd, &mut dec)? as ();
+								skip_payload!(PartitionedPageEnd);
 								send(Request::RegisterPage(posts));
 								break;
 							}
@@ -542,18 +549,16 @@ impl Connection {
 					send(Request::RegisterThread(decode!()));
 				}
 				PartitionedThreadIndexStart => {
-					decode_empty!();
+					skip_payload!();
 					let mut threads =
 						Vec::<common::payloads::ThreadWithPosts>::new();
 					loop {
 						match dec.peek_type() {
 							Some(ThreadAbbreviated) => {
-								threads
-									.push(decode(ThreadAbbreviated, &mut dec)?);
+								threads.push(decode!(ThreadAbbreviated));
 							}
 							Some(PartitionedThreadIndexEnd) => {
-								decode(PartitionedThreadIndexEnd, &mut dec)?
-									as ();
+								skip_payload!(PartitionedThreadIndexEnd);
 								send(Request::RegisterThreads(threads));
 								break;
 							}
