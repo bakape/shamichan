@@ -2,7 +2,7 @@ use crate::{
 	message::Message,
 	util::{DynResult, MessageCacher},
 };
-use bytes::Bytes;
+use actix_web::web::Bytes;
 use common::{
 	payloads::{ImmutablePage, Post},
 	Encoder, MessageType,

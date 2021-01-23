@@ -2,7 +2,7 @@ use crate::{
 	buttons::SpanButton,
 	comp_util,
 	mouse::Coordinates,
-	state::{self, FeedID, Focus, Location, State},
+	state::{self, FeedID, Focus, Location},
 	util,
 };
 use common::{

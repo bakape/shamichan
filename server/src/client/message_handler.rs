@@ -8,8 +8,8 @@ use crate::{
 	util::{self, DynResult},
 };
 use actix::{Actor, Addr};
+use actix_web::web::Bytes;
 use async_trait::async_trait;
-use bytes::Bytes;
 use common::{
 	debug_log,
 	payloads::{

@@ -1,4 +1,4 @@
-use bytes::Bytes;
+use actix_web::web::Bytes;
 use common::Decoder;
 
 /// Reusable message buffer wrapper with AsRef[u8]
