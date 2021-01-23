@@ -22,6 +22,21 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 	return
 }
 
+// Write redirects to db. /all/ seems like a good place for admin-only actions
+func Redirect(id uint64, act common.ModerationAction, url string) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		return logModeration(tx, auth.ModLogEntry{
+			Board: "all",
+			ID:    id,
+			ModerationEntry: common.ModerationEntry{
+				Type: act,
+				By:   "admin",
+				Data: url,
+			},
+		})
+	})
+}
+
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
 	post, err := GetPost(id)

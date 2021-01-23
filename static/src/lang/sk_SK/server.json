@@ -505,6 +505,8 @@
 		"ownNoBoards": "Nevlastníš žiadne dosky",
 		"post": "Plagát",
 		"purgePost": "Purge post/image",
+		"redirectIP": "Redirect by IP",
+		"redirectThread": "Redirect by thread",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Nastav bannery",
 		"setLoading": "Nastav animáciu načítania",

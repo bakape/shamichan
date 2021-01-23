@@ -505,6 +505,8 @@
 		"ownNoBoards": "你沒有擁有任何看板",
 		"post": "貼文",
 		"purgePost": "清除 貼文/照片",
+		"redirectIP": "Redirect by IP",
+		"redirectThread": "Redirect by thread",
 		"searchTooltip": "以標題、內文或包裹著反斜線的看板名稱來過濾。接受正規表達式。",
 		"setBanners": "設置橫幅",
 		"setLoading": "設置加載動畫",

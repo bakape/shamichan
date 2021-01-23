@@ -144,6 +144,10 @@ Renders a moderation log page
 						{%s ln.Common.UI["meidoVisionPost"] %}
 					{% case common.PurgePost %}
 						{%s ln.UI["purgePost"] %}
+					{% case common.RedirectIP %}
+						{%s ln.UI["redirectIP"] %}
+					{% case common.RedirectThread %}
+						{%s ln.UI["redirectThread"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>

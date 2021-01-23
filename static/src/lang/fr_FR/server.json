@@ -503,6 +503,8 @@
 		"ownNoBoards": "Vous ne possédez aucune planche",
 		"post": "Message",
 		"purgePost": "Éliminer message/image",
+		"redirectIP": "Redirect by IP",
+		"redirectThread": "Redirect by thread",
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",
