@@ -19,7 +19,7 @@ import (
 
 // LogUnexpected fails the test and prints the values in an
 // `expected: X got: Y` format
-func LogUnexpected(t *testing.T, expected, got interface{}) {
+func LogUnexpected(t *testing.T, got, expected interface{}) {
 	t.Helper()
 
 	// Allow comparison of structs with private fields
@@ -37,7 +37,7 @@ func LogUnexpected(t *testing.T, expected, got interface{}) {
 func AssertEquals(t *testing.T, res, std interface{}) {
 	t.Helper()
 	if !reflect.DeepEqual(res, std) {
-		LogUnexpected(t, std, res)
+		LogUnexpected(t, res, std)
 	}
 }
 
