@@ -10,7 +10,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20190827161153-36995ce6b19f
 	github.com/bakape/captchouli/v2 v2.0.3
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/thumbnailer/v2 v2.6.4
+	github.com/bakape/thumbnailer/v2 v2.6.6
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
