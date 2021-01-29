@@ -8,7 +8,7 @@
 		"postsAndImagesOmitted": "%d posts(s) and %d image(s) omitted",
 		"postsOmitted": "%d posts(s) omitted",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
-		"redirectIP": "POSTER REDIRECTED TO \"%s\" BY",
+		"redirectIP": "POSTER REDIRECTED TO \"%s\" BY '%s'",
 		"redirectThread": "THREAD REDIRECTED TO \"%s\" BY '%s'",
 		"shadowBinned": "SHADOW BINNED BY '%s' FOR %s FOR \"%s\"",
 		"threadLockToggled": "THREAD %s BY '%s'",
