@@ -78,9 +78,9 @@ impl Threads {
 					.threads
 					.values()
 					.flat_map(|t| t.thread_data.tags.iter())
-					.cloned()
-					.collect::<HashSet<String>>()
+					.collect::<HashSet<_>>()
 					.into_iter()
+					.cloned()
 					.collect::<Vec<String>>();
 				tags.sort_unstable();
 				let msg = Message::new(Encoder::encode(
