@@ -15,6 +15,8 @@ github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROr
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer/v2 v2.6.4 h1:zp3y7k3p355xeQTNyGyBuTc28pYLBuO9n0ZuB9Hk5ms=
 github.com/bakape/thumbnailer/v2 v2.6.4/go.mod h1:+yOYrfZmQ3VO7uqVHxTr3p5J74WRjP5MeQQXaU6GBjY=
+github.com/bakape/thumbnailer/v2 v2.6.6 h1:hq3TZt8ZA03ZQbJ+uXK6beoiJ2OU/amI2b8WZUTC0kI=
+github.com/bakape/thumbnailer/v2 v2.6.6/go.mod h1:+yOYrfZmQ3VO7uqVHxTr3p5J74WRjP5MeQQXaU6GBjY=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=
 github.com/chai2010/webp v1.1.0/go.mod h1:LP12PG5IFmLGHUU26tBiCBKnghxx3toZFwDjOYvd3Ow=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
