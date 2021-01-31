@@ -575,6 +575,13 @@ impl Connection {
 				UsedTags => {
 					send(Request::SetUsedTags(decode!()));
 				}
+				CurrentTime => {
+					let server_time: u32 = decode!();
+					let now = (js_sys::Date::now() / 1000_f64) as i64;
+					send(Request::SetTimeCorrection(
+						(server_time as i64 - now) as i32,
+					));
+				}
 				_ => error!("unhandled message type: {:?}", t),
 			}
 		}

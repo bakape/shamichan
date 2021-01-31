@@ -77,6 +77,10 @@ pub struct State {
 
 	/// Tags already used on threads
 	pub used_tags: Rc<Vec<String>>,
+
+	/// Time correction between the server and client.
+	/// Add to client-generated unix timestamps to correct them.
+	pub time_correction: i32,
 }
 
 impl State {

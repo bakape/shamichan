@@ -75,6 +75,9 @@ pub enum Request {
 
 	/// Set tags used on threads
 	SetUsedTags(Vec<String>),
+
+	/// Set time correction between the server and client
+	SetTimeCorrection(i32),
 }
 
 /// Selective changes of global state to be notified on
@@ -104,6 +107,9 @@ pub enum Change {
 
 	/// Subscribe to any changes to a post
 	Post(u64),
+
+	/// Change in time correction value
+	TimeCorrection,
 }
 
 /// Abstraction over AgentLink and ComponentLink
@@ -397,6 +403,12 @@ impl yew::agent::Agent for Agent {
 					s.used_tags = tags.into();
 				});
 				self.trigger(&Change::UsedTags);
+			}
+			SetTimeCorrection(c) => {
+				write(|s| {
+					s.time_correction = c;
+				});
+				self.trigger(&Change::TimeCorrection);
 			}
 		};
 

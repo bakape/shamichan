@@ -22,6 +22,7 @@ pub struct Scheduler {
 	link: AgentLink<Self>,
 	use_relative: bool,
 	now: u32,
+	time_correction: i32,
 
 	// Prevent dropping
 	#[allow(unused)]
@@ -34,7 +35,7 @@ pub struct Scheduler {
 
 pub enum Message {
 	Tick,
-	OptionsChange,
+	StateUpdated,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -199,35 +200,62 @@ impl Agent for Scheduler {
 	type Output = Response;
 
 	fn create(link: AgentLink<Self>) -> Self {
-		Self {
+		use state::Change;
+
+		let mut s = Self {
 			interval: IntervalService::spawn(
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			bridge: state::hook(&link, vec![state::Change::Options], |_| {
-				Message::OptionsChange
-			}),
+			bridge: state::hook(
+				&link,
+				vec![Change::Options, Change::TimeCorrection],
+				|_| Message::StateUpdated,
+			),
 			link,
-			use_relative: state::read(|s| s.options.relative_timestamps),
-			now: now(),
+			use_relative: false,
+			now: 0,
+			time_correction: 0,
 			queue: Default::default(),
-		}
+		};
+		let (r, c) =
+			state::read(|s| (s.options.relative_timestamps, s.time_correction));
+		s.use_relative = r;
+		s.time_correction = c;
+		s.update_now();
+		s
 	}
 
 	fn update(&mut self, msg: Self::Message) {
 		match msg {
-			Message::OptionsChange => {
-				let new = state::read(|s| s.options.relative_timestamps);
-				if new == self.use_relative {
-					return;
+			Message::StateUpdated => {
+				let (new_relative, new_time_correction) = state::read(|s| {
+					(s.options.relative_timestamps, s.time_correction)
+				});
+				let mut resend = false;
+
+				if new_relative != self.use_relative {
+					self.use_relative = new_relative;
+					resend = true;
 				}
-				self.use_relative = new;
-				for t in self.queue.iter() {
-					self.send(&t);
+
+				if self.time_correction != new_time_correction {
+					self.time_correction = new_time_correction;
+					self.update_now();
+					resend = true;
+					for t in self.queue.iter_mut() {
+						t.diff = RelativeTime::new(self.now, t.val);
+					}
+				}
+
+				if resend {
+					for t in self.queue.iter() {
+						self.send(&t);
+					}
 				}
 			}
 			Message::Tick => {
-				self.now = now();
+				self.update_now();
 				loop {
 					let pop = match self.queue.peek() {
 						Some(peeking) => {
@@ -287,10 +315,12 @@ impl Scheduler {
 	fn remove(&mut self, id: HandlerId) {
 		self.queue.remove(&HandlerIDKey(&id));
 	}
-}
 
-fn now() -> u32 {
-	(Date::now() / 1000.0) as u32
+	/// Update current Unix timestamp corrected for drift between server and client
+	fn update_now(&mut self) {
+		self.now = ((Date::now() / 1000.0) as i64 + self.time_correction as i64)
+			as u32;
+	}
 }
 
 /// Enables eviction of queued Ticks by HandlerId

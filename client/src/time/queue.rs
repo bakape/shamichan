@@ -67,10 +67,18 @@ impl<T: PartialOrd> Queue<T> {
 		remove(&mut self.head, key);
 	}
 
-	pub fn iter<'n, 'l: 'n>(&'l self) -> Iter<'n, T> {
-		Iter {
-			current: self.head.as_ref().map(|x| x.as_ref()),
-		}
+	/// Create iterator over the queue
+	pub fn iter<'n, 'l: 'n>(&'l self) -> impl Iterator<Item = &'n T> {
+		Iter::new(&self.head)
+	}
+
+	/// Create mutable iterator over the queue.
+	///
+	/// No changes that affect node order must be made.
+	pub fn iter_mut<'n, 'l: 'n>(
+		&'l mut self,
+	) -> impl Iterator<Item = &'n mut T> {
+		IterMut::new(&mut self.head)
 	}
 }
 
@@ -86,20 +94,59 @@ impl<T: PartialOrd> Node<T> {
 }
 
 /// Iterates over all nodes in the Queue
-pub struct Iter<'a, T: PartialOrd> {
-	current: Option<&'a Node<T>>,
+struct Iter<'a, T: PartialOrd> {
+	next: Option<&'a Node<T>>,
+}
+
+impl<'a, T: PartialOrd> Iter<'a, T> {
+	fn new(first: &'a Option<Box<Node<T>>>) -> Self {
+		Iter::<'a, T> {
+			next: Self::unpack(first),
+		}
+	}
+
+	fn unpack(next: &'a Option<Box<Node<T>>>) -> Option<&'a Node<T>> {
+		next.as_ref().map(|x| x.as_ref())
+	}
 }
 
 impl<'a, T: PartialOrd> Iterator for Iter<'a, T> {
 	type Item = &'a T;
 
 	fn next(&mut self) -> Option<&'a T> {
-		match self.current {
-			Some(n) => {
-				self.current = n.into();
-				(&n.val).into()
-			}
-			None => None,
+		self.next.take().map(|n| {
+			self.next = Self::unpack(&n.next);
+			(&n.val).into()
+		})
+	}
+}
+
+/// Iterates over all nodes in the Queue mutably.
+///
+/// No changes that affect node order must be made.
+struct IterMut<'a, T: PartialOrd> {
+	next: Option<&'a mut Node<T>>,
+}
+
+impl<'a, T: PartialOrd> IterMut<'a, T> {
+	fn new(first: &'a mut Option<Box<Node<T>>>) -> Self {
+		IterMut::<'a, T> {
+			next: Self::unpack(first),
 		}
+	}
+
+	fn unpack(next: &'a mut Option<Box<Node<T>>>) -> Option<&'a mut Node<T>> {
+		next.as_mut().map(|x| x.as_mut())
+	}
+}
+
+impl<'a, T: PartialOrd> Iterator for IterMut<'a, T> {
+	type Item = &'a mut T;
+
+	fn next(&mut self) -> Option<&'a mut T> {
+		self.next.take().map(|n| {
+			self.next = Self::unpack(&mut n.next);
+			(&mut n.val).into()
+		})
 	}
 }
