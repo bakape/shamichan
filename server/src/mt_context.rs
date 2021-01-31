@@ -17,7 +17,7 @@ lazy_static! {
 	/// Global multithreaded Tokio runtime
 	static ref TOKIO_RUNTIME: tokio::runtime::Runtime =
 		tokio::runtime::Builder::new_multi_thread()
-		.enable_time()
+		.enable_all()
 		.build()
 		.unwrap();
 }
