@@ -210,7 +210,7 @@ impl Agent for Scheduler {
 			bridge: state::hook(
 				&link,
 				vec![Change::Options, Change::TimeCorrection],
-				|_| Message::StateUpdated,
+				|| Message::StateUpdated,
 			),
 			link,
 			use_relative: false,

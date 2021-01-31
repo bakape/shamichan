@@ -136,7 +136,7 @@ impl Agent for Connection {
 		use state::Change;
 
 		let mut s = Self {
-			bridge: state::hook(&link, vec![Change::KeyPair], |_| {
+			bridge: state::hook(&link, vec![Change::KeyPair], || {
 				Event::KeyPairChanged
 			}),
 			authed_with: None,

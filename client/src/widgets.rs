@@ -30,7 +30,7 @@ impl Component for AsideRow {
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
-			bridge: state::hook(&link, vec![state::Change::Location], |_| true),
+			bridge: state::hook(&link, vec![state::Change::Location], || true),
 			props,
 			link,
 		}
@@ -177,7 +177,7 @@ impl Component for NewThreadForm {
 				_ => Msg::NOP,
 			})),
 			el: NodeRef::default(),
-			bridge: state::hook(&link, vec![state::Change::UsedTags], |_| {
+			bridge: state::hook(&link, vec![state::Change::UsedTags], || {
 				Msg::Rerender
 			}),
 			link,

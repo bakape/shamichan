@@ -159,12 +159,12 @@ impl HookBridge {
 pub fn hook<L, F>(link: &L, changes: Vec<Change>, f: F) -> HookBridge
 where
 	L: Link,
-	F: Fn(()) -> L::Message + 'static,
+	F: Fn() -> L::Message + 'static,
 {
 	use yew::agent::Bridged;
 
 	let mut b = HookBridge {
-		bridge: Agent::bridge(link.make_callback(f)),
+		bridge: Agent::bridge(link.make_callback(move |_| f())),
 	};
 	if !changes.is_empty() {
 		b.bridge.send(Request::NotifyChange(changes));

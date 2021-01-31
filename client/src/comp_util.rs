@@ -170,7 +170,7 @@ where
 	fn create(props: Self::Properties, link: yew::ComponentLink<Self>) -> Self {
 		let mut inner: I = Default::default();
 		let mut ctx = Ctx {
-			bridge: crate::state::hook(&link, I::subscribe_to(&props), |_| {
+			bridge: crate::state::hook(&link, I::subscribe_to(&props), || {
 				I::update_message()
 			}),
 			link,
