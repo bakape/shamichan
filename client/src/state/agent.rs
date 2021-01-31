@@ -78,6 +78,9 @@ pub enum Request {
 
 	/// Set time correction between the server and client
 	SetTimeCorrection(i32),
+
+	/// Set configs received from the server
+	SetConfigs(common::config::Public),
 }
 
 /// Selective changes of global state to be notified on
@@ -409,6 +412,12 @@ impl yew::agent::Agent for Agent {
 					s.time_correction = c;
 				});
 				self.trigger(&Change::TimeCorrection);
+			}
+			SetConfigs(c) => {
+				write(|s| {
+					s.configs = c;
+				});
+				self.trigger(&Change::Configs);
 			}
 		};
 

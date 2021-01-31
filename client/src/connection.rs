@@ -420,6 +420,7 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
+		#[inline]
 		fn decode<T>(t: MessageType, dec: &mut Decoder) -> util::Result<T>
 		where
 			T: for<'de> serde::Deserialize<'de> + std::fmt::Debug,
@@ -430,9 +431,6 @@ impl Connection {
 		}
 
 		let mut dec = Decoder::new(&data)?;
-
-		// TODO: thread page and meta handlers
-		// TODO: index thread handler
 
 		while let Some(t) = dec.peek_type() {
 			use common::payloads::{HandshakeRes, PubKeyStatus};
@@ -581,6 +579,9 @@ impl Connection {
 					send(Request::SetTimeCorrection(
 						(server_time as i64 - now) as i32,
 					));
+				}
+				Configs => {
+					send(Request::SetConfigs(decode!()));
 				}
 				_ => error!("unhandled message type: {:?}", t),
 			}

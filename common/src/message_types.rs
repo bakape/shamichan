@@ -50,7 +50,7 @@ pub enum MessageType {
 	Page,
 
 	/// Send configs from the server
-	Config,
+	Configs,
 
 	/// Signals the beginning of a sequence of posts, part of a partitioned page
 	/// response

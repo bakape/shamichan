@@ -154,7 +154,7 @@ impl AsyncHandler<HandleMessage> for MessageHandler {
 				Some(m) => Some(m.finish()?.into()),
 				None => {
 					// No need to respond, if no message or error to send.
-					// Saves so message handling and synchronization overhead.
+					// Avoids some message handling and synchronization costs.
 					return Ok(());
 				}
 			}),
@@ -223,7 +223,7 @@ impl MessageHandler {
 							expect!(Handshake);
 							self.handle_handshake(&mut dec).await?;
 							self.send(CurrentTime, &util::now())?;
-							self.send(Config, &config::get().public)?;
+							self.send(Configs, &config::get().public)?;
 						}
 						RequestedReshake { pub_key } => {
 							expect!(Handshake);
