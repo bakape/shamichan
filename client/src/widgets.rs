@@ -168,9 +168,6 @@ impl Component for NewThreadForm {
 	type Message = Msg;
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		// Get a fresh list of used thread tags
-		connection::send(common::MessageType::UsedTags, &());
-
 		Self {
 			posting: posting::Agent::bridge(link.callback(|msg| match msg {
 				posting::Response::State(s) => Msg::PostFormState(s),
@@ -191,6 +188,10 @@ impl Component for NewThreadForm {
 	fn update(&mut self, msg: Self::Message) -> bool {
 		match msg {
 			Msg::Toggle(expand) => {
+				if expand && !self.expanded {
+					// Get a fresh list of used thread tags
+					connection::send(common::MessageType::UsedTags, &());
+				}
 				self.expanded = expand;
 				true
 			}
