@@ -102,20 +102,16 @@ func commitLogin(w http.ResponseWriter, ip, userID string) (err error) {
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
 	http.SetCookie(w, &http.Cookie{
-		Name:     "loginID",
-		Value:    url.QueryEscape(userID),
-		Path:     "/",
-		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Name:    "loginID",
+		Value:   url.QueryEscape(userID),
+		Path:    "/",
+		Expires: expires,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    token,
-		Path:     "/",
-		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Name:    "session",
+		Value:   token,
+		Path:    "/",
+		Expires: expires,
 	})
 	return
 }
