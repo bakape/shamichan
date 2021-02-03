@@ -172,22 +172,11 @@ export function inputElement(
 	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement
 }
 
-// Returns string to add security options to cookie
-function secureCookie() {
-	for (let s of ["127.0.0.1", "[::1]", "localhost"]) {
-		if (location.hostname === s) {
-			return "";
-		}
-	}
-	return " samesite=none; secure;";
-}
-
 // Set a global cookie, that expires after `days`
 export function setCookie(key: string, val: string, days: number) {
-	let date = new Date();
-	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-	document.cookie =
-		`${key}=${val}; expires=${date.toUTCString()}; path=/;${secureCookie}`;
+	let date = new Date()
+	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
+	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/; samesite=none; secure;`;
 }
 
 // Get a cookie value by name. Returns empty string, if none.

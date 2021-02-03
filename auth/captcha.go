@@ -14,7 +14,6 @@ import (
 	captchouli_common "github.com/bakape/captchouli/v2/common"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
 )
 
 const (
@@ -80,16 +79,14 @@ func (b *Base64Token) EnsureCookie(
 			return
 		}
 
-		err = util.SetCookie(w, r, &http.Cookie{
-			Name:    CaptchaCookie,
-			Value:   string(text),
-			Path:    "/",
-			Expires: time.Now().Add(time.Hour * 24),
+		http.SetCookie(w, &http.Cookie{
+			Name:     CaptchaCookie,
+			Value:    string(text),
+			Path:     "/",
+			Expires:  time.Now().Add(time.Hour * 24),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
 		})
-		if err != nil {
-			return
-		}
-
 		return
 	default:
 		return fmt.Errorf("auth: reading cookie: %s", err)
