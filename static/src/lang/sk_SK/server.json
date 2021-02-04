@@ -180,6 +180,10 @@
 			"Schovať náhľady",
 			"Display a [Show] button in place of thumbnails"
 		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
+		],
 		"horizontalPosting": [
 			"Horizontal Posting",
 			"38chan nostalgia"

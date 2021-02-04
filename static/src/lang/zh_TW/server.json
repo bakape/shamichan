@@ -180,6 +180,10 @@
 			"隱藏縮圖",
 			"顯示［顯示］按鈕來代替縮圖"
 		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
+		],
 		"horizontalPosting": [
 			"橫向貼文",
 			"38chan 懷舊之情"

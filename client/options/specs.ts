@@ -99,6 +99,13 @@ export const specs: { [id: string]: OptionSpec } = {
 	// Relative post timestamps
 	relativeTime: {},
 	// Now playing banners
+	horizontalNowPlaying: {
+		default: true,
+		exec: toggleHeadStyle(
+			"horizontalNowPlaying",
+			"#banner-center > div:not(.hidden) { display: inline; margin: 0.5em; }"
+		),
+	},
 	radio: {
 		exec: toggleNowPlaying(
 			"https://r-a-d.io/",

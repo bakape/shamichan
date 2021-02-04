@@ -28,6 +28,7 @@ interface Options extends ChangeEmitter {
 	postInlineExpand: boolean
 	relativeTime: boolean
 	meguTV: boolean
+	horizontalNowPlaying: boolean
 	radio: boolean
 	eden: boolean
 	shamiradio: boolean
