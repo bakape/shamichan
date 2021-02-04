@@ -104,9 +104,6 @@ class OptionModel {
 
 	// Retrieve option value from storage and parse result. If none, return
 	public get(): any {
-		if (this.spec.getfn) {
-			return this.spec.getfn();
-		}
 		const stored = this.read()
 		if (!stored) {
 			return this.spec.default
@@ -140,7 +137,7 @@ class OptionModel {
 
 	// Write value to localStorage, if needed
 	public set(val: any) {
-		if (this.id === "meguTV" || this.spec.getfn) {
+		if (this.id === "meguTV") {
 			return;
 		}
 		if (val !== this.spec.default || this.read()) {
