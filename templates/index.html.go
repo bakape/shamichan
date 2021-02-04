@@ -197,7 +197,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:169
 	qw422016.N().S(`]</noscript></nav>`)
 //line index.html:175
-	qw422016.N().S(`<b id="banner-center" class="spaced"></b>`)
+	qw422016.N().S(`<b id="banner-center"></b>`)
 //line index.html:179
 	qw422016.N().S(`<span class="center-vertically"><b id="sync" class="banner-float svg-link noscript-hide" title="`)
 //line index.html:181

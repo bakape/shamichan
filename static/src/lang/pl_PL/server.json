@@ -97,8 +97,8 @@
 			"Close open post"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"Odpowiedzi #8ball",
@@ -280,10 +280,6 @@
 			"Desktop Notifications",
 			"Get desktop notifications when quoted or a syncwatch is about to start"
 		],
-		"nowPlaying": [
-			"Now Playing Banner",
-			"Currently playing song on r/a/dio or eden and other stream information in the top banner."
-		],
 		"oldPassword": [
 			"Old password",
 			""
@@ -321,8 +317,8 @@
 			"Don't ask"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +368,9 @@
 			"Wygaśnięcie sesji konta",
 			"Czas w dniach, po jakim konta są automatycznie wylogowywane"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Image Spoilers",

@@ -4,7 +4,7 @@ import { config } from '../state'
 import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
-import initNowPlaying from "./nowPlaying"
+import { toggle as toggleNowPlaying } from "./nowPlaying"
 import initTV from "./meguTV"
 import options from "."
 
@@ -101,24 +101,52 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Relative post timestamps
 	relativeTime: {},
-	// R/a/dio or Eden now playing banner
-	nowPlaying: {
-		type: optionType.number,
-		default: 0,
-		noExecOnStart: true,
-		exec: initNowPlaying,
-	},
+	// Now playing banners
 	radio: {
-		exec: overrideSet("nowPlaying", 1 << 0),
-		getfn: overrideGet("nowPlaying", 1 << 0),
+		exec: toggleNowPlaying(
+			"https://r-a-d.io/",
+			"https://r-a-d.io/api",
+			({
+				main: {
+					dj: {
+						djname: streamer,
+					},
+					listeners,
+					np: song,
+				}
+			}) => ({ listeners, song, streamer }),
+		),
 	},
 	eden: {
-		exec: overrideSet("nowPlaying", 1 << 1),
-		getfn: overrideGet("nowPlaying", 1 << 1),
+		exec: toggleNowPlaying(
+			"https://www.edenofthewest.com/",
+			"https://www.edenofthewest.com/api/live/nowplaying/eden_radio",
+			({
+				listeners: {
+					current: listeners,
+				},
+				live: {
+					streamer_name: streamer,
+				},
+				now_playing: {
+					song: {
+						text: song,
+					},
+				},
+			}) => ({ listeners, song, streamer }),
+		),
 	},
-	shami: {
-		exec: overrideSet("nowPlaying", 1 << 2),
-		getfn: overrideGet("nowPlaying", 1 << 2),
+	shamiradio: {
+		exec: toggleNowPlaying(
+			"https://radio.shamik.ooo/",
+			"https://radio.shamik.ooo/status-json.xsl",
+			({ icestats: { source } }) => {
+				const [fallback, main] = Array.isArray(source) ? source : [source]
+				const { listeners, server_name: streamer, title: song = "oh dear, tags aren't set" }
+					= main?.stream_start ? main : fallback
+				return { listeners, song, streamer }
+			},
+		),
 	},
 	// User-specified video in the background
 	bgVideo: {
@@ -348,7 +376,7 @@ function overrideSet(key: string, flag: number): () => void {
 		let store = document.getElementById(key) as HTMLInputElement;
 		store.valueAsNumber = data ^ flag;
 		// Have to manually trigger change event
-		let evt = new Event("change", {bubbles: true});
+		let evt = new Event("change", { bubbles: true });
 		store.dispatchEvent(evt);
 	}
 }

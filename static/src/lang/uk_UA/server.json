@@ -97,8 +97,8 @@
 			"Закрити відкритий пост"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball відповіді",
@@ -280,10 +280,6 @@
 			"Повідомлення на робочий стіл",
 			"Отримувати повідомлення коли цитовано ваш пост або синхронізація почалась."
 		],
-		"nowPlaying": [
-			"Зараз показується Banner",
-			"Зараз програється пісня на р/a/діо або eden, інша інформація у банері зверху"
-		],
 		"oldPassword": [
 			"Old password",
 			""
@@ -321,8 +317,8 @@
 			"Don't ask"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +368,9 @@
 			"Час дії сесії",
 			"Час в днях поки аккаунт буде автоматично розлогінено"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Текстові спойлери",

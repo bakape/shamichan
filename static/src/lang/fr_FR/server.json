@@ -97,8 +97,8 @@
 			"Termine le message ouvert"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"Questions #8ball",
@@ -280,10 +280,6 @@
 			"Notifications",
 			"Recevoir des notifications lorsque vous êtes cité et bien plus encore"
 		],
-		"nowPlaying": [
-			"Now Playing Banner",
-			"Afficher la chanson en cours sur r/a/dio ou eden et d'autres informations sur le stream dans la bannière du haut."
-		],
 		"oldPassword": [
 			"Ancien mot de passe",
 			""
@@ -321,8 +317,8 @@
 			"Pose pas de questions"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +368,9 @@
 			"Expiration d'une session",
 			"Nombre de jours avant la déconnexion automatique d'un utilisateur"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Spoiler",

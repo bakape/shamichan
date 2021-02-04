@@ -10,7 +10,7 @@ import { bgVideos } from "../state"
 export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
 export * from "./specs"
-export { posterName } from "./nowPlaying"
+export { getPostName } from "./nowPlaying"
 export { persistMessages } from "./meguTV"
 
 // Delete legacy options localStorage entry, if any
@@ -28,10 +28,9 @@ interface Options extends ChangeEmitter {
 	postInlineExpand: boolean
 	relativeTime: boolean
 	meguTV: boolean
-	nowPlaying: number
 	radio: boolean
 	eden: boolean
-	shami: boolean
+	shamiradio: boolean
 	bgVideo: string
 	bgMute: boolean
 	horizontalPosting: boolean
@@ -169,10 +168,7 @@ export function initOptions() {
 	}
 
 	// Conditionally load and execute optional modules
-	for (let opt of [
-		"userBG", "nowPlaying", "bgVideo", "mascot", "customCSSToggle",
-		"meguTV",
-	]) {
+	for (let opt of ["userBG", "bgVideo", "mascot", "customCSSToggle", "meguTV"]) {
 		if (options[opt]) {
 			models[opt].execute(true)
 		}
