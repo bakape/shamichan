@@ -43,11 +43,14 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Let the JS add the ID of the post to "mine"
-		util.SetCookie(w, r, &http.Cookie{
+		err = util.SetCookie(w, r, &http.Cookie{
 			Name:  "addMine",
 			Value: strconv.FormatUint(post.ID, 10),
 			Path:  "/",
 		})
+		if err != nil {
+			return
+		}
 
 		http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
 		incrementSpamscore(ip, req.Body, session, true)

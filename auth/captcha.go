@@ -80,12 +80,16 @@ func (b *Base64Token) EnsureCookie(
 			return
 		}
 
-		util.SetCookie(w, r, &http.Cookie{
+		err = util.SetCookie(w, r, &http.Cookie{
 			Name:    CaptchaCookie,
 			Value:   string(text),
 			Path:    "/",
 			Expires: time.Now().Add(time.Hour * 24),
 		})
+		if err != nil {
+			return
+		}
+
 		return
 	default:
 		return fmt.Errorf("auth: reading cookie: %s", err)
