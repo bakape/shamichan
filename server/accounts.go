@@ -106,24 +106,18 @@ func commitLogin(
 	// deleted
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
-	err = util.SetCookie(w, r, &http.Cookie{
+	util.SetCookie(w, r, &http.Cookie{
 		Name:    "loginID",
 		Value:   url.QueryEscape(userID),
 		Path:    "/",
 		Expires: expires,
 	})
-	if err != nil {
-		return
-	}
-	err = util.SetCookie(w, r, &http.Cookie{
+	util.SetCookie(w, r, &http.Cookie{
 		Name:    "session",
 		Value:   token,
 		Path:    "/",
 		Expires: expires,
 	})
-	if err != nil {
-		return
-	}
 	return
 }
 

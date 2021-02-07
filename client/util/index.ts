@@ -174,12 +174,14 @@ export function inputElement(
 
 // Returns string to add security options to cookie
 function secureCookie() {
+	let c = " samesite=Lax;";
 	for (let s of ["127.0.0.1", "[::1]", "localhost"]) {
 		if (location.hostname === s) {
-			return "";
+			return c
 		}
 	}
-	return " samesite=none; secure;";
+	c += " secure;";
+	return c
 }
 
 // Set a global cookie, that expires after `days`

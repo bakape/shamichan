@@ -171,21 +171,17 @@ func TrimString(s *string, maxLen int) {
 }
 
 // Adds security options to cookie and sets it in responsewriter
-func SetCookie(w http.ResponseWriter, r *http.Request, c *http.Cookie) error {
+func SetCookie(w http.ResponseWriter, r *http.Request, c *http.Cookie) {
+	c.SameSite = http.SameSiteLaxMode
+	c.Secure = true
+
 	// Allow localhost to set cookies on http
 	for _, s := range [...]string{"127.0.0.1", "[::1]", "localhost"} {
 		// Compare as a prefix to avoid messing with :portnumber
 		if strings.HasPrefix(r.Host, s) {
 			c.Secure = false
-			c.SameSite = http.SameSiteDefaultMode
-			http.SetCookie(w, c)
-
-			return nil
+			break
 		}
 	}
-	c.Secure = true
-	c.SameSite = http.SameSiteNoneMode
 	http.SetCookie(w, c)
-
-	return nil
 }
