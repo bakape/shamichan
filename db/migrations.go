@@ -1521,6 +1521,11 @@ var migrations = []func(*sql.Tx) error{
 			`alter table posts alter column flag type varchar(5)`,
 		)
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`truncate table sessions;`,
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

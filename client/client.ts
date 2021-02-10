@@ -141,8 +141,12 @@ export default () => {
 		handle(msg.id, m =>
 			m.applyModeration(msg))
 
-	handlers[message.redirect] = (url: string) =>
-		location.href = url.replace(/shamik\.ooo|megu\.ca/, location.hostname) || url
+	handlers[message.redirect] = (msg: string) => {
+		const url = new URL(msg, location.origin)
+		if (/https?:/.test(url.protocol)) {
+			location.href = url.href
+		}
+	}
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)

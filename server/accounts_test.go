@@ -104,16 +104,14 @@ func setLoginCookies(r *http.Request, creds auth.SessionCreds) {
 		Value:    creds.UserID,
 		Path:     "/",
 		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteStrictMode,
 	})
 	r.AddCookie(&http.Cookie{
 		Name:     "session",
 		Value:    creds.Session,
 		Path:     "/",
 		Expires:  expires,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteStrictMode,
 	})
 }
 

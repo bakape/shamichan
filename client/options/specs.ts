@@ -202,7 +202,9 @@ export const specs: { [id: string]: OptionSpec } = {
 			document
 				.getElementById('theme-css')
 				.setAttribute('href', `/assets/css/${theme}.css`)
-			setCookie("theme", theme, 365 * 10)
+			// The server needs the theme cookie when nagivating from
+			// a third party website, so we set SameSite=Lax.
+			setCookie("theme", theme, 365 * 10, "lax")
 		},
 	},
 	// Custom user-set background
