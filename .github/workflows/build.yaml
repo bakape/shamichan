@@ -9,4 +9,4 @@ jobs:
       - name: Checkout commit
         uses: actions/checkout@v2"
       - name: Run tests
-        run: make test docker
+        run: make test_docker
