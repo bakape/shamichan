@@ -1,3 +1,0 @@
-services: docker
-script:
-  - make test_docker

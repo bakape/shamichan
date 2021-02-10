@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout commit
-        uses: actions/checkout@v2ca;"
+        uses: actions/checkout@v2"
       - name: Run tests
         run: make test docker
