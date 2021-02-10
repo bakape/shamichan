@@ -97,8 +97,8 @@
 			"Zatvoriť otvorený plagát"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball odpoveďe",
@@ -179,6 +179,10 @@
 		"hideThumbs": [
 			"Schovať náhľady",
 			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
 		],
 		"horizontalPosting": [
 			"Horizontal Posting",
@@ -280,10 +284,6 @@
 			"Desktop Notifications",
 			"Get desktop notifications when quoted or a syncwatch is about to start"
 		],
-		"nowPlaying": [
-			"Now Playing Banner",
-			"Currently playing song on r/a/dio or eden and other stream information in the top banner."
-		],
 		"oldPassword": [
 			"Old password",
 			""
@@ -321,8 +321,8 @@
 			"Don't ask"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +372,9 @@
 			"Vypršanie sedenia pre účet",
 			"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Textové spojlere",

@@ -97,8 +97,8 @@
 			"kapat"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball answers",
@@ -179,6 +179,10 @@
 		"hideThumbs": [
 			"Hide thumbnails",
 			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
 		],
 		"horizontalPosting": [
 			"Enine girdiler",
@@ -280,10 +284,6 @@
 			"Masaüstü uyarıları",
 			"Alıntı yapıldığında veya syncwatch başladığında uyarıları al"
 		],
-		"nowPlaying": [
-			"Şimdi Çalınan",
-			"Şimdi çalınan şarkıyı göster"
-		],
 		"oldPassword": [
 			"Old password",
 			""
@@ -321,8 +321,8 @@
 			"Don't ask"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +372,9 @@
 			"Account session expiry",
 			"Time in days until user accoubts are automatically logged out"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Text spoilers",

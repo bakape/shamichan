@@ -97,8 +97,8 @@
 			"Закрыть открытый пост"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball ответы",
@@ -179,6 +179,10 @@
 		"hideThumbs": [
 			"Скрыть превью",
 			"Отображать кнопку [Показать] на месте превью"
+		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
 		],
 		"horizontalPosting": [
 			"Горизонтальный постинг",
@@ -280,10 +284,6 @@
 			"Уведомления",
 			"Получать уведомления при цитированиях или перед синхронизацией"
 		],
-		"nowPlaying": [
-			"Баннер «сейчас играет»",
-			"Текущая проигрываемая песня на р/а/дио или eden и прочая информация в верхнем баннере"
-		],
 		"oldPassword": [
 			"Старый пароль",
 			""
@@ -321,8 +321,8 @@
 			"Don't ask"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +372,9 @@
 			"Время устаревания сессии",
 			"Число дней до автоматического разлогинивания из аккаунта"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Спойлеры изображений",

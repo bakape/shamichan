@@ -97,8 +97,8 @@
 			"Open bericht sluiten"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball antwoorden",
@@ -179,6 +179,10 @@
 		"hideThumbs": [
 			"Thumbnails verbergen",
 			"Geef een [Show] knop weer in plaats van thumbnails"
+		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
 		],
 		"horizontalPosting": [
 			"Horizontaal Posting",
@@ -280,10 +284,6 @@
 			"Desktop Notificaties",
 			"Ontvang bureaubladmeldingen wanneer deze worden geciteerd of een syncwatch gaat beginnen"
 		],
-		"nowPlaying": [
-			"Nu banner aan het spelen",
-			"Momenteel speelt het nummer op r / a / dio of eden en andere streaminformatie in de bovenste balk."
-		],
 		"oldPassword": [
 			"Oud wachtwoord",
 			""
@@ -321,8 +321,8 @@
 			"Vraag niet"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -372,9 +372,9 @@
 			"Account sessie verstrijken",
 			"Tijd in dagen totdat gebruikersaccounts automatisch worden afgemeld"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Afbeelding Spoilers",

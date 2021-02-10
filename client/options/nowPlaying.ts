@@ -1,199 +1,127 @@
-// R/a/dio  and Eden integration
+import lang from "../lang"
+import { HTML, escape } from "../util"
 
-import { HTML, makeAttrs, fetchJSON, escape } from '../util'
-import options from '.'
-import lang from '../lang'
+class RadioData {
+	constructor(
+		readonly listeners: number,
+		readonly song: string,
+		readonly streamer: string,
+	) { }
 
-type RadioData = {
-	np: string
-	listeners: number
-	dj: string
-	[index: string]: string | number
-}
+	private static descriptors = [
+		["listeners", "number"],
+		["song", "string"],
+		["streamer", "string"],
+	] as const
 
-type RadioRecord = {
-	urlBase: string
-	urlPath: string
-	data: RadioData
-	unmarshalfn: Function	// Unmarshal JSON response into RadioData object
-}
-
-// Entries must be in the same order as their option buttons
-const radios: RadioRecord[] = [
-	{
-		urlBase: 'https://r-a-d.io/',
-		urlPath: 'api',
-		data: {} as RadioData,
-		unmarshalfn: (res: any) => {
-			const {
-				main: {
-					np, listeners,
-					dj: {
-						djname: dj,
-					},
-				},
-			} = res;
-			return { np, listeners, dj } as RadioData;
-		},
-	} as RadioRecord,
-	{
-		urlBase: 'https://www.edenofthewest.com/',
-		urlPath: 'api/live/nowplaying/eden_radio',
-		data: {} as RadioData,
-		unmarshalfn: (res: any) => {
-			const {
-				listeners: {
-					current: listeners,
-				},
-				live: {
-					streamer_name: dj,
-				},
-				now_playing: {
-					song: {
-						text: np,
-					},
-				},
-			} = res;
-			return { np, listeners, dj } as RadioData;
-		},
-	} as RadioRecord,
-	{
-		urlBase: 'https://radio.shamik.ooo/',
-		urlPath: 'status-json.xsl',
-		data: {} as RadioData,
-		unmarshalfn: (res: any) => {
-			const streams = (!Array.isArray(res.icestats.source) ? [res.icestats.source] : res.icestats.source).map(s => ({
-				np: s.title,
-				listeners: s.listeners,
-				dj: s.server_name,
-			}));
-			// streams[0] is fallback, streams[1] is used by DJ
-			if (streams.length === 1 || streams[1].dj === undefined) {
-				// Nobody streaming
-				return streams[0] as RadioData;
-			}
-			if (streams.length >= 1 && streams[1].np === undefined) {
-				streams[1].np = "oh dear, tags aren't set";
-			}
-			return streams[1] as RadioData;
+	static is(data: unknown): data is RadioData {
+		if (typeof data !== "object" || data === null) {
+			return false
 		}
-	} as RadioRecord,
-];
-
-let el = document.getElementById('banner-center'),
-	started = false;
-
-// Replacement new post names based on currently playing song
-export const posterName = () =>
-	_posterName;
-let _posterName = "";
-const songMap = new Map([
-	[/Girls,? Be Ambitious/i, 'Joe'],
-	[/Super Special/i, 'Super Special'],
-]);
-
-// Fetch JSON from enabled radio stations' API and rerender the banner, if different
-// data received
-async function fetchData(refresh: boolean = false) {
-	let enabled: number[] = [];
-	let changed = false;
-	for (let i = 0; i < radios.length; i++) {
-		// If station enabled
-		if ((1 << i) & options.nowPlaying) {
-			const [res, err] = await fetchJSON<any>(radios[i].urlBase + radios[i].urlPath);
-			if (err) {
-				console.warn(err);
-				continue;
+		for (const [key, type] of RadioData.descriptors) {
+			if (key in data && typeof (data as any)[key] === type) {
+				continue
 			}
-			let newData = radios[i].unmarshalfn(res);
-			if (!isMatch(newData, radios[i].data)) {
-				changed = true;
-				radios[i].data = newData;
+			return false
+		}
+		return true
+	}
+
+	static equal(a: RadioData, b: RadioData) {
+		for (const [key] of RadioData.descriptors) {
+			if (a[key] === b[key]) {
+				continue
 			}
-			enabled.push(i);
+			return false
+		}
+		return true
+	}
+}
+
+let globalPostName: string | undefined
+export const getPostName = () => globalPostName
+
+function postNameFor(song: string) {
+	for (const [pattern, name] of [
+		[/Girls,? Be Ambitious/i, "Joe"],
+		[/Super Special/i, "Super Special"],
+	] as const) {
+		if (pattern.test(song)) {
+			return name
 		}
 	}
-	if (changed || refresh) {
-		render(enabled);
-	}
 }
 
-// Compares all keys on a with keys on b for equality
-function isMatch(a: {}, b: {}): boolean {
-	for (let key in a) {
-		if (a[key] !== b[key]) {
-			return false;
+class Banner {
+	data?: RadioData
+	postName?: string
+	timer?: ReturnType<typeof setInterval>
+
+	readonly element: HTMLElement
+
+	constructor(
+		readonly url: string,
+		readonly api: string,
+		readonly unmarshal: (data: any) => Record<keyof RadioData, unknown>,
+	) {
+		this.element = document.createElement("div")
+		this.element.classList.add("spaced")
+		document.getElementById("banner-center")!.append(this.element)
+	}
+
+	async fetch() {
+		const response = await fetch(this.api)
+		if (!response.ok) {
+			throw Error(await response.text())
 		}
-	}
-	return true;
-}
-
-function genAttrs(data: RadioData): string {
-	return makeAttrs({
-		title: lang.ui["googleSong"],
-		// Remove hyphens to prevent google from generating exclusions
-		href: `https://google.com/search?q=`
-			+ encodeURIComponent(data.np.replace(/\-/g, ' ')),
-		target: "_blank",
-	});
-}
-
-// Render the banner message text
-function render(enabled: number[] = []) {
-	if (options.nowPlaying == 0) {
-		el.innerHTML = _posterName = "";
-		return;
+		const data = this.unmarshal(await response.json())
+		if (!RadioData.is(data)) {
+			throw Error("Unexpected response")
+		}
+		return data
 	}
 
-	let matched = false;
-	let s: string[] = [];
-	for (const i of enabled) {
-		// Check for song matches
-		if (!matched) {
-			for (let [patt, rep] of songMap) {
-				if (patt.test(radios[i].data.np)) {
-					matched = true;
-					_posterName = rep;
-					break;
-				}
+	async update() {
+		const data = await this.fetch()
+		if (this.data && RadioData.equal(this.data, data)) {
+			return
+		}
+
+		this.element.innerHTML = HTML`
+		<a href="${this.url}" target="_blank">
+			[${escape(data.listeners.toString())}] ${escape(data.streamer)}
+		</a>
+		<a href="https://google.com/search?q=${encodeURIComponent(data.song.replace(/-/g, " "))}" target="_blank" title=${lang.ui["googleSong"]}>
+			<b>
+				${escape(data.song)}
+			</b>
+		</a>`
+
+		if (this.data?.song !== data.song) {
+			if (globalPostName === undefined || globalPostName === this.postName) {
+				globalPostName = this.postName = postNameFor(data.song)
 			}
 		}
-		s.push(HTML
-		`<div class="stream-info spaced">
-			<a href="${radios[i].urlBase}" target="_blank">
-				[${escape(radios[i].data.listeners.toString())}] ${escape(radios[i].data.dj)}
-			</a>
-			<a ${genAttrs(radios[i].data)}>
-				<b>
-					${escape(radios[i].data.np)}
-				</b>
-			</a>
-		</div>`);
-	}
-	if (!matched) {
-		_posterName = "";
-	}
-	el.innerHTML = s.join("");
-}
 
-// Initialize
-export default function () {
-	if (started) {
-		return;
+		this.data = data
 	}
-	started = true;
-	fetchData();
 
-	// Handle toggling of the option
-	let timer = setInterval(fetchData, 10000);
-	options.onChange("nowPlaying", selection => {
-		clearInterval(timer);
-		if (selection == 0) {
-			render();
+	toggle(enabled: boolean) {
+		this.element.classList.toggle("hidden", !enabled)
+		clearInterval(this.timer)
+		if (enabled) {
+			const update = () => this.update().catch(console.warn)
+			this.timer = setInterval(update, 10000)
+			update()
 		} else {
-			timer = setInterval(fetchData, 10000);
-			// Force rerender even if all RadioData is the same
-			fetchData(true);
+			delete this.data
+			delete this.postName
+			delete this.timer
 		}
-	});
+	}
+}
+
+export function toggle(...args: ConstructorParameters<typeof Banner>) {
+	const banner = new Banner(...args)
+	return (enabled = false) => banner.toggle(enabled)
 }

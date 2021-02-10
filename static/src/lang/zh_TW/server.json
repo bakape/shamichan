@@ -97,8 +97,8 @@
 			"關閉打開的貼文"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball 答案",
@@ -179,6 +179,10 @@
 		"hideThumbs": [
 			"隱藏縮圖",
 			"顯示［顯示］按鈕來代替縮圖"
+		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
 		],
 		"horizontalPosting": [
 			"橫向貼文",
@@ -280,10 +284,6 @@
 			"桌面通知",
 			"在被引用或即將開始 syncwatch 時獲取桌面通知"
 		],
-		"nowPlaying": [
-			"正在播放橫幅",
-			"目前正在 r/a/dio 或 eden 播放的歌曲以及其他串流訊息在置頂橫幅。"
-		],
 		"oldPassword": [
 			"舊密碼",
 			""
@@ -321,8 +321,8 @@
 			"不要問"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
 		],
 		"rbText": [
 			"紅/藍 文字",
@@ -372,9 +372,9 @@
 			"帳戶會話到期時長",
 			"用戶帳戶自動登出以前的天數"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"圖片劇透標記",
