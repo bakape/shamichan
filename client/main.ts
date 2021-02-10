@@ -30,27 +30,29 @@ async function start() {
 
 	// Migrate nowPlaying options
 	const nowPlaying = localStorage.getItem("nowPlaying")
-	switch (nowPlaying) {
-		case "true":
-		case "r/a/dio":
-			localStorage.setItem("radio", "true")
-			break
-		case "eden":
-			localStorage.setItem("eden", "true")
-			break
-		case "both":
-			localStorage.setItem("radio", "true")
-			localStorage.setItem("eden", "true")
-			break
-		default:
-			const flags = parseInt(nowPlaying, 10)
-			for (const [i, key] of ["radio", "eden", "shamiradio"].entries()) {
-				if (flags & 1 << i) {
-					localStorage.setItem(key, "true")
+	if (nowPlaying !== null) {
+		switch (nowPlaying) {
+			case "true":
+			case "r/a/dio":
+				localStorage.setItem("radio", "true")
+				break
+			case "eden":
+				localStorage.setItem("eden", "true")
+				break
+			case "both":
+				localStorage.setItem("radio", "true")
+				localStorage.setItem("eden", "true")
+				break
+			default:
+				const flags = parseInt(nowPlaying, 10)
+				for (const [i, key] of ["radio", "eden", "shamiradio"].entries()) {
+					if (flags & 1 << i) {
+						localStorage.setItem(key, "true")
+					}
 				}
-			}
+		}
+		localStorage.removeItem("nowPlaying")
 	}
-	localStorage.removeItem("nowPlaying")
 
 	initOptions()
 
