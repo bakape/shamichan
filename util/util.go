@@ -5,7 +5,6 @@ package util
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"net/http"
 	"strings"
 	"unicode/utf8"
 )
@@ -168,20 +167,4 @@ func TrimString(s *string, maxLen int) {
 			*s = strings.ToValidUTF8(*s, "?")
 		}
 	}
-}
-
-// Adds security options to cookie and sets it in responsewriter
-func SetCookie(w http.ResponseWriter, r *http.Request, c *http.Cookie) {
-	c.SameSite = http.SameSiteLaxMode
-	c.Secure = true
-
-	// Allow localhost to set cookies on http
-	for _, s := range [...]string{"127.0.0.1", "[::1]", "localhost"} {
-		// Compare as a prefix to avoid messing with :portnumber
-		if strings.HasPrefix(r.Host, s) {
-			c.Secure = false
-			break
-		}
-	}
-	http.SetCookie(w, c)
 }
