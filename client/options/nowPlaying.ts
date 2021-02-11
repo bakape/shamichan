@@ -91,7 +91,7 @@ class Banner {
 		<a href="${this.url}" target="_blank">
 			[${escape(data.listeners.toString())}] ${escape(data.streamer)}
 		</a>
-		<a href="https://google.com/search?q=${encodeURIComponent(data.song.replace(/-/g, " "))}" target="_blank" title=${lang.ui["googleSong"]}>
+		<a href="https://google.com/search?q=${encodeURIComponent(data.song.replace(/-/g, " "))}" target="_blank" title="${lang.ui["googleSong"]}">
 			<b>
 				${escape(data.song)}
 			</b>
