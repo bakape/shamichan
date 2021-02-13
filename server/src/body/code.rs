@@ -32,7 +32,7 @@ fn highlight_code(frag: &str, _: u8) -> Result {
 		ClassStyle::Spaced,
 	);
 	for line in frag.lines() {
-		gen.parse_html_for_line(&line);
+		gen.parse_html_for_line_which_includes_newline(&line);
 	}
 	Ok(common::payloads::post_body::Node::Code(gen.finalize()))
 }
