@@ -52,7 +52,7 @@ features = [
   "migrate",
   "offline",
 ]
-git = "https://github.com/launchbadge/sqlx.git"
+version = "0.5.1"
 
 [dependencies.askama]
 features = ["with-actix-web", "serde-json"]
