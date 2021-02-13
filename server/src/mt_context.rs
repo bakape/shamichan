@@ -85,10 +85,12 @@ where
 
 	/// Handle any errors originating from handle()
 	fn handle_error(&mut self, _: &mut Self::Context, err: Self::Error) {
+		use std::any::type_name;
+
 		log::error!(
 			"failed to handle message {} on actor {}: {:?}",
-			stringify!(M),
-			stringify!(Self),
+			type_name::<M>(),
+			type_name::<Self>(),
 			err
 		);
 	}
