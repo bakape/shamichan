@@ -361,7 +361,7 @@ where
 		}
 	}
 
-	/// Run the next pending action in the queue, if one is not running already
+	/// Run any pending actions in the queue, if none are running already
 	fn try_run_pending(&mut self, ctx: &mut <Self as Actor>::Context) {
 		if self.pending.is_empty() {
 			return;
@@ -620,7 +620,8 @@ where
 				ctx.terminate();
 			}
 			ActorState::Stopping => {
-				// Run stopping() on the
+				// Run the actor's stopping() on the next stopping() call of the
+				// Scheduler
 				self.stopped_self = stopped_self;
 				ctx.stop();
 
