@@ -176,10 +176,8 @@ impl yew::Component for ReplyButton {
 	}
 
 	fn view(&self) -> yew::Html {
-		use posting::State::*;
-
 		match self.state {
-			Ready | Locked => html! {
+			posting::State::Ready => html! {
 				<buttons::AsideButton
 					text="reply"
 					disabled=matches!(self.state, Locked),

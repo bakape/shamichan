@@ -25,7 +25,7 @@ pub enum MessageType {
 	/// Acknowledgment of thread creation. Response to InsertPost from server.
 	InsertPostAck,
 
-	/// Image inserted into an open post
+	/// Insert an image into an open post
 	InsertImage,
 
 	/// Submit captcha or pass result captcha authentication

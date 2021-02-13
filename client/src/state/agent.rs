@@ -703,7 +703,10 @@ impl Agent {
 						_ => (),
 					};
 
-					Connection::dispatcher().send(Request::Send(e.finish()?));
+					Connection::dispatcher().send(Request::Send {
+						is_open_post_manipulation: false,
+						message: e.finish()?,
+					});
 					self.feed_sync_state = FeedSyncState::Receiving {
 						loc: new.clone(),
 						flags,

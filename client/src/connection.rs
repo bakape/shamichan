@@ -45,7 +45,16 @@ where
 	util::with_logging(|| {
 		let mut enc = common::Encoder::new(Vec::new());
 		encode_msg(&mut enc, t, payload)?;
-		Connection::dispatcher().send(Request::Send(enc.finish()?));
+		Connection::dispatcher().send(Request::Send {
+			is_open_post_manipulation: matches!(
+				t,
+				MessageType::Append
+					| MessageType::Backspace
+					| MessageType::PatchPostBody
+					| MessageType::InsertImage
+			),
+			message: enc.finish()?,
+		});
 		Ok(())
 	});
 }
@@ -53,11 +62,24 @@ where
 /// States of the connection finite state machine
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum State {
+	/// Module loading
 	Loading,
+
+	/// Connecting to server
 	Connecting,
+
+	/// Handshake with server in progress
 	Handshaking,
+
+	/// Handshake complete - can send regular messages
 	HandshakeComplete,
-	Dropped,
+
+	/// Connection loss
+	Disconnected,
+
+	/// Server disconnected client with a critical error. This should mean a
+	/// programming error of some sort.
+	CriticalError,
 }
 
 impl Default for State {
@@ -114,7 +136,16 @@ pub enum Event {
 /// Request to send a message
 pub enum Request {
 	/// Send a regular message
-	Send(Vec<u8>),
+	Send {
+		/// Messages manipulates an open post and should not be buffered.
+		/// This is to guarantee sequentiality of state updates on the server.
+		/// The sender is responsible for restoring the sequentiality on
+		/// reconnection.
+		is_open_post_manipulation: bool,
+
+		/// Message to send
+		message: Vec<u8>,
+	},
 
 	/// Send a handshake message
 	Handshake {
@@ -191,24 +222,27 @@ impl Agent for Connection {
 				})
 			}
 			Close(e) => {
-				self.reset_socket_and_timer();
-				if e.code() != 1000 && e.reason() != "" {
-					if e.reason() == "unknown public key ID" {
+				let r = e.reason();
+				if e.code() != 1000 && !r.is_empty() {
+					if r == "unknown public key ID" {
 						state::Agent::dispatcher()
 							.send(state::Request::SetKeyID(None));
 					} else {
-						util::log_and_alert_error(&e.reason())
+						util::log_and_alert_error(&r);
+						self.set_state(State::CriticalError);
+						return;
 					}
 				}
+				self.reset_socket_and_timer();
 				self.handle_disconnect();
 			}
 			Error(e) => {
 				self.reset_socket_and_timer();
 				util::log_error(&e.message());
-				self.set_state(State::Dropped);
+				self.set_state(State::Disconnected);
 			}
 			TryReconnecting => {
-				if self.state == State::Dropped {
+				if self.state == State::Disconnected {
 					self.connect();
 				}
 			}
@@ -252,8 +286,11 @@ impl Agent for Connection {
 	fn handle_input(&mut self, req: Self::Input, _: HandlerId) {
 		util::with_logging(|| {
 			match req {
-				Request::Send(msg) => {
-					self.send(msg, false)?;
+				Request::Send {
+					message,
+					is_open_post_manipulation,
+				} => {
+					self.send(message, false, !is_open_post_manipulation)?;
 				}
 				Request::Handshake { key_pair, message } => {
 					// Prevent async race conditions on key pair change
@@ -261,7 +298,7 @@ impl Agent for Connection {
 						return Ok(());
 					}
 
-					self.send(message, true)?;
+					self.send(message, true, false)?;
 
 					// Set state here, because the handshake message is
 					// generated async and thus does not have access to self
@@ -300,7 +337,7 @@ impl Connection {
 			self.link.callback(|_| Event::TryReconnecting),
 		));
 
-		self.set_state(State::Dropped);
+		self.set_state(State::Disconnected);
 	}
 
 	fn close_socket(&mut self) {
@@ -325,7 +362,12 @@ impl Connection {
 		self.reset_reconn_timer();
 	}
 
-	fn send(&mut self, mut msg: Vec<u8>, is_handshake: bool) -> util::Result {
+	fn send(
+		&mut self,
+		mut msg: Vec<u8>,
+		is_handshake: bool,
+		defer: bool,
+	) -> util::Result {
 		use State::*;
 
 		match (
@@ -340,7 +382,9 @@ impl Connection {
 				soc.send_with_u8_array(&mut msg)?;
 			}
 			_ => {
-				self.deferred.push(msg);
+				if defer {
+					self.deferred.push(msg);
+				}
 			}
 		}
 		Ok(())
@@ -487,7 +531,7 @@ impl Connection {
 							util::with_logging(|| {
 								self.set_state(State::HandshakeComplete);
 								for msg in std::mem::take(&mut self.deferred) {
-									self.send(msg, false)?;
+									self.send(msg, false, false)?;
 								}
 								Ok(())
 							});
@@ -672,15 +716,21 @@ impl Component for SyncCounter {
 	fn view(&self) -> Html {
 		use State::*;
 
+		let mut cls = vec!["banner-float"];
+		if self.current == State::CriticalError {
+			cls.push("admin");
+		}
+
 		html! {
-			<b id="sync" class="banner-float" title=localize!("sync")>
+			<b id="sync" class=cls title=localize!("sync")>
 				{
 					localize! {
 						match self.current {
 							Loading => "loading",
 							Connecting | Handshaking => "connecting",
 							HandshakeComplete => "connected",
-							Dropped => "disconnected",
+							Disconnected => "disconnected",
+							CriticalError => "critical_error",
 						}
 					}
 				}

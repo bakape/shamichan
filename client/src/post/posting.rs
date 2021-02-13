@@ -75,9 +75,12 @@ impl PostComponent for Inner {
 		use State::*;
 
 		match self.state {
-			Draft(_) | Allocated | Allocating(_) | NeedCaptcha(_) | Stalled
-			| Erred => true,
-			Ready | Locked => false,
+			Draft { .. }
+			| Allocated { .. }
+			| Allocating { .. }
+			| NeedCaptcha { .. }
+			| CriticalError => true,
+			Ready => false,
 		}
 	}
 
@@ -185,7 +188,8 @@ impl PostComponent for Inner {
 						},
 						// Don't commit a quote, if it is the only input in a
 						// post
-						matches!(self.state, State::Draft(_)) || old.is_empty(),
+						matches!(self.state, State::Draft { .. })
+							|| old.is_empty(),
 					)?;
 
 					true
@@ -313,37 +317,31 @@ impl Inner {
 /// State oif the agent FSM
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum State {
-	/// Ready to create posts
+	/// Ready to create posts. Post form closed.
 	Ready,
 
-	/// Post creation controls locked
-	Locked,
+	/// Post open but not yet allocating to target thread
+	Draft { thread: u64 },
 
 	/// Sent a request to allocate a post on target thread
-	Allocating(u64),
+	Allocating { thread: u64 },
 
 	/// Post open and allocated to the server
-	Allocated,
+	Allocated { post: u64 },
 
 	/// Captcha solution required to allocate to target thread.
 	/// This can only take place as an interrupt from the server during
 	/// Allocating.
 	#[allow(unused)] // TODO: remove it
-	NeedCaptcha(u64),
+	NeedCaptcha { thread: u64 },
 
-	/// Allocated post during loss of connectivity
-	Stalled,
-
-	/// Post open but not yet allocating to target thread
-	Draft(u64),
-
-	/// Suffered unrecoverable error
-	Erred,
+	/// Client suffered unrecoverable error
+	CriticalError,
 }
 
 impl Default for State {
 	fn default() -> Self {
-		Self::Locked
+		Self::Ready
 	}
 }
 
@@ -439,7 +437,7 @@ impl yew::agent::Agent for Agent {
 				link.callback(|s| Message::ConnStateUpdate(s)),
 			),
 			link,
-			state: State::Locked,
+			state: State::Ready,
 			conn_state: connection::State::Loading,
 			subscribers: Default::default(),
 			last_selection: Default::default(),
@@ -452,51 +450,46 @@ impl yew::agent::Agent for Agent {
 
 		match msg {
 			ConnStateUpdate(cs) => {
+				use connection::State as CS;
+				use State as S;
+
 				self.conn_state = cs;
-				// TODO: port to work with message buffering
-				//
-				// use State as S;
-				// use connection::State as CS;
-				//
-				// match self.state {
-				// 	S::Locked => match cs {
-				// 		CS::Synced => self.set_state(S::Ready),
-				// 		_ => (),
-				// 	},
-				// 	S::Ready => match cs {
-				// 		CS::Synced | CS::Syncing => (),
-				// 		_ => self.set_state(S::Locked),
-				// 	},
-				// 	S::Allocating(thread) => match cs {
-				// 		CS::Synced | CS::Syncing => (),
-				// 		_ => self.set_state(S::Draft(thread)),
-				// 	},
-				// 	S::Allocated => match cs {
-				// 		CS::Syncing => (),
-				// 		CS::Synced => {
-				// 			// TODO: resend body and try to resend any missing
-				// 			// buffered image, if a disconnect happened
-				// 		}
-				// 		_ => self.set_state(S::Stalled),
-				// 	},
-				// 	S::Stalled => match cs {
-				// 		CS::Synced => {
-				// 			// TODO: resend body and try to resend any buffered
-				// 			// image, if none yet set
-				// 			self.set_state(S::Allocated);
-				// 		}
-				// 		_ => (),
-				// 	},
-				// 	S::Draft(_) => match cs {
-				// 		CS::Synced => self.commit_pending(),
-				// 		_ => (),
-				// 	},
-				// 	S::NeedCaptcha(thread) => match cs {
-				// 		CS::Synced => (),
-				// 		_ => self.set_state(S::Draft(thread)),
-				// 	},
-				// 	_ => (),
-				// }
+				if cs == CS::CriticalError {
+					self.set_state(S::CriticalError);
+					return;
+				}
+
+				match self.state {
+					// Nothing to transition into, if the form is just sitting
+					// closed
+					S::Ready => (),
+
+					// If a full connection is established and we have something
+					// in the draft, allocate a post
+					S::Draft { .. } => match cs {
+						CS::HandshakeComplete => self.commit_pending(),
+						_ => (),
+					},
+
+					// If any connection change from HandshakeComplete occurred
+					// during allocation, consider the post lost.
+					S::Allocating { thread } | S::NeedCaptcha { thread } => {
+						self.set_state(S::Draft { thread })
+					}
+
+					S::Allocated { post } => match cs {
+						// TODO: resend body and try to resend any missing
+						// buffered image, if a disconnect happened
+						CS::HandshakeComplete => {}
+
+						// Message filtering and deferral on connection loss
+						// is handled by the connection module itself.
+						_ => (),
+					},
+
+					// Already stalled on a critical error
+					S::CriticalError => (),
+				};
 			}
 			SelectionChange => util::with_logging(|| {
 				fn closest_el(
@@ -569,12 +562,12 @@ impl yew::agent::Agent for Agent {
 			}
 			CommitText(new) => self.commit_text(new.chars().collect()),
 			SetAllocated(id) => {
-				self.set_state(State::Allocated);
+				self.set_state(State::Allocated { post: id });
 				self.send_to_views(&Response::SetID(id));
 			}
 			OpenDraft(thread) => {
 				if self.state == State::Ready {
-					self.set_state(State::Draft(thread));
+					self.set_state(State::Draft { thread });
 				}
 			}
 		}
@@ -590,7 +583,7 @@ impl Agent {
 				self.state, new
 			));
 			self.state = new;
-			if self.state == State::Allocated {
+			if matches!(new, State::Allocated { .. }) {
 				self.commit_pending();
 			}
 			for id in self.subscribers.keys() {
@@ -620,7 +613,7 @@ impl Agent {
 		use State::*;
 
 		match self.state {
-			Draft(thread) => state::read(|s| {
+			Draft { thread } => state::read(|s| {
 				if !s.location.is_thread() {
 					return false;
 				}
@@ -635,10 +628,10 @@ impl Agent {
 						},
 					},
 				);
-				self.set_state(Allocating(thread));
+				self.set_state(Allocating { thread });
 				true
 			}),
-			Allocating(_) | Allocated | Stalled => true,
+			Allocating { .. } | Allocated { .. } => true,
 			_ => false,
 		}
 	}
@@ -694,7 +687,7 @@ impl Agent {
 
 	/// Diff and commit text changes to server
 	fn commit_text(&mut self, new: Vec<char>) {
-		if !self.try_alloc() || self.state != State::Allocated {
+		if !self.try_alloc() || !matches!(self.state, State::Allocated { .. }) {
 			// Buffer post body till alloc
 			self.post_body = new;
 			return;

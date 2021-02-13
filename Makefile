@@ -48,8 +48,7 @@ test:
 # Prepare offline version of checked queries for compilation without a connected
 # database
 db_prepare_offline:
-	cargo sqlx prepare -- --package server
-	mv sqlx-data.json server/
+	$(MAKE) -C server db_prepare_offline
 
 test_no_race:
 	cargo test
