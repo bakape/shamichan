@@ -218,8 +218,10 @@ impl Component for NewThreadForm {
 			Msg::AddTag => {
 				if self.selected_tags.len() < 3 {
 					self.selected_tags.push("".into());
+					true
+				} else {
+					false
 				}
-				true
 			}
 			Msg::Submit => {
 				use web_sys::{FormData, HtmlFormElement};
@@ -237,27 +239,22 @@ impl Component for NewThreadForm {
 							)?,
 						)?;
 
-						let tags: Vec<String> = f
-							.get_all("tag")
-							.iter()
-							.filter_map(|t| t.as_string())
-							.map(|s| s.to_lowercase())
-							.collect();
-						if tags
-							.iter()
-							.collect::<std::collections::BTreeSet<_>>()
-							.len() != tags.len()
-						{
-							Err("tag set contains duplicates")?;
-						}
-
 						connection::send(
 							common::MessageType::InsertThread,
 							&common::payloads::ThreadCreationReq {
 								subject: f.get("subject").as_string().ok_or(
 									"could not convert subject to string",
 								)?,
-								tags,
+								tags: f
+									.get_all("tag")
+									.iter()
+									.filter_map(|t| t.as_string())
+									.map(|s| s.trim().to_lowercase())
+									.into_iter()
+									// Ensure lack of duplicates
+									.collect::<std::collections::HashSet<_>>()
+									.into_iter()
+									.collect(),
 								opts: state::read(|s| {
 									common::payloads::NewPostOpts {
 										name: s.new_post_opts.name.clone(),
