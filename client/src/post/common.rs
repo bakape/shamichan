@@ -382,7 +382,7 @@ where
 				}
 				{self.render_name(c)}
 				{
-					match &c.post.opts.post_opts.flag {
+					match &c.post.flag {
 						Some(code) => match super::countries::get_name(&code) {
 							Some(name) => html! {
 								<img
@@ -477,21 +477,20 @@ where
 	fn render_name<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
 		// TODO: Staff titles
 		let mut w: Vec<Html> = Default::default();
-		let p_opts = &c.post.opts.post_opts;
 
 		if c.app.options.forced_anonymity
-			|| (p_opts.name.is_none() && p_opts.trip.is_none())
+			|| (c.post.name.is_none() && c.post.trip.is_none())
 		{
 			w.push(html! {
 				<span>{localize!("anon")}</span>
 			});
 		} else {
-			if let Some(name) = &p_opts.name {
+			if let Some(name) = &c.post.name {
 				w.push(html! {
 					<span>{name}</span>
 				});
 			}
-			if let Some(trip) = &p_opts.trip {
+			if let Some(trip) = &c.post.trip {
 				w.push(html! {
 					<code>{trip}</code>
 				});
@@ -504,7 +503,7 @@ where
 		}
 
 		let mut cls = vec!["name"];
-		if c.post.opts.sage {
+		if c.post.sage {
 			cls.push("sage");
 		}
 		// TODO: Add admin class, if staff title

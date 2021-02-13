@@ -358,8 +358,15 @@ impl yew::agent::Agent for Agent {
 						created_on: n.time,
 						open: true,
 
-						// TODO: set this from modal
-						opts: Default::default(),
+						// TODO: set this from the modal
+						sage: Default::default(),
+						name: Default::default(),
+						trip: Default::default(),
+
+						// TODO: figure out, if wee need special handling for
+						// setting a flag on the OP of a thread, before thread
+						// options can be set
+						flag: Default::default(),
 
 						body: Default::default(),
 						image: Default::default(),
@@ -634,8 +641,8 @@ impl Agent {
 				write(|s| {
 					self.trigger(&Change::ThreadList);
 					for t in threads {
-						self.trigger(&Change::Thread(t.thread_data.id));
-						s.threads.insert(t.thread_data.id, t.thread_data);
+						self.trigger(&Change::Thread(t.thread.id));
+						s.threads.insert(t.thread.id, t.thread);
 
 						for (_, p) in t.posts {
 							self.trigger(&Change::Post(p.id));

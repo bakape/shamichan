@@ -99,7 +99,6 @@ pub struct PostCreationOpts {
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ReplyCreationOpts {
 	pub sage: bool,
-	#[serde(flatten)]
 	pub post_opts: PostCreationOpts,
 }
 
@@ -138,8 +137,10 @@ pub struct Post {
 	pub created_on: u32,
 	pub open: bool,
 
-	#[serde(flatten)]
-	pub opts: ReplyCreationOpts,
+	pub sage: bool,
+	pub name: Option<String>,
+	pub trip: Option<String>,
+	pub flag: Option<String>,
 
 	/// Post text body. Wrapped in an Arc to enable cheap copying on both the
 	/// server and client
@@ -163,9 +164,12 @@ impl Post {
 			page,
 			created_on,
 			open: true,
-			opts,
 			body: Default::default(),
 			image: None,
+			sage: opts.sage,
+			name: opts.post_opts.name,
+			trip: opts.post_opts.trip,
+			flag: opts.post_opts.flag,
 		}
 	}
 
@@ -236,9 +240,7 @@ impl Thread {
 /// A thread and it's posts flattened into a single structure
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ThreadWithPosts {
-	#[serde(flatten)]
-	pub thread_data: Thread,
-
+	pub thread: Thread,
 	pub posts: HashMap<u64, Post>,
 }
 

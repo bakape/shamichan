@@ -99,7 +99,7 @@ impl Registry {
 			.iter_mut()
 			.map(|t| {
 				(
-					t.thread_data.clone(),
+					t.thread.clone(),
 					t.posts.keys().copied().collect::<Vec<u64>>(),
 				)
 			})

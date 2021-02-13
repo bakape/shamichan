@@ -77,7 +77,7 @@ impl Threads {
 				let mut tags = self
 					.threads
 					.values()
-					.flat_map(|t| t.thread_data.tags.iter())
+					.flat_map(|t| t.thread.tags.iter())
 					.collect::<HashSet<_>>()
 					.into_iter()
 					.cloned()

@@ -120,7 +120,7 @@ impl AsyncHandler<Pulse> for IndexFeed {
 
 				match c {
 					InsertPost(p) => {
-						t.thread_data.post_count += 1;
+						t.thread.post_count += 1;
 						t.posts.insert(p.id, p);
 					}
 					SetBody { id, body } => {
@@ -173,7 +173,7 @@ impl AsyncHandler<super::InsertThread> for IndexFeed {
 
 		let now = crate::util::now();
 		let thread = ThreadWithPosts {
-			thread_data: Thread::new(msg.id, now, msg.subject, msg.tags),
+			thread: Thread::new(msg.id, now, msg.subject, msg.tags),
 			posts: {
 				let mut h = HashMap::new();
 				h.insert(msg.id, Post::new_op(msg.id, now, msg.opts));
@@ -253,7 +253,7 @@ impl IndexFeed {
 			threads: Threads::new(
 				threads
 					.into_iter()
-					.map(|t| (t.thread_data.id, t.into()))
+					.map(|t| (t.thread.id, t.into()))
 					.collect(),
 			),
 			enc: Default::default(),

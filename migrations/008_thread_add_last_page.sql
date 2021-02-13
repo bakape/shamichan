@@ -39,7 +39,7 @@ declare
 	max_page bigint;
 	thread threads%rowtype;
 
-	data jsonb;
+	thread_json jsonb;
 	posts jsonb;
 begin
 	select max(p.page) into max_page
@@ -52,16 +52,16 @@ begin
 		page = max_page;
 	end if;
 
-	select encode(t, page, max_page + 1) into data
+	select encode(t, page, max_page + 1) into thread_json
 		from threads t
 		where t.id = get_thread.id;
-	if data is null then
+	if thread_json is null then
 		return null;
 	end if;
 
 	case page
 	when -5 then
-		data = data || '{"page":0}';
+		thread_json = thread_json || '{"page":0}';
 		select into posts
 			json_object_agg(pp.id, encode(pp))
 			from (
@@ -92,8 +92,10 @@ begin
 			where (p.thread = get_thread.id and p.page = get_thread.page)
 				or p.id = get_thread.id;
 	end case;
-	data = jsonb_set(data, '{posts}', posts);
 
-	return data;
+	return jsonb_build_object(
+		'thread', thread_json,
+		'posts', posts
+	);
 end;
 $$;
