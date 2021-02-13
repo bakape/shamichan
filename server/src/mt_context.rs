@@ -70,7 +70,7 @@ where
 #[async_trait]
 pub trait AsyncHandler<M>
 where
-	Self: Actor<Context = MTContext<Self>> + Send,
+	Self: Actor<Context = MTContext<Self>> + Send + Debug,
 	M: Send,
 {
 	/// Error type returned by `handle()`
@@ -88,10 +88,11 @@ where
 		use std::any::type_name;
 
 		log::error!(
-			"failed to handle message {} on actor {}: {:?}",
+			"failed to handle message {} on actor {}: {:?}\nactor state: {:#?}",
 			type_name::<M>(),
 			type_name::<Self>(),
-			err
+			err,
+			self,
 		);
 	}
 }
