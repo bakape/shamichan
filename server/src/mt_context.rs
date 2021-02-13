@@ -15,7 +15,7 @@ use tokio::sync::{Mutex as AsyncMutex, OwnedMutexGuard};
 
 lazy_static! {
 	/// Global multithreaded Tokio runtime
-	static ref TOKIO_RUNTIME: tokio::runtime::Runtime =
+	pub static ref TOKIO_RUNTIME: tokio::runtime::Runtime =
 		tokio::runtime::Builder::new_multi_thread()
 		.enable_all()
 		.build()

@@ -69,10 +69,18 @@ async fn main() -> Result<(), std::io::Error> {
 
     async fn inner() -> util::DynResult {
         stderrlog::new().init()?;
-        db::open().await?;
+
+        // TODO: remove this and revert tokio runtime to private, when we switch
+        // to actix_web, askama and actix_web_actors to 4.0.
+        async fn init_db(
+        ) -> util::DynResult<Vec<common::payloads::ThreadWithPosts>> {
+            db::open().await?;
+
+            db::get_all_threads_short().await
+        }
+        let threads = mt_context::TOKIO_RUNTIME.block_on(init_db())?;
 
         // Spawn registry on it's own thread to reduce contention
-        let threads = db::get_all_threads_short().await?;
         let registry =
             Registry::start_in_arbiter(&Arbiter::new(), move |ctx| {
                 Registry::new(ctx, threads)
