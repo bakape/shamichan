@@ -63,7 +63,7 @@ begin
 	when -5 then
 		data = data || '{"page":0}';
 		select into posts
-			jsonb_agg(encode(pp) order by pp.id)
+			json_object_agg(pp.id, encode(pp))
 			from (
 				select *
 				from posts p
@@ -87,7 +87,7 @@ begin
 		end if;
 
 		select into posts
-			jsonb_agg(encode(p) order by p.id)
+			json_object_agg(p.id, encode(p))
 			from posts p
 			where (p.thread = get_thread.id and p.page = get_thread.page)
 				or p.id = get_thread.id;
