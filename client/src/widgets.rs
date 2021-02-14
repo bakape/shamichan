@@ -141,13 +141,15 @@ struct NewThreadForm {
 	expanded: bool,
 	selected_tags: Vec<String>,
 
-	// TODO: remove sending and sync to postform Draft and allocating flow
 	sending: bool,
 
 	post_form_state: posting::State,
+	conn_state: connection::State,
 
 	#[allow(unused)]
 	posting: Box<dyn Bridge<posting::Agent>>,
+	#[allow(unused)]
+	connection: Box<dyn Bridge<connection::Connection>>,
 	#[allow(unused)]
 	bridge: state::HookBridge,
 }
@@ -159,6 +161,7 @@ enum Msg {
 	AddTag,
 	Submit,
 	PostFormState(posting::State),
+	ConnState(connection::State),
 	Rerender,
 	NOP,
 }
@@ -173,6 +176,9 @@ impl Component for NewThreadForm {
 				posting::Response::State(s) => Msg::PostFormState(s),
 				_ => Msg::NOP,
 			})),
+			connection: connection::Connection::bridge(
+				link.callback(|s| Msg::ConnState(s)),
+			),
 			el: NodeRef::default(),
 			bridge: state::hook(&link, vec![state::Change::UsedTags], || {
 				Msg::Rerender
@@ -182,6 +188,7 @@ impl Component for NewThreadForm {
 			sending: false,
 			selected_tags: vec!["".into()],
 			post_form_state: Default::default(),
+			conn_state: Default::default(),
 		}
 	}
 
@@ -276,6 +283,10 @@ impl Component for NewThreadForm {
 				self.post_form_state = s;
 				true
 			}
+			Msg::ConnState(s) => {
+				self.conn_state = s;
+				true
+			}
 			Msg::NOP => false,
 			Msg::Rerender => true,
 		}
@@ -336,8 +347,10 @@ impl NewThreadForm {
 						type="submit"
 						style="width: 50%"
 						disabled=self.sending
-									|| self.post_form_state
-										!= posting::State::Ready
+								|| self.post_form_state
+									!= posting::State::Ready
+								|| self.conn_state
+									!= connection::State::HandshakeComplete
 					/>
 					<input
 						type="button"
