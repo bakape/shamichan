@@ -45,14 +45,15 @@ test:
 	cargo test
 	# go test --race ./...
 
-test_coverage_watch:
-	cargo watch -x 'tarpaulin --ignore-tests --out Lcov' -i lcov.info
+test_no_race:
+	cargo test
+	# go test ./...
+
+test_coverage:
+	cargo tarpaulin --workspace --exclude client --out Lcov
 
 # Prepare offline version of checked queries for compilation without a connected
 # database
 db_prepare_offline:
 	$(MAKE) -C server db_prepare_offline
 
-test_no_race:
-	cargo test
-	# go test ./...
