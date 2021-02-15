@@ -36,3 +36,4 @@ db_*.db
 target
 vendor
 .env
+lcov.info
