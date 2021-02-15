@@ -1,5 +1,6 @@
 use std::fmt::Write;
 use wasm_bindgen::prelude::JsValue;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys;
 
@@ -79,10 +80,10 @@ macro_rules! cache_variable {
 		unsafe {
 			if CACHED.is_none() {
 				CACHED = Some($get());
-				}
-			CACHED.as_ref().unwrap()
 			}
-		}};
+			CACHED.as_ref().unwrap()
+		}
+	}};
 }
 
 /// Define function that caches global JS variable lookup
@@ -129,7 +130,7 @@ def_cached_getter! {
 	}
 }
 
-/// Add static passive DOM event listener
+/// Add static DOM event listener
 pub fn add_static_listener<E>(
 	target: &impl AsRef<web_sys::EventTarget>,
 	event: &str,
@@ -138,8 +139,20 @@ pub fn add_static_listener<E>(
 ) where
 	E: wasm_bindgen::convert::FromWasmAbi + 'static,
 {
-	use wasm_bindgen::prelude::*;
+	add_listener(target, event, passive, cb).forget();
+}
 
+/// Add DOM event listener.
+/// Returns created closure, that can be dropped to free resources.
+pub fn add_listener<E>(
+	target: &impl AsRef<web_sys::EventTarget>,
+	event: &str,
+	passive: bool,
+	cb: yew::Callback<E>,
+) -> Closure<dyn Fn(E)>
+where
+	E: wasm_bindgen::convert::FromWasmAbi + 'static,
+{
 	let cl = Closure::wrap(Box::new(move |e: E| cb.emit(e)) as Box<dyn Fn(E)>);
 	target
 		.as_ref()
@@ -153,9 +166,7 @@ pub fn add_static_listener<E>(
 			},
 		)
 		.unwrap();
-
-	// Never drop the closure as this event handler is static
-	cl.forget();
+	cl
 }
 
 /// Log any error to console

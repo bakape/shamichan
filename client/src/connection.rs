@@ -5,6 +5,7 @@ use super::{
 use common::{debug_log, Decoder, Encoder, MessageType};
 use serde::Serialize;
 use std::{collections::HashSet, fmt::Debug};
+use wasm_bindgen::prelude::*;
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
 	html,
@@ -112,6 +113,9 @@ pub struct Connection {
 	/// Connection to server
 	socket: Option<web_sys::WebSocket>,
 
+	/// Socket handler closures to be freed on socket closure
+	handler_closures: Vec<Box<dyn Drop>>,
+
 	/// Active subscribers to connection state change
 	subscribers: HashSet<HandlerId>,
 
@@ -176,6 +180,7 @@ impl Agent for Connection {
 			reconn_attempts: 0,
 			reconn_timer: None,
 			socket: None,
+			handler_closures: Default::default(),
 			subscribers: HashSet::new(),
 			deferred: vec![],
 		};
@@ -185,10 +190,11 @@ impl Agent for Connection {
 		#[rustfmt::skip]
 		macro_rules! bind {
 			($target:ident, $event:expr, $variant:ident) => {
-				s.add_listener(
+				util::add_static_listener(
 					&util::$target(),
 					$event,
-					|_: web_sys::Event| Event::$variant,
+					true,
+					s.link.callback(|_: web_sys::Event| Event::$variant,),
 				);
 			};
 		}
@@ -345,6 +351,7 @@ impl Connection {
 			util::log_error_res(s.close());
 		}
 		self.socket = None;
+		self.handler_closures.clear();
 		self.authed_with = None;
 	}
 
@@ -390,20 +397,6 @@ impl Connection {
 		Ok(())
 	}
 
-	fn add_listener<T, E, F>(&self, target: &T, event: &str, mapper: F)
-	where
-		T: AsRef<web_sys::EventTarget>,
-		E: wasm_bindgen::convert::FromWasmAbi + 'static,
-		F: Fn(E) -> Event + 'static,
-	{
-		util::add_static_listener(
-			target,
-			event,
-			true,
-			self.link.callback(mapper),
-		);
-	}
-
 	fn connect(&mut self) {
 		self.close_socket();
 		if !util::window().navigator().on_line() {
@@ -435,20 +428,26 @@ impl Connection {
 
 			socket.set_binary_type(web_sys::BinaryType::Arraybuffer);
 
-			self.add_listener(&socket, "open", |_: web_sys::Event| Event::Open);
-
-			#[rustfmt::skip]
-			macro_rules! bind {
-				($event:ident, $type:expr, $variant:ident) => {
-					self.add_listener(&socket, $type, |e: web_sys::$event| {
+			macro_rules! add_listener {
+				($event:expr, $mapper:expr) => {
+					self.handler_closures.push(Box::new(util::add_listener(
+						&socket,
+						$event,
+						true,
+						self.link.callback($mapper),
+					)))
+				};
+				($event:expr, $web_sys_event:ident, $variant:ident) => {
+					add_listener!($event, |e: web_sys::$web_sys_event| {
 						Event::$variant(e)
 					});
 				};
 			}
 
-			bind!(CloseEvent, "close", Close);
-			bind!(ErrorEvent, "error", Error);
-			bind!(MessageEvent, "message", Receive);
+			add_listener!("open", |_: web_sys::Event| Event::Open);
+			add_listener!("close", CloseEvent, Close);
+			add_listener!("error", ErrorEvent, Error);
+			add_listener!("message", MessageEvent, Receive);
 
 			Ok(socket)
 		}() {
