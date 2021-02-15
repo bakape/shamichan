@@ -57,3 +57,7 @@ test_coverage:
 db_prepare_offline:
 	$(MAKE) -C server db_prepare_offline
 
+db_rebuild:
+	sqlx database drop -y
+	sqlx database create
+	sqlx migrate run
