@@ -337,7 +337,7 @@ impl NewThreadForm {
 					required=true
 					type="text"
 					maxlength="100"
-					style="width: 100%"
+					pattern="\\S+"
 				/>
 				<hr />
 				{self.render_tags()}
@@ -380,8 +380,9 @@ impl NewThreadForm {
 
 	fn render_tags(&self) -> Html {
 		let mut v = Vec::with_capacity(3);
+		let close_button = self.selected_tags.len() != 1;
 		for (i, t) in self.selected_tags.iter().enumerate() {
-			v.push(self.render_tag(t, i));
+			v.push(self.render_tag(t, i, close_button));
 		}
 		if v.len() < 3 {
 			v.push(html! {
@@ -395,7 +396,7 @@ impl NewThreadForm {
 		v.into_iter().collect()
 	}
 
-	fn render_tag(&self, tag: &str, id: usize) -> Html {
+	fn render_tag(&self, tag: &str, id: usize, close_button: bool) -> Html {
 		html! {
 			<span>
 				<input
@@ -407,16 +408,27 @@ impl NewThreadForm {
 					value=tag
 					name="tag"
 					list="used-tags"
+					pattern="\\S+"
 					oninput=self.link.callback(move |e: InputData|
 						Msg::InputTag(id, e.value)
 					)
 				/>
-				<a
-					class="act"
-					onclick=self.link.callback(move |_| Msg::RemoveTag(id))
-				>
-					{"X"}
-				</a>
+				{
+					if close_button {
+						html! {
+							<a
+								class="act"
+								onclick=self.link.callback(
+									move |_| Msg::RemoveTag(id),
+								)
+							>
+								{"X"}
+							</a>
+						}
+					} else {
+						html!{}
+					}
+				}
 			</span>
 		}
 	}
