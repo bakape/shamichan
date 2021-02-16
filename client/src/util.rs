@@ -165,7 +165,7 @@ where
 				opts
 			},
 		)
-		.unwrap();
+		.unwrap_throw();
 	cl
 }
 

@@ -28,6 +28,7 @@ wasm-bindgen = "0.2.70"
 wasm-bindgen-futures = "0.4.20"
 yew = "0.17.4"
 indexmap = "1.6.1"
+gloo = "0.2.1"
 
 [dependencies.web-sys]
 features = [

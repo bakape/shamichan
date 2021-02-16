@@ -123,6 +123,7 @@ pub struct Connection {
 	deferred: Vec<Vec<u8>>,
 }
 
+#[derive(Debug)]
 pub enum Event {
 	Open,
 	Close(web_sys::CloseEvent),
@@ -210,6 +211,8 @@ impl Agent for Connection {
 
 	fn update(&mut self, msg: Event) {
 		use Event::*;
+
+		debug_log!("connection event", msg);
 
 		match msg {
 			Open => {
@@ -351,7 +354,17 @@ impl Connection {
 			util::log_error_res(s.close());
 		}
 		self.socket = None;
-		self.handler_closures.clear();
+
+		if !self.handler_closures.is_empty() {
+			// Free any closures only after nothing is surely using them
+			// anymore. Better than leaking them.
+			let cls = std::mem::take(&mut self.handler_closures);
+			gloo::timers::callback::Timeout::new(1000 * 60, move || {
+				std::mem::drop(cls)
+			})
+			.forget();
+		}
+
 		self.authed_with = None;
 	}
 
@@ -457,7 +470,7 @@ impl Connection {
 				self.reset_reconn_timer();
 			}
 			Err(e) => {
-				ConsoleService::error(e.as_ref());
+				util::log_error(&e);
 			}
 		};
 	}
