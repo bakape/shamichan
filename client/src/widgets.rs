@@ -212,13 +212,13 @@ impl Component for NewThreadForm {
 				if self.selected_tags.len() == 1 {
 					self.selected_tags[0].clear();
 				} else {
-					self.selected_tags = self
-						.selected_tags
-						.iter()
-						.enumerate()
-						.filter(|(j, _)| *j != i)
-						.map(|(_, s)| s.clone())
-						.collect();
+					self.selected_tags =
+						std::mem::take(&mut self.selected_tags)
+							.into_iter()
+							.enumerate()
+							.filter(|(j, _)| *j != i)
+							.map(|(_, s)| s)
+							.collect();
 				}
 				true
 			}
