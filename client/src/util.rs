@@ -190,7 +190,7 @@ pub fn log_warn(msg: impl AsRef<str>) {
 /// Display error alert message
 pub fn alert(msg: &impl std::fmt::Display) {
 	// Ignore result
-	window().alert_with_message(&format!("error: {}", msg)).ok();
+	window().alert_with_message(&msg.to_string()).ok();
 }
 
 /// Log error to console and display it in an alert message
