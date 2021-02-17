@@ -175,7 +175,7 @@ impl AsyncHandler<FetchPage> for ThreadFeed {
 				return Ok(());
 			}
 		}
-		if id as u64 > (std::u32::MAX << 1) as u64 {
+		if id as u64 > (std::u32::MAX >> 1) as u64 {
 			return Err("page ID overflow".into());
 		}
 		let id = id as u32;
