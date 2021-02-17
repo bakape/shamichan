@@ -164,7 +164,7 @@ impl AsyncHandler<FetchPage> for ThreadFeed {
 		use PageRecord::*;
 
 		if id < 0 {
-			id = self.thread_meta.page_count as i32 - id;
+			id = self.thread_meta.page_count as i32 + id;
 		}
 		{
 			let max = self.thread_meta.page_count as i32 - 1;
