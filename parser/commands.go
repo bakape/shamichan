@@ -24,6 +24,45 @@ var (
 	errDieTooBig    = common.ErrInvalidInput("die too big")
 )
 
+const (
+	dubs = iota + 1
+	trips
+	quads
+)
+
+var rollModifiers = [...]struct {
+	re   *regexp.Regexp
+	list []uint16
+}{
+	{
+		re: regexp.MustCompile(`(?i)\bdubs\b`),
+	},
+	{
+		re: regexp.MustCompile(`(?i)\btrips\b`),
+	},
+	{
+		re: regexp.MustCompile(`(?i)\bquads\b`),
+	},
+}
+
+func init() {
+	for i := range rollModifiers {
+		var base uint16
+		switch i {
+		case 0:
+			base = 11
+		case 1:
+			base = 111
+		case 2:
+			base = 1111
+		}
+		rollModifiers[i].list = append(rollModifiers[i].list, 1)
+		for m := uint16(1); m <= uint16(9); m++ {
+			rollModifiers[i].list = append(rollModifiers[i].list, base*m)
+		}
+	}
+}
+
 // Returns a cryptographically secure pseudorandom int in the interval [0;max)
 func randInt(max int) int {
 	i, _ := rand.Int(rand.Reader, big.NewInt(int64(max)))
@@ -42,6 +81,7 @@ func parseCommand(
 	ip string,
 	isSlut *bool,
 	isDead *bool,
+	body []byte,
 ) (
 	com common.Command, err error,
 ) {
@@ -164,9 +204,18 @@ func parseCommand(
 			return
 		}
 
+		var mod int
+		for i := len(rollModifiers) - 1; i >= 0; i-- {
+			m := rollModifiers[i]
+			if m.re.Match(body) {
+				mod = i + 1
+				break
+			}
+		}
+
 		// Dice throw
 		com.Type = common.Dice
-		com.Dice, err = parseDice(matchStr)
+		com.Dice, err = parseDice(matchStr, mod)
 	}
 
 	return
@@ -178,7 +227,7 @@ func isNumError(err error) bool {
 }
 
 // Parse dice throw commands
-func parseDice(match string) (val []uint16, err error) {
+func parseDice(match string, mod int) (val []uint16, err error) {
 	dice := common.DiceRegexp.FindStringSubmatch(match)
 
 	var rolls int
@@ -208,10 +257,23 @@ func parseDice(match string) (val []uint16, err error) {
 		return nil, errDieTooBig
 	}
 
+	var overrides []uint16
+	if mod != 0 && randInt(3) == 0 {
+		i := 0
+		list := rollModifiers[mod-1].list
+		for roll := list[i]; i < len(list) && roll <= uint16(max); i++ {
+		}
+		overrides = list[:i+1]
+	}
+
 	val = make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
 		if max != 0 {
-			val[i] = uint16(randInt(max)) + 1
+			if len(overrides) != 0 {
+				val[i] = overrides[randInt(len(overrides))]
+			} else {
+				val[i] = uint16(randInt(max)) + 1
+			}
 		} else {
 			val[i] = 0
 		}

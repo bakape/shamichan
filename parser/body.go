@@ -2,11 +2,12 @@
 package parser
 
 import (
+	"regexp"
+	"unicode"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"regexp"
-	"unicode"
 )
 
 var (
@@ -95,7 +96,7 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut, &isDead)
+			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut, &isDead, body)
 			switch err {
 			case nil:
 				com = append(com, c)
