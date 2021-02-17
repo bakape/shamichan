@@ -568,10 +568,8 @@ impl Agent {
 
 				// Also insert the page number counted from the back to prevent
 				// duplicate requests
-				pages.insert(
-					-(thread.as_ref().unwrap().page_count as i32 - page as i32),
-					None,
-				);
+				let page_count = thread.as_ref().unwrap().page_count as i32;
+				pages.insert(-(page_count - page as i32), None);
 
 				if pages
 					.iter()
@@ -581,7 +579,7 @@ impl Agent {
 					use std::mem::take;
 
 					let pages = take(pages);
-					let loc = take(loc);
+					let mut loc = take(loc);
 					let thread = thread.take().unwrap();
 					let flags = *flags;
 					self.feed_sync_state = Synced {
@@ -606,6 +604,16 @@ impl Agent {
 							self.trigger(&Change::Post(p.id));
 							s.register_post(p);
 						}
+
+						// Normalize page number
+						match &mut loc.feed {
+							FeedID::Thread { page, .. } => {
+								if *page < 0 {
+									*page += page_count;
+								}
+							}
+							_ => unreachable!(),
+						};
 
 						self.set_location_no_sync(s, loc, flags);
 					});
