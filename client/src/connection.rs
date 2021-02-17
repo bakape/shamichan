@@ -25,7 +25,8 @@ use yew::{
 // Client -> ThreadFeed -> Client -> websocket response (confirmation or
 // failure)
 
-fn encode_msg<T>(
+/// Encode message and log it in debug mode
+pub fn encode_msg<T>(
 	enc: &mut Encoder,
 	t: MessageType,
 	payload: &T,

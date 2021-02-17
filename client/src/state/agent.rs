@@ -695,16 +695,22 @@ impl Agent {
 				false
 			}
 			_ => {
-				debug_log!("fetching");
+				debug_log!("fetching", new);
 				util::with_logging(|| {
+					use crate::connection::encode_msg;
+
 					let mut e = Encoder::default();
 					let mut pages = HashMap::new();
 
-					e.write_message(MessageType::Synchronize, &new_feed_num)?;
+					encode_msg(
+						&mut e,
+						MessageType::Synchronize,
+						&new_feed_num,
+					)?;
 
 					match &new.feed {
 						FeedID::Thread { page, .. } => {
-							e.write_message(MessageType::Page, page)?;
+							encode_msg(&mut e, MessageType::Page, page)?;
 							pages.insert(*page, None);
 						}
 						_ => (),
