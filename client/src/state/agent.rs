@@ -565,10 +565,11 @@ impl Agent {
 				thread,
 			} if thread.is_some() && loc.feed.as_u64() == thread_id => {
 				pages.insert(page as i32, Some(posts));
+
 				// Also insert the page number counted from the back to prevent
 				// duplicate requests
 				pages.insert(
-					thread.as_ref().unwrap().page_count as i32 - page as i32,
+					-(thread.as_ref().unwrap().page_count as i32 - page as i32),
 					None,
 				);
 
