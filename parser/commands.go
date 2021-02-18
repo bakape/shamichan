@@ -261,7 +261,7 @@ func parseDice(match string, mod int) (val []uint16, err error) {
 	if mod != 0 && randInt(3) == 0 {
 		i := 0
 		list := rollModifiers[mod-1].list
-		for roll := list[i]; i < len(list) && roll <= uint16(max); i++ {
+		for roll := list[i]; i < len(list) && roll < uint16(max); i++ {
 		}
 		overrides = list[:i+1]
 	}
