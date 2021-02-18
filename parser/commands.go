@@ -269,7 +269,7 @@ func parseDice(match string, mod int) (val []uint16, err error) {
 	val = make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
 		if max != 0 {
-			if len(overrides) != 0 {
+			if len(overrides) > 1 {
 				val[i] = overrides[randInt(len(overrides))]
 			} else {
 				val[i] = uint16(randInt(max)) + 1
