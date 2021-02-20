@@ -35,6 +35,13 @@ server:
 		$(if $(filter 1,$(DEBUG)),,--release)
 	cp target/$(if $(filter 1,$(DEBUG)),debug,release)/meguca meguca
 
+server_debug:
+	SQLX_OFFLINE=true cargo build \
+		--workspace \
+		--exclude client
+	cp target/debug/meguca meguca
+	RUST_BACKTRACE=1 ./meguca
+
 clean:
 	rm -rf meguca www/client www/js
 	cargo clean
