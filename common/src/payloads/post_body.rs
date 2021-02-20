@@ -179,7 +179,7 @@ pub enum PatchNode {
 	/// Descend deeper to patch one or both of the siblings
 	Siblings([Option<Box<PatchNode>>; 2]),
 
-	/// Partially modify an existing Code, Text or URL Node
+	/// Partially modify an existing textual Node
 	Patch(TextPatch),
 }
 
