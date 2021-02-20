@@ -72,13 +72,11 @@ async fn main() -> Result<(), std::io::Error> {
 
         // TODO: remove this and revert tokio runtime to private, when we switch
         // to actix_web, askama and actix_web_actors to 4.0.
-        async fn init_db(
-        ) -> util::DynResult<Vec<common::payloads::ThreadWithPosts>> {
+        let threads = mt_context::TOKIO_RUNTIME.block_on(async {
             db::open().await?;
 
             db::get_all_threads_short().await
-        }
-        let threads = mt_context::TOKIO_RUNTIME.block_on(init_db())?;
+        })?;
 
         // Spawn registry on it's own thread to reduce contention
         let registry =
@@ -116,18 +114,24 @@ async fn main() -> Result<(), std::io::Error> {
                     let app = App::new();
                 }
             };
-            app.wrap(Logger::default())
+            let mut app = app
+                .wrap(Logger::default())
                 .wrap(NormalizePath::new(TrailingSlash::Trim))
                 .wrap(Compress::default())
-                .service(web::resource("/").to(|| async {
-                    Index {
-                        config: config::get().public.clone(),
-                    }
-                }))
                 .data(registry.clone())
                 .data(index_feed.clone())
                 .service(connect)
-                .service(Files::new("/assets", "./www"))
+                .service(Files::new("/assets", "./www"));
+
+            for p in &["/", "/catalog", "/threads/{thread:\\d+}/{page:\\d+}"] {
+                app = app.service(web::resource(*p).to(|| async {
+                    Index {
+                        config: config::get().public.clone(),
+                    }
+                }));
+            }
+
+            app
         })
         .bind(&config::SERVER.address)?
         .run()

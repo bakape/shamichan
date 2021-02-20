@@ -369,15 +369,11 @@ where
 		if self.pending.is_empty() {
 			return;
 		}
-		if let Ok(act) = self.actor.clone().try_lock_owned() {
-			async fn run<A>(
-				mut ctx: MTContext<A>,
-				mut act: OwnedMutexGuard<A>,
-				scheduler: Addr<Scheduler<A>>,
-				pending: VecDeque<Box<dyn WrappedMessage<A>>>,
-			) where
-				A: Actor<Context = MTContext<A>> + Send,
-			{
+		if let Ok(mut act) = self.actor.clone().try_lock_owned() {
+			let scheduler = ctx.address();
+			let pending = std::mem::take(&mut self.pending);
+			let mut ctx = self.ctx(ctx);
+			TOKIO_RUNTIME.spawn(async move {
 				// Process all available messages in one batch to avoid
 				// switching overhead
 				let act: &mut A = &mut act; // cache dereference
@@ -399,14 +395,7 @@ where
 					unprocessed: it.collect(),
 					stopped_self: ctx.stopped_self,
 				});
-			}
-
-			TOKIO_RUNTIME.spawn(run(
-				self.ctx(ctx),
-				act,
-				ctx.address(),
-				std::mem::take(&mut self.pending),
-			));
+			});
 		}
 	}
 
@@ -474,14 +463,10 @@ where
 			// This is needed because Scheduler will not receive Done from the
 			// actor in the Tokio runtime anymore to call its stopped() method.
 			Err(_) => {
-				async fn run<A>(mut ctx: MTContext<A>, act: Arc<AsyncMutex<A>>)
-				where
-					A: Actor<Context = MTContext<A>> + Send,
-				{
+				let act = self.actor.clone();
+				TOKIO_RUNTIME.spawn(async move {
 					act.lock().await.stopped(&mut ctx);
-				}
-
-				TOKIO_RUNTIME.spawn(run(ctx, self.actor.clone()));
+				});
 			}
 		}
 	}
