@@ -337,7 +337,7 @@ impl NewThreadForm {
 					required=true
 					type="text"
 					maxlength="100"
-					pattern="\\S+"
+					pattern=r".*\S+.*"
 				/>
 				<hr />
 				{self.render_tags()}
@@ -408,7 +408,7 @@ impl NewThreadForm {
 					value=tag
 					name="tag"
 					list="used-tags"
-					pattern="\\S+"
+					pattern=r".*\S+.*"
 					oninput=self.link.callback(move |e: InputData|
 						Msg::InputTag(id, e.value)
 					)
