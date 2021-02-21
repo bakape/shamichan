@@ -38,32 +38,39 @@ where
 		removed
 	}
 
+	#[inline]
 	pub fn get(&self, k: &K) -> Option<&HashSet<V>> {
 		self.0.get(k)
 	}
 
+	#[inline]
 	pub fn get_mut(&mut self, k: &K) -> Option<&mut HashSet<V>> {
 		self.0.get_mut(k)
 	}
 
+	#[inline]
 	pub fn clear(&mut self) {
 		self.0.clear()
 	}
 
+	#[inline]
 	pub fn drain(
 		&mut self,
 	) -> std::collections::hash_map::Drain<'_, K, HashSet<V>> {
 		self.0.drain()
 	}
 
+	#[inline]
 	pub fn keys(&self) -> impl Iterator<Item = &K> {
 		self.0.keys()
 	}
 
+	#[inline]
 	pub fn values(&self) -> impl Iterator<Item = &V> {
 		self.0.values().map(|s| s.iter()).flatten()
 	}
 
+	#[inline]
 	pub fn is_empty(&self) -> bool {
 		self.0.is_empty()
 	}
@@ -74,6 +81,7 @@ where
 	K: Hash + Eq,
 	V: Hash + Eq,
 {
+	#[inline]
 	fn from_iter<T: IntoIterator<Item = (K, HashSet<V>)>>(iter: T) -> Self {
 		Self(HashMap::<K, HashSet<V>>::from_iter(iter))
 	}
@@ -95,6 +103,7 @@ where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone,
 {
+	#[inline]
 	fn default() -> Self {
 		Self {
 			by_key: Default::default(),
@@ -113,10 +122,12 @@ where
 		self.by_value.insert(v, k);
 	}
 
+	#[inline]
 	pub fn get_by_key(&self, k: &K) -> Option<&HashSet<V>> {
 		self.by_key.get(k)
 	}
 
+	#[inline]
 	pub fn get_by_value(&self, v: &V) -> Option<&HashSet<K>> {
 		self.by_value.get(v)
 	}

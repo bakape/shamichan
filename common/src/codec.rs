@@ -17,6 +17,7 @@ struct Escaper<W: Write> {
 }
 
 impl<W: Write> Escaper<W> {
+	#[inline]
 	fn new(w: W) -> Escaper<W> {
 		Self { w: w }
 	}
@@ -43,6 +44,7 @@ impl<W: Write> Write for Escaper<W> {
 		Ok(src_len)
 	}
 
+	#[inline]
 	fn flush(&mut self) -> io::Result<()> {
 		self.w.flush()
 	}
@@ -55,6 +57,7 @@ pub struct Encoder {
 }
 
 impl Default for Encoder {
+	#[inline]
 	fn default() -> Self {
 		Self::new(Default::default())
 	}
@@ -63,6 +66,7 @@ impl Default for Encoder {
 impl Encoder {
 	/// Create new encoder for building message streams, which will have its
 	/// output written to the passed output stream.
+	#[inline]
 	pub fn new(mut w: Vec<u8>) -> Self {
 		Self::init_single_message(&mut w);
 		Self {
@@ -82,6 +86,7 @@ impl Encoder {
 
 	/// Indicate this is single message and not a concatenated vector of
 	/// messages
+	#[inline]
 	fn init_single_message(w: &mut Vec<u8>) {
 		w.push(0);
 	}
@@ -110,6 +115,7 @@ impl Encoder {
 	}
 
 	/// Flush any pending data to output stream
+	#[inline]
 	pub fn flush(&mut self) -> io::Result<()> {
 		self.w.flush()
 	}
@@ -129,6 +135,7 @@ impl Encoder {
 
 	/// Consumes this encoder, flushing the output stream and returning the
 	/// underlying writer
+	#[inline]
 	pub fn finish(self) -> io::Result<Vec<u8>> {
 		self.w.finish()
 	}
@@ -231,16 +238,19 @@ impl Decoder {
 	///
 	/// This method does not advance the decoder. Either read_next() or
 	/// skip_next() need to be called to advance it.
+	#[inline]
 	pub fn peek_type(&self) -> Option<MessageType> {
 		self.splitter.message_types.get(self.off).copied()
 	}
 
 	/// Return all message types decoded
+	#[inline]
 	pub fn all_types(&self) -> &[MessageType] {
 		&self.splitter.message_types
 	}
 
 	/// Skip reading next message and advance the decoder
+	#[inline]
 	pub fn skip_next(&mut self) {
 		self.off += 1;
 	}
@@ -277,6 +287,7 @@ struct MessageSplitter {
 }
 
 impl MessageSplitter {
+	#[inline]
 	fn new() -> Self {
 		Self {
 			buf: Vec::with_capacity(1 << 10),
@@ -335,6 +346,7 @@ impl Write for MessageSplitter {
 		Ok(src_len)
 	}
 
+	#[inline]
 	fn flush(&mut self) -> io::Result<()> {
 		Ok(())
 	}

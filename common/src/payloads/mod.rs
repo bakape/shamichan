@@ -151,6 +151,7 @@ pub struct Post {
 
 impl Post {
 	/// Create a new empty Post
+	#[inline]
 	pub fn new(
 		id: u64,
 		thread: u64,
@@ -174,6 +175,7 @@ impl Post {
 	}
 
 	/// Create a new empty OP
+	#[inline]
 	pub fn new_op(id: u64, created_on: u32, opts: PostCreationOpts) -> Self {
 		Self::new(
 			id,
@@ -218,6 +220,7 @@ pub struct Thread {
 
 impl Thread {
 	/// Create a new thread with 1 empty OP
+	#[inline]
 	pub fn new(
 		id: u64,
 		created_on: u32,
@@ -285,6 +288,7 @@ pub enum FileType {
 
 impl FileType {
 	/// Return canonical extension for file type
+	#[inline]
 	pub fn extension(&self) -> &'static str {
 		use FileType::*;
 

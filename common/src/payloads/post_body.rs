@@ -60,6 +60,7 @@ pub enum Node {
 }
 
 impl Default for Node {
+	#[inline]
 	fn default() -> Self {
 		Self::Empty
 	}

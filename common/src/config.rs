@@ -15,6 +15,7 @@ pub struct UploadMaximums {
 }
 
 impl Default for UploadMaximums {
+	#[inline]
 	fn default() -> Self {
 		Self {
 			size: 5.0,
@@ -52,12 +53,14 @@ pub enum Language {
 }
 
 impl Default for Language {
+	#[inline]
 	fn default() -> Self {
 		Self::en_GB
 	}
 }
 
 impl std::fmt::Display for Language {
+	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(match self {
 			Self::en_GB => "en_GB",
@@ -98,8 +101,9 @@ pub enum Theme {
 }
 
 impl Default for Theme {
+	#[inline]
 	fn default() -> Self {
-		Self::moe
+		Self::ashita
 	}
 }
 
