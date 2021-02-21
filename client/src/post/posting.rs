@@ -71,7 +71,7 @@ impl PostComponent for Inner {
 		self.agent = a.into();
 	}
 
-	fn should_render(&self, _: &super::common::Props) -> bool {
+	fn should_render<'c>(&self, _: &Ctx<'c, Self>) -> bool {
 		use State::*;
 
 		match self.state {
@@ -84,13 +84,13 @@ impl PostComponent for Inner {
 		}
 	}
 
-	fn is_draggable(_: &super::common::Props) -> bool {
+	fn is_draggable<'c>(&self, _: &Ctx<'c, Self>) -> bool {
 		true
 	}
 
-	fn update_extra<'s, 'c>(
+	fn update_extra<'c>(
 		&mut self,
-		ctx: &mut super::common::CtxMut<'s, 'c, Self>,
+		c: &mut Ctx<'c, Self>,
 		msg: Self::MessageExtra,
 	) -> bool {
 		util::with_logging(|| {
@@ -103,9 +103,9 @@ impl PostComponent for Inner {
 					true
 				}
 				SetID(id) => {
-					let mut old = ctx.ctx.props().clone();
+					let mut old = c.props().clone();
 					old.id = id;
-					ctx.ctx.set_props(old)
+					c.set_props(old)
 				}
 				TextInput(s) => {
 					self.resize_textarea()?;
@@ -166,7 +166,7 @@ impl PostComponent for Inner {
 					let s_chars: Vec<_> = s.chars().collect();
 					let s_chars_len = s_chars.len();
 					self.replace_text(
-						&ctx.ctx.link,
+						&c.link(),
 						{
 							// Combine new body
 							let old_len = old.len();
@@ -202,7 +202,7 @@ impl PostComponent for Inner {
 					// Because Firefox refocuses the clicked <a> on quote
 					if first {
 						self.on_next_frame(
-							&ctx.ctx.link,
+							&c.link(),
 							FormMessage::Focus { pos, first: false },
 						);
 					} else {
@@ -215,16 +215,16 @@ impl PostComponent for Inner {
 		})
 	}
 
-	fn extra_classes(&self) -> &'static [&'static str] {
+	fn extra_classes<'c>(&self, _: &Ctx<'c, Self>) -> &'static [&'static str] {
 		&["post-form"]
 	}
 
-	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
+	fn render_body<'c>(&self, c: &Ctx<'c, Self>) -> Html {
 		html! {
 			<textarea
 				class="post-form-input"
 				ref=self.text_area.clone()
-				oninput=c.ctx.link.callback(|yew::html::InputData{value}| {
+				oninput=c.link().callback(|yew::html::InputData{value}| {
 					super::common::Message::Extra(FormMessage::TextInput(value))
 				})
 			>
@@ -232,7 +232,7 @@ impl PostComponent for Inner {
 		}
 	}
 
-	fn render_after<'s, 'c>(&self, _: &Ctx<'s, 'c, Self>) -> Html {
+	fn render_after<'c>(&self, _: &Ctx<'c, Self>) -> Html {
 		html! {
 			<span>{"TODO: controls"}</span>
 		}
@@ -346,8 +346,14 @@ impl Default for State {
 }
 
 pub enum Message {
+	/// Websocket connection state updated
 	ConnStateUpdate(connection::State),
+
+	/// User text selection has changed
 	SelectionChange,
+
+	/// A change in the currently open post ID
+	OpenPostIDChange,
 }
 
 /// Currently selected text and elements
@@ -369,9 +375,6 @@ pub enum Request {
 
 	/// Commit text body changes
 	CommitText(String),
-
-	/// Set postform post as allocated and it's ID
-	SetAllocated(u64),
 
 	/// Open a draft postform for a target thread
 	OpenDraft(u64),
@@ -402,6 +405,7 @@ pub struct Agent {
 
 	#[allow(unused)]
 	conn: Box<dyn Bridge<connection::Connection>>,
+	app_state: state::StateBridge,
 
 	conn_state: connection::State,
 
@@ -435,6 +439,11 @@ impl yew::agent::Agent for Agent {
 		Self {
 			conn: connection::Connection::bridge(
 				link.callback(|s| Message::ConnStateUpdate(s)),
+			),
+			app_state: state::hook(
+				&link,
+				vec![state::Change::OpenPostID],
+				|| Message::OpenPostIDChange,
 			),
 			link,
 			state: State::Ready,
@@ -489,6 +498,15 @@ impl yew::agent::Agent for Agent {
 
 					// Already stalled on a critical error
 					S::CriticalError => (),
+				};
+			}
+			OpenPostIDChange => {
+				match (&self.app_state.get().open_post_id, &self.state) {
+					(Some(id), State::Draft { .. }) => {
+						self.set_state(State::Allocated { post: *id });
+						self.send_to_views(&Response::SetID(*id));
+					}
+					_ => (),
 				};
 			}
 			SelectionChange => util::with_logging(|| {
@@ -561,10 +579,6 @@ impl yew::agent::Agent for Agent {
 				self.subscribers.insert(h, Subscription::ViewUpdates);
 			}
 			CommitText(new) => self.commit_text(new.chars().collect()),
-			SetAllocated(id) => {
-				self.set_state(State::Allocated { post: id });
-				self.send_to_views(&Response::SetID(id));
-			}
 			OpenDraft(thread) => {
 				if self.state == State::Ready {
 					self.set_state(State::Draft { thread });
@@ -613,7 +627,8 @@ impl Agent {
 		use State::*;
 
 		match self.state {
-			Draft { thread } => state::read(|s| {
+			Draft { thread } => {
+				let s = self.app_state.get();
 				if !s.location.is_thread() {
 					return false;
 				}
@@ -630,7 +645,7 @@ impl Agent {
 				);
 				self.set_state(Allocating { thread });
 				true
-			}),
+			}
 			Allocating { .. } | Allocated { .. } => true,
 			_ => false,
 		}

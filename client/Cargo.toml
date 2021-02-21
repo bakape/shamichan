@@ -19,16 +19,16 @@ common = {path = "../common"}
 console_error_panic_hook = "0.1.6"
 flate2 = "1.0.20"
 futures = "0.3.12"
+gloo = "0.2.1"
 hex = "0.4.2"
+indexmap = "1.6.1"
 js-sys = "0.3.47"
-serde = { version = "1.0.123", features = ["rc"] }
+serde = {version = "1.0.123", features = ["rc"]}
 serde_json = "1.0.62"
 uuid = "0.8.2"
 wasm-bindgen = "0.2.70"
 wasm-bindgen-futures = "0.4.20"
 yew = "0.17.4"
-indexmap = "1.6.1"
-gloo = "0.2.1"
 
 [dependencies.web-sys]
 features = [

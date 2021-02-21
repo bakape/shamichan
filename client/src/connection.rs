@@ -5,14 +5,10 @@ use super::{
 use common::{debug_log, Decoder, Encoder, MessageType};
 use serde::Serialize;
 use std::{collections::HashSet, fmt::Debug};
-use wasm_bindgen::prelude::*;
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
 	html,
-	services::{
-		console::ConsoleService,
-		timeout::{TimeoutService, TimeoutTask},
-	},
+	services::timeout::{TimeoutService, TimeoutTask},
 	Bridge, Bridged, Component, ComponentLink, Html,
 };
 
@@ -102,8 +98,7 @@ pub struct Connection {
 	authed_with: Option<uuid::Uuid>,
 
 	/// Link to global application state
-	#[allow(unused)]
-	bridge: state::HookBridge,
+	app_state: state::StateBridge,
 
 	/// Reconnection attempts since last connect, if any
 	reconn_attempts: i32,
@@ -173,7 +168,7 @@ impl Agent for Connection {
 		use state::Change;
 
 		let mut s = Self {
-			bridge: state::hook(&link, vec![Change::KeyPair], || {
+			app_state: state::hook(&link, vec![Change::KeyPair], || {
 				Event::KeyPairChanged
 			}),
 			authed_with: None,
@@ -218,18 +213,17 @@ impl Agent for Connection {
 		match msg {
 			Open => {
 				self.reset_reconn_attempts();
-				Self::send_handshake_req(state::read(|s| s.key_pair.clone()))
+				Self::send_handshake_req(self.app_state.get().key_pair.clone())
 			}
 			KeyPairChanged => {
-				state::read(|s| {
-					if match (&s.key_pair.id, &self.authed_with) {
-						(Some(new), Some(old)) => new != old,
-						_ => false,
-					} {
-						// Reconnect with new key
-						self.connect();
-					}
-				})
+				if match (&self.app_state.get().key_pair.id, &self.authed_with)
+				{
+					(Some(new), Some(old)) => new != old,
+					_ => false,
+				} {
+					// Reconnect with new key
+					self.connect();
+				}
 			}
 			Close(e) => {
 				let r = e.reason();
@@ -304,7 +298,7 @@ impl Agent for Connection {
 				}
 				Request::Handshake { key_pair, message } => {
 					// Prevent async race conditions on key pair change
-					if state::read(|s| s.key_pair != key_pair) {
+					if self.app_state.get().key_pair != key_pair {
 						return Ok(());
 					}
 
@@ -533,7 +527,7 @@ impl Connection {
 				Handshake => {
 					let req: HandshakeRes = decode!();
 					self.authed_with = Some(req.id.clone());
-					if state::read(|s| s.key_pair.id.is_none()) {
+					if self.app_state.get().key_pair.id.is_none() {
 						state::Agent::dispatcher().send(
 							state::Request::SetKeyID(req.id.clone().into()),
 						);
@@ -553,13 +547,13 @@ impl Connection {
 							// Key already saved in database. Need to confirm
 							// it's the same private key by sending a
 							// HandshakeReq with Authentication::Saved.
-							let mut kp = state::read(|s| s.key_pair.clone());
+							let mut kp = self.app_state.get().key_pair.clone();
 							kp.id = req.id.into();
 							Self::send_handshake_req(kp);
 						}
 						PubKeyStatus::NotFound => {
 							send(Request::SetKeyID(None));
-							let mut kp = state::read(|s| s.key_pair.clone());
+							let mut kp = self.app_state.get().key_pair.clone();
 							kp.id = req.id.into();
 							Self::send_handshake_req(kp);
 						}

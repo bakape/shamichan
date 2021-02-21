@@ -55,22 +55,18 @@ impl comp_util::Inner for Inner {
 		use PostSet::*;
 
 		// TODO: Filter hidden posts
-		let posts: Vec<u64> = state::read(|s| match &c.props().pages {
+		let posts: Vec<u64> = match &c.props().pages {
 			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
-				let page_count = s
+				let page_count = c
+					.app_state()
 					.threads
 					.get(&c.props().id)
 					.map(|t| t.page_count)
 					.unwrap_or(1);
-				self.read_page_posts(&mut v, c.props().id, page_count - 1, s);
+				self.read_page_posts(c, &mut v, page_count - 1);
 				if v.len() < 5 && page_count > 1 {
-					self.read_page_posts(
-						&mut v,
-						c.props().id,
-						page_count - 2,
-						s,
-					);
+					self.read_page_posts(c, &mut v, page_count - 2);
 				}
 				v.sort_unstable();
 				if v.len() > 5 {
@@ -82,12 +78,12 @@ impl comp_util::Inner for Inner {
 			Pages(pages) => {
 				let mut v = Vec::with_capacity(300);
 				for p in pages.iter() {
-					self.read_page_posts(&mut v, c.props().id, *p, s);
+					self.read_page_posts(c, &mut v, *p);
 				}
 				v.sort_unstable();
 				v
 			}
-		});
+		};
 
 		html! {
 			<section class="thread-container" key=c.props().id>
@@ -108,14 +104,16 @@ impl Inner {
 	/// Read the post IDs of a page, excluding the OP, into dst
 	fn read_page_posts(
 		&self,
+		c: &comp_util::Ctx<Self>,
 		dst: &mut Vec<u64>,
-		thread: u64,
 		page: u32,
-		s: &state::State,
 	) {
-		if let Some(posts) = s.posts_by_thread_page.get_by_key(&(thread, page))
+		if let Some(posts) = c
+			.app_state()
+			.posts_by_thread_page
+			.get_by_key(&(c.props().id, page))
 		{
-			dst.extend(posts.iter().filter(|id| **id != thread));
+			dst.extend(posts.iter().filter(|id| **id != c.props().id));
 		}
 	}
 }

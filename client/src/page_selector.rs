@@ -33,7 +33,7 @@ impl comp_util::Inner for Inner {
 	type Properties = Props;
 
 	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
-		self.fetch_page_count(c.props().thread);
+		self.fetch_page_count(c);
 	}
 
 	fn update_message() -> Self::Message {
@@ -79,7 +79,7 @@ impl comp_util::Inner for Inner {
 			SelectPage(_) => todo!("page navigation"),
 			ThreadUpdate => {
 				let old = self.page_count;
-				self.fetch_page_count(c.props().thread);
+				self.fetch_page_count(c);
 				old != self.page_count
 			}
 			NOP => false,
@@ -106,7 +106,7 @@ impl comp_util::Inner for Inner {
 				{
 					for (self.offset..self.page_count).map(|i| html! {
 						<a
-							onclick=c.link.callback(move |_|
+							onclick=c.link().callback(move |_|
 								Message::SelectPage(i)
 							)
 						>
@@ -141,14 +141,17 @@ impl Inner {
 		msg: Message,
 	) -> Html {
 		html! {
-			<a onclick=c.link.callback(move |_| msg.clone())>{text}</a>
+			<a onclick=c.link().callback(move |_| msg.clone())>{text}</a>
 		}
 	}
 
 	/// Fetch and set new page count value for thread from global state
-	fn fetch_page_count(&mut self, thread: u64) {
-		self.page_count = state::read(|s| {
-			s.threads.get(&thread).map(|t| t.page_count).unwrap_or(1)
-		});
+	fn fetch_page_count(&mut self, c: &mut comp_util::Ctx<Self>) {
+		self.page_count = c
+			.app_state()
+			.threads
+			.get(&c.props().thread)
+			.map(|t| t.page_count)
+			.unwrap_or(1);
 	}
 }

@@ -40,7 +40,7 @@ impl comp_util::Inner for Inner {
 	}
 
 	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
-		let toggle = c.link.callback(|_| Message::ToggleExpand);
+		let toggle = c.link().callback(|_| Message::ToggleExpand);
 
 		html! {
 			<a class="svg-link control" onclick=toggle.clone()>

@@ -4,8 +4,7 @@ use yew::{html, Component, ComponentLink, Html};
 
 /// Central thread container
 pub struct Threads {
-	#[allow(unused)]
-	bridge: state::HookBridge,
+	app_state: state::StateBridge,
 
 	#[allow(unused)]
 	link: ComponentLink<Self>,
@@ -19,7 +18,7 @@ impl Component for Threads {
 		use state::Change;
 
 		Self {
-			bridge: state::hook(
+			app_state: state::hook(
 				&link,
 				vec![Change::Location, Change::ThreadList],
 				|| (),
@@ -32,59 +31,56 @@ impl Component for Threads {
 		use super::thread as view;
 		use state::FeedID;
 
-		state::read(|s| {
-			match &s.location.feed {
-				FeedID::Catalog => {
-					html! {
-						<span>{"TODO"}</span>
-					}
+		match &self.app_state.get().location.feed {
+			FeedID::Catalog => {
+				html! {
+					<span>{"TODO"}</span>
 				}
-				FeedID::Index => {
-					let mut threads: Vec<&Thread> =
-						s.threads.values().collect();
-					// TODO: Different sort orders
-					threads.sort_unstable_by_key(|t| {
-						std::cmp::Reverse(t.bumped_on)
-					});
+			}
+			FeedID::Index => {
+				let s = self.app_state.get();
+				let mut threads: Vec<&Thread> = s.threads.values().collect();
+				// TODO: Different sort orders
+				threads
+					.sort_unstable_by_key(|t| std::cmp::Reverse(t.bumped_on));
 
-					let mut w = Vec::with_capacity(threads.len() * 2);
-					for (i, t) in threads.into_iter().enumerate() {
-						if i != 0 {
-							w.push(html! {
-								<hr />
-							});
-						}
+				let mut w = Vec::with_capacity(threads.len() * 2);
+				for (i, t) in threads.into_iter().enumerate() {
+					if i != 0 {
 						w.push(html! {
-							<view::Thread
-								id=t.id pages=view::PostSet::Last5Posts
-							/>
+							<hr />
 						});
 					}
-
-					html! {
-						<section>
-							{w.into_iter().collect::<Html>()}
-						</section>
-					}
+					w.push(html! {
+						<view::Thread
+							id=t.id pages=view::PostSet::Last5Posts
+						/>
+					});
 				}
-				FeedID::Thread { id, page } => {
-					if page < &0 {
-						html! {}
-					} else {
-						html! {
-							<view::Thread
-								id=id
-								pages=view::PostSet::Pages(
-									[*page as u32]
-									.iter()
-									.copied()
-									.collect(),
-								)
-							/>
-						}
+
+				html! {
+					<section>
+						{w.into_iter().collect::<Html>()}
+					</section>
+				}
+			}
+			FeedID::Thread { id, page } => {
+				if page < &0 {
+					html! {}
+				} else {
+					html! {
+						<view::Thread
+							id=id
+							pages=view::PostSet::Pages(
+								[*page as u32]
+								.iter()
+								.copied()
+								.collect(),
+							)
+						/>
 					}
 				}
 			}
-		})
+		}
 	}
 }

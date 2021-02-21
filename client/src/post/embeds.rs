@@ -21,13 +21,7 @@ struct Descriptor {
 	target: String,
 }
 
-common::gen_global! {
-	/// Fetched embed data cache
-	HashMap<Descriptor, Data> {
-		fn read();
-		fn write();
-	}
-}
+static mut CACHE: *mut HashMap<Descriptor, Data> = std::ptr::null_mut();
 
 /// Render link to embedadble resource
 pub fn render(e: Embed) -> Html {

@@ -2,7 +2,7 @@ use crate::{
 	buttons::SpanButton,
 	comp_util,
 	mouse::Coordinates,
-	state::{self, FeedID, Focus, Location},
+	state::{self, FeedID, Focus, Location, State},
 	util,
 };
 use common::{
@@ -27,71 +27,187 @@ pub trait PostComponent: Default {
 
 	/// MessageExtra handler. Returns, if component should be rerendered
 	#[allow(unused_variables)]
-	fn update_extra<'s, 'c>(
+	fn update_extra<'c>(
 		&mut self,
-		ctx: &mut CtxMut<'s, 'c, Self>,
+		c: &mut Ctx<'c, Self>,
 		msg: Self::MessageExtra,
 	) -> bool {
 		false
-	}
-
-	/// Should post even render?
-	#[allow(unused_variables)]
-	fn should_render(&self, props: &Props) -> bool {
-		true
 	}
 
 	/// Return, if this component is a preview of a post and thus should not
 	/// spawn its own previews.
 	//
 	/// Value must be static.
+	#[inline]
 	fn is_preview() -> bool {
 		false
 	}
 
+	/// Should post even render?
+	#[allow(unused_variables)]
+	fn should_render<'c>(&self, c: &Ctx<'c, Self>) -> bool {
+		true
+	}
+
 	/// Can be dragged and repositioned across the screen
-	fn is_draggable(props: &Props) -> bool;
+	fn is_draggable<'c>(&self, c: &Ctx<'c, Self>) -> bool;
 
 	/// Extra classes to assign to the post's root element
-	fn extra_classes(&self) -> &'static [&'static str] {
+	#[allow(unused_variables)]
+	fn extra_classes<'c>(&self, c: &Ctx<'c, Self>) -> &'static [&'static str] {
 		Default::default()
 	}
 
 	/// Render post's text body
-	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html;
+	fn render_body<'c>(&self, c: &Ctx<'c, Self>) -> Html;
 
 	/// Append extra HTML to the end of the post's root element
 	#[allow(unused_variables)]
-	fn render_after<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
+	fn render_after<'c>(&self, c: &Ctx<'c, Self>) -> Html {
 		html! {}
 	}
 }
 
-/// Context passed to PostComponent implementors
-pub struct Ctx<'s, 'c, PC>
+/// Reference to parent context that might be mutable.
+enum ParentCtxRef<'c, PC>
 where
 	PC: PostComponent + 'static,
 {
-	/// Global state reference
-	pub app: &'s state::State,
-
-	/// Post data of target post
-	pub post: &'s Post,
-
-	/// comp_util::Ctx passed from upstream
-	pub ctx: &'c comp_util::Ctx<PostCommonInner<PC>>,
+	Const(&'c comp_util::Ctx<PostCommonInner<PC>>),
+	Mut(&'c mut comp_util::Ctx<PostCommonInner<PC>>),
 }
 
-/// Partially mutable context passed to PostComponent implementors
-pub struct CtxMut<'s, 'c, PC>
+impl<'c, PC> ParentCtxRef<'c, PC>
 where
 	PC: PostComponent + 'static,
 {
-	/// Global state reference
-	pub app: &'s state::State,
+	fn as_ref(&'c self) -> &'c comp_util::Ctx<PostCommonInner<PC>> {
+		match self {
+			Self::Const(p) => p,
+			Self::Mut(p) => p as &'c comp_util::Ctx<PostCommonInner<PC>>,
+		}
+	}
+}
+
+/// Context passed to PostComponent implementors
+pub struct Ctx<'c, PC>
+where
+	PC: PostComponent + 'static,
+{
+	/// Post data of target post.
+	///
+	/// Uses raw pointers to allow both mutably and immutably reference the parent
+	/// context at the same times as this post. The post is not actually
+	/// contained by the parent context, but should not outlive the context
+	/// anyway
+	post: *const Post,
 
 	/// comp_util::Ctx passed from upstream
-	pub ctx: &'c mut comp_util::Ctx<PostCommonInner<PC>>,
+	parent: ParentCtxRef<'c, PC>,
+}
+
+impl<'c, PC> Ctx<'c, PC>
+where
+	PC: PostComponent + 'static,
+{
+	/// Construct a new immutable context, if possible.
+	///
+	/// Guarantees immutability by returning an `impl AsRef` instead of `Self`.
+	fn new(
+		parent: &'c comp_util::Ctx<PostCommonInner<PC>>,
+	) -> Option<impl AsRef<Ctx<'c, PC>>> {
+		Some(Ctx::<'c, PC> {
+			post: Self::get_post(parent)?,
+			parent: ParentCtxRef::Const(parent),
+		})
+	}
+
+	/// Construct a new mutable context, if possible.
+	fn new_mut(
+		parent: &'c mut comp_util::Ctx<PostCommonInner<PC>>,
+	) -> Option<impl AsMut<Ctx<'c, PC>>> {
+		Some(Ctx::<'c, PC> {
+			post: Self::get_post(parent)?,
+			parent: ParentCtxRef::Mut(parent),
+		})
+	}
+
+	fn get_post(
+		parent: &comp_util::Ctx<PostCommonInner<PC>>,
+	) -> Option<*const Post> {
+		match parent.app_state().posts.get(&parent.props().id) {
+			// This fools the borrow checker
+			Some(p) => Some(p as *const Post),
+			None => {
+				debug_log!("post not found in app state", parent.props().id);
+				return None;
+			}
+		}
+	}
+
+	/// Get reference to component properties
+	#[inline]
+	pub fn props(
+		&self,
+	) -> &<PostCommonInner<PC> as comp_util::Inner>::Properties {
+		self.parent.as_ref().props()
+	}
+
+	/// Set component properties. Returns, if properties where altered.
+	#[inline]
+	pub fn set_props(
+		&mut self,
+		props: <PostCommonInner<PC> as comp_util::Inner>::Properties,
+	) -> bool {
+		match &mut self.parent {
+			ParentCtxRef::Mut(c) => c.set_props(props),
+			ParentCtxRef::Const(_) => unsafe {
+				std::hint::unreachable_unchecked()
+			},
+		}
+	}
+
+	/// Get reference to parent post data
+	#[inline]
+	pub fn post(&self) -> &'c Post {
+		match unsafe { self.post.as_ref() } {
+			Some(p) => p,
+			None => unsafe { std::hint::unreachable_unchecked() },
+		}
+	}
+
+	/// Get reference to component's properties
+	#[inline]
+	pub fn link(
+		&self,
+	) -> &yew::ComponentLink<comp_util::HookedComponent<PostCommonInner<PC>>> {
+		self.parent.as_ref().link()
+	}
+
+	/// Get reference to the global application state
+	#[inline]
+	pub fn app_state(&self) -> std::cell::Ref<'static, State> {
+		self.parent.as_ref().app_state()
+	}
+}
+
+impl<'c, PC> AsRef<Self> for Ctx<'c, PC>
+where
+	PC: PostComponent + 'static,
+{
+	fn as_ref(&self) -> &Self {
+		self
+	}
+}
+
+impl<'c, PC> AsMut<Self> for Ctx<'c, PC>
+where
+	PC: PostComponent + 'static,
+{
+	fn as_mut(&mut self) -> &mut Self {
+		self
+	}
 }
 
 /// Common behavior for all post PostComponents as a wrapper
@@ -142,7 +258,7 @@ where
 	type Message = Message<PC::MessageExtra>;
 
 	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
-		self.inner.init(&c.link);
+		self.inner.init(&c.link());
 	}
 
 	fn update_message() -> Self::Message {
@@ -150,9 +266,9 @@ where
 	}
 
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
-		use state::Change;
+		use state::Change::*;
 
-		vec![Change::Configs, Change::Options, Change::Post(props.id)]
+		vec![Configs, Options, Location, Post(props.id), OpenPostID]
 	}
 
 	fn update(
@@ -165,9 +281,9 @@ where
 		match msg {
 			Rerender => true,
 			NOP => false,
-			Extra(e) => state::read(|s| {
-				self.inner.update_extra(&mut CtxMut { app: s, ctx: c }, e)
-			}),
+			Extra(e) => Ctx::new_mut(c)
+				.map(|mut c| self.inner.update_extra(c.as_mut(), e))
+				.unwrap_or(false),
 			ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
 				true
@@ -200,28 +316,27 @@ where
 				if let Some(el) =
 					self.media_el.cast::<web_sys::HtmlAudioElement>()
 				{
-					el.set_volume(state::read(|s| {
-						s.options.audio_volume as f64 / 100_f64
-					}));
+					el.set_volume(
+						c.app_state().options.audio_volume as f64 / 100_f64,
+					);
 				}
 				false
 			}
 			CheckTallImage => {
 				util::with_logging(|| {
-					state::read(|s| {
-						if let (Some(img), Some(wh)) = (
-							s.posts
-								.get(&c.props().id)
-								.map(|p| p.image.as_ref())
-								.flatten(),
-							util::window().inner_height()?.as_f64(),
-						) {
-							if img.width as f64 > wh {
-								self.scroll_to();
-							}
+					if let (Some(img), Some(wh)) = (
+						c.app_state()
+							.posts
+							.get(&c.props().id)
+							.map(|p| p.image.as_ref())
+							.flatten(),
+						util::window().inner_height()?.as_f64(),
+					) {
+						if img.width as f64 > wh {
+							self.scroll_to();
 						}
-						Ok(())
-					})
+					}
+					Ok(())
 				});
 				false
 			}
@@ -229,13 +344,13 @@ where
 				use crate::mouse;
 				use yew::agent::Bridged;
 
-				if !PC::is_draggable(c.props()) {
+				if !self.is_draggable(c) {
 					return false;
 				}
 
 				self.last_mouse_coordinates = coords;
 				let mut b =
-					mouse::Agent::bridge(c.link.callback(|msg| match msg {
+					mouse::Agent::bridge(c.link().callback(|msg| match msg {
 						mouse::Response::Coordinates(c) => {
 							Message::MouseMove(c)
 						}
@@ -259,7 +374,7 @@ where
 				false
 			}
 			MouseMove(coords) => {
-				if self.drag_agent.is_none() || !PC::is_draggable(c.props()) {
+				if self.drag_agent.is_none() || !self.is_draggable(c) {
 					return false;
 				}
 
@@ -271,74 +386,63 @@ where
 	}
 
 	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
-		if !self.inner.should_render(c.props()) {
+		let c = match Ctx::new(c) {
+			Some(c) => c,
+			None => return html! {},
+		};
+		let c = c.as_ref();
+
+		if !self.inner.should_render(&c) {
 			debug_log!("post specified to not render", c.props().id);
 			return html! {};
 		}
 
-		state::read(|s| {
-			let c = Ctx {
-				app: s,
-				ctx: c,
-				post: match s.posts.get(&c.props().id) {
-					Some(p) => p,
-					None => {
-						debug_log!(
-							"post not found in collection",
-							c.props().id
-						);
-						return html! {};
-					}
-				},
-			};
+		let mut cls = vec!["glass"];
+		cls.extend(self.inner.extra_classes(&c));
+		if c.post().open {
+			cls.push("open");
+		}
 
-			let mut cls = vec!["glass"];
-			cls.extend(self.inner.extra_classes());
-			if c.post.open {
-				cls.push("open");
-			}
+		let mut style = String::new();
+		if !self.translation.is_zero() {
+			style = format!(
+				"transform: translate({}px, {}px);",
+				self.translation.x, self.translation.y
+			);
+			cls.push("translated");
+		} else if c.post().id == c.post().thread {
+			// Moved OPs need to not blend into the background
+			cls.push("no-border");
+		}
 
-			let mut style = String::new();
-			if !self.translation.is_zero() {
-				style = format!(
-					"transform: translate({}px, {}px);",
-					self.translation.x, self.translation.y
-				);
-				cls.push("translated");
-			} else if c.post.id == c.post.thread {
-				// Moved OPs need to not blend into the background
-				cls.push("no-border");
-			}
-
-			#[rustfmt::skip]
+		#[rustfmt::skip]
 			macro_rules! with_image {
 				($method:ident) => {
-					match &c.post.image {
+					match &c.post().image {
 						Some(img) => self.$method(&c, img),
 						None => html! {},
 					}
 				};
 			}
 
-			html! {
-				<article
-					class=cls
-					key=c.ctx.props().id
-					ref=self.el.clone()
-					style=style
-				>
-					{self.render_header(&c)}
-					{with_image!(render_figcaption)}
-					<div class="post-container">
-						{with_image!(render_figure)}
-						<blockquote>{self.inner.render_body(&c)}</blockquote>
-					</div>
-					// TODO: post moderation log
-					// TODO: backlinks
-					{self.inner.render_after(&c)}
-				</article>
-			}
-		})
+		html! {
+			<article
+				class=cls
+				key=c.props().id
+				ref=self.el.clone()
+				style=style
+			>
+				{self.render_header(&c)}
+				{with_image!(render_figcaption)}
+				<div class="post-container">
+					{with_image!(render_figure)}
+					<blockquote>{self.inner.render_body(&c)}</blockquote>
+				</div>
+				// TODO: post moderation log
+				// TODO: backlinks
+				{self.inner.render_after(&c)}
+			</article>
+		}
 	}
 }
 
@@ -352,9 +456,16 @@ where
 		}
 	}
 
-	fn render_header<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
-		let thread = if c.post.id == c.post.thread {
-			c.app.threads.get(&c.post.thread)
+	fn is_draggable(&self, c: &comp_util::Ctx<Self>) -> bool {
+		Ctx::new(c)
+			.map(|c| self.inner.is_draggable(c.as_ref()))
+			.unwrap_or(false)
+	}
+
+	fn render_header<'c>(&self, c: &Ctx<'c, PC>) -> Html {
+		let s = c.app_state();
+		let thread = if c.post().id == c.post().thread {
+			s.threads.get(&c.post().thread)
 		} else {
 			None
 		};
@@ -382,7 +493,7 @@ where
 				}
 				{self.render_name(c)}
 				{
-					match &c.post.flag {
+					match &c.post().flag {
 						Some(code) => match super::countries::get_name(&code) {
 							Some(name) => html! {
 								<img
@@ -396,28 +507,28 @@ where
 						None => html! {},
 					}
 				}
-				<crate::time::view::View time=c.post.created_on />
+				<crate::time::view::View time=c.post().created_on />
 				<nav class="spaced">
 					// TODO: focus this post
 					<a>{"#"}</a>
 					<a
 						class="quote"
-						onclick=c.ctx.link.callback(|_| Message::QuoteSelf)
+						onclick=c.link().callback(|_| Message::QuoteSelf)
 					>
-						{c.post.id}
+						{c.post().id}
 					</a>
 				</nav>
 				{
 					if thread.is_some()
 					&& !PC::is_preview()
-					&& !state::read(|s| c.app.location.is_thread())
+					&& !c.app_state().location.is_thread()
 					{
-						let id = c.post.id;
+						let id = c.post().id;
 						html! {
 							<>
 								<SpanButton
 									text="top"
-									on_click=c.ctx.link.callback(move |_| {
+									on_click=c.link().callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -430,7 +541,7 @@ where
 								/>
 								<SpanButton
 									text="bottom"
-									on_click=c.ctx.link.callback(move |_| {
+									on_click=c.link().callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -447,16 +558,16 @@ where
 						html! {}
 					}
 				}
-				<super::menu::Menu id=c.post.id />
+				<super::menu::Menu id=c.post().id />
 			</>
 		};
 
 		// TODO: return to original position on double click
-		if PC::is_draggable(c.ctx.props()) {
+		if self.inner.is_draggable(&c) {
 			html! {
 				<header
 					class="spaced draggable"
-					ondragstart=c.ctx.link.callback(|e: web_sys::DragEvent| {
+					ondragstart=c.link().callback(|e: web_sys::DragEvent| {
 						e.prevent_default();
 						Message::DragStart(Coordinates::from(&*e))
 					})
@@ -474,36 +585,36 @@ where
 		}
 	}
 
-	fn render_name<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
+	fn render_name<'c>(&self, c: &Ctx<'c, PC>) -> Html {
 		// TODO: Staff titles
 		let mut w: Vec<Html> = Default::default();
 
-		if c.app.options.forced_anonymity
-			|| (c.post.name.is_none() && c.post.trip.is_none())
+		if c.app_state().options.forced_anonymity
+			|| (c.post().name.is_none() && c.post().trip.is_none())
 		{
 			w.push(html! {
 				<span>{localize!("anon")}</span>
 			});
 		} else {
-			if let Some(name) = &c.post.name {
+			if let Some(name) = &c.post().name {
 				w.push(html! {
 					<span>{name}</span>
 				});
 			}
-			if let Some(trip) = &c.post.trip {
+			if let Some(trip) = &c.post().trip {
 				w.push(html! {
 					<code>{trip}</code>
 				});
 			}
 		}
-		if c.app.mine.contains(&c.post.id) {
+		if c.app_state().mine.contains(&c.post().id) {
 			w.push(html! {
 				<i>{localize!("you")}</i>
 			});
 		}
 
 		let mut cls = vec!["name"];
-		if c.post.sage {
+		if c.post().sage {
 			cls.push("sage");
 		}
 		// TODO: Add admin class, if staff title
@@ -515,11 +626,7 @@ where
 		}
 	}
 
-	fn render_figcaption<'s, 'c>(
-		&self,
-		c: &Ctx<'s, 'c, PC>,
-		img: &Image,
-	) -> Html {
+	fn render_figcaption<'c>(&self, c: &Ctx<'c, PC>, img: &Image) -> Html {
 		let mut file_info = Vec::<String>::new();
 
 		#[rustfmt::skip]
@@ -563,7 +670,8 @@ where
 		html! {
 			<figcaption class="spaced">
 				{
-					if c.app.options.hide_thumbnails || c.app.options.work_mode
+					if c.app_state().options.hide_thumbnails
+					   || c.app_state().options.work_mode
 					{
 						html! {
 							<crate::buttons::SpanButton
@@ -572,7 +680,7 @@ where
 								} else {
 									"show"
 								}
-								on_click=c.ctx.link.callback(|_|
+								on_click=c.link().callback(|_|
 									Message::ImageHideToggle
 								)
 							/>
@@ -595,7 +703,7 @@ where
 						html! {
 							<SpanButton
 								text="contract"
-								on_click=c.ctx.link.callback(|_|
+								on_click=c.link().callback(|_|
 									Message::ImageContract
 								)
 							/>
@@ -615,11 +723,7 @@ where
 		}
 	}
 
-	fn render_image_search<'s, 'c>(
-		&self,
-		c: &Ctx<'s, 'c, PC>,
-		img: &Image,
-	) -> Html {
+	fn render_image_search<'c>(&self, c: &Ctx<'c, PC>, img: &Image) -> Html {
 		use FileType::*;
 
 		match img.thumb_type {
@@ -644,7 +748,7 @@ where
 		);
 
 		let mut v = Vec::<(&'static str, String)>::new();
-		for p in c.app.options.enabled_image_search.iter() {
+		for p in c.app_state().options.enabled_image_search.iter() {
 			if let Some(u) = p.url(img, &url) {
 				v.push((p.symbol(), u));
 			}
@@ -670,12 +774,13 @@ where
 		}
 	}
 
-	fn render_figure<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>, img: &Image) -> Html {
+	fn render_figure<'c>(&self, c: &Ctx<'c, PC>, img: &Image) -> Html {
 		use yew::events::MouseEvent;
 		use FileType::*;
 
 		if !self.reveal_image
-			&& (c.app.options.hide_thumbnails || c.app.options.work_mode)
+			&& (c.app_state().options.hide_thumbnails
+				|| c.app_state().options.work_mode)
 		{
 			return html! {};
 		}
@@ -700,11 +805,13 @@ where
 					}
 					.to_string(),
 				)
-			} else if img.spoilered && !c.app.options.reveal_image_spoilers {
+			} else if img.spoilered
+				&& !c.app_state().options.reveal_image_spoilers
+			{
 				// Spoilered and spoilers enabled
 				(150, 150, "/assets/spoil/default.jpg".into())
 			} else if img.file_type == GIF
-				&& c.app.options.expand_gif_thumbnails
+				&& c.app_state().options.expand_gif_thumbnails
 			{
 				// Animated GIF thumbnails
 				(img.thumb_width, img.thumb_height, src.clone())
@@ -719,9 +826,9 @@ where
 			use state::ImageExpansionMode;
 
 			let mut cls = vec!["expanded"];
-			match c.app.options.image_expansion_mode {
+			match c.app_state().options.image_expansion_mode {
 				ImageExpansionMode::FitWidth => {
-					c.ctx.link.send_message(Message::CheckTallImage);
+					c.link().send_message(Message::CheckTallImage);
 					cls.push("fit-to-width");
 				}
 				ImageExpansionMode::FitHeight => {
@@ -734,7 +841,7 @@ where
 			};
 			let cls_joined = cls.join(" ");
 
-			let contract = c.ctx.link.callback(move |e: MouseEvent| {
+			let contract = c.link().callback(move |e: MouseEvent| {
 				if e.button() != 0 {
 					Message::NOP
 				} else {
@@ -745,7 +852,7 @@ where
 
 			thumb = match img.file_type {
 				OGG | MP4 | WEBM => {
-					c.ctx.link.send_message(Message::SetVolume);
+					c.link().send_message(Message::SetVolume);
 					html! {
 						<video
 							ref=self.media_el.clone()
@@ -771,10 +878,10 @@ where
 				}
 			};
 		} else {
-			let no_mode = c.app.options.image_expansion_mode
+			let no_mode = c.app_state().options.image_expansion_mode
 				== state::ImageExpansionMode::None;
 			let is_expandable = is_expandable(img.file_type);
-			let on_click = c.ctx.link.callback(move |e: MouseEvent| {
+			let on_click = c.link().callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
 					Message::NOP
 				} else {
@@ -804,7 +911,7 @@ where
 				{
 					if self.expand_image && is_audio {
 						// Change volume after render
-						c.ctx.link.send_message(Message::SetVolume);
+						c.link().send_message(Message::SetVolume);
 						html! {
 							<audio
 								ref=self.media_el.clone()

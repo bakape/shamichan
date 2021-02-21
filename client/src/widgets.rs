@@ -13,9 +13,7 @@ use yew::{
 pub struct AsideRow {
 	link: ComponentLink<Self>,
 	props: Props,
-
-	#[allow(unused)]
-	bridge: state::HookBridge,
+	app_state: state::StateBridge,
 }
 
 #[derive(Clone, Properties, Eq, PartialEq)]
@@ -30,7 +28,11 @@ impl Component for AsideRow {
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
-			bridge: state::hook(&link, vec![state::Change::Location], || true),
+			app_state: state::hook(
+				&link,
+				vec![state::Change::Location],
+				|| true,
+			),
 			props,
 			link,
 		}
@@ -41,79 +43,77 @@ impl Component for AsideRow {
 	}
 
 	fn view(&self) -> Html {
-		state::read(|s| {
-			let loc = &s.location;
-			let is_thread = loc.is_thread();
-			let (label, focus) = if self.props.is_top {
-				("bottom", Focus::Bottom)
-			} else {
-				("top", Focus::Top)
-			};
+		let loc = &self.app_state.get().location;
+		let is_thread = loc.is_thread();
+		let (label, focus) = if self.props.is_top {
+			("bottom", Focus::Bottom)
+		} else {
+			("top", Focus::Top)
+		};
 
-			#[rustfmt::skip]
-			macro_rules! navi_button {
-				($pat:pat, $label:expr, $loc:expr) => {
-					if !matches!(loc.feed, $pat) {
-						self.render_navigation_button($label, $loc)
+		#[rustfmt::skip]
+		macro_rules! navi_button {
+			($pat:pat, $label:expr, $loc:expr) => {
+				if !matches!(loc.feed, $pat) {
+					self.render_navigation_button($label, $loc)
+				} else {
+					html! {}
+				}
+			};
+		}
+
+		html! {
+			<span
+				class="aside-container"
+				style={
+					if self.props.is_top {
+						"margin-top: 1.5em;"
+					} else {
+						""
+					}
+				}
+			>
+				{
+					if !is_thread && self.props.is_top {
+						html! {
+							<NewThreadForm />
+						}
 					} else {
 						html! {}
 					}
-				};
-			}
-
-			html! {
-				<span
-					class="aside-container"
-					style={
-						if self.props.is_top {
-							"margin-top: 1.5em;"
-						} else {
-							""
-						}
+				}
+				{
+					self.render_navigation_button(label, Location {
+						feed: loc.feed.clone(),
+						focus: Some(focus),
+					})
+				}
+				{
+					navi_button!(FeedID::Index, "index", Location{
+						feed: FeedID::Index,
+						focus: None,
+					})
+				}
+				{
+					navi_button!(FeedID::Catalog, "catalog", Location{
+						feed: FeedID::Catalog,
+						focus: None,
+					})
+				}
+				{
+					match &loc.feed {
+						FeedID::Thread { id, .. } => html! {
+							<aside class="glass">
+								<crate::page_selector::PageSelector
+									thread=id
+								/>
+							</aside>
+						},
+						_ => html! {},
 					}
-				>
-					{
-						if !is_thread && self.props.is_top {
-							html! {
-								<NewThreadForm />
-							}
-						} else {
-							html! {}
-						}
-					}
-					{
-						self.render_navigation_button(label, Location {
-							feed: loc.feed.clone(),
-							focus: Some(focus),
-						})
-					}
-					{
-						navi_button!(FeedID::Index, "index", Location{
-							feed: FeedID::Index,
-							focus: None,
-						})
-					}
-					{
-						navi_button!(FeedID::Catalog, "catalog", Location{
-							feed: FeedID::Catalog,
-							focus: None,
-						})
-					}
-					{
-						match &loc.feed {
-							FeedID::Thread { id, .. } => html! {
-								<aside class="glass">
-									<crate::page_selector::PageSelector
-										thread=id
-									/>
-								</aside>
-							},
-							_ => html! {},
-						}
-					}
-				</span>
-			}
-		})
+				}
+			</span>
+		}
 	}
 }
 
@@ -150,8 +150,7 @@ struct NewThreadForm {
 	posting: Box<dyn Bridge<posting::Agent>>,
 	#[allow(unused)]
 	connection: Box<dyn Bridge<connection::Connection>>,
-	#[allow(unused)]
-	bridge: state::HookBridge,
+	app_state: state::StateBridge,
 }
 
 enum Msg {
@@ -180,9 +179,11 @@ impl Component for NewThreadForm {
 				link.callback(|s| Msg::ConnState(s)),
 			),
 			el: NodeRef::default(),
-			bridge: state::hook(&link, vec![state::Change::UsedTags], || {
-				Msg::Rerender
-			}),
+			app_state: state::hook(
+				&link,
+				vec![state::Change::UsedTags],
+				|| Msg::Rerender,
+			),
 			link,
 			expanded: false,
 			sending: false,
@@ -262,11 +263,14 @@ impl Component for NewThreadForm {
 									.collect::<std::collections::HashSet<_>>()
 									.into_iter()
 									.collect(),
-								opts: state::read(|s| {
-									common::payloads::NewPostOpts {
-										name: s.new_post_opts.name.clone(),
-									}
-								}),
+								opts: common::payloads::NewPostOpts {
+									name: self
+										.app_state
+										.get()
+										.new_post_opts
+										.name
+										.clone(),
+								},
 								// TODO
 								captcha_solution: vec![],
 							},
@@ -362,7 +366,7 @@ impl NewThreadForm {
 				</span>
 				<datalist id="used-tags">
 					{
-						for state::read(|s| s.used_tags.clone())
+						for self.app_state.get().used_tags.clone()
 							.iter()
 							.filter(|t|
 								!self.selected_tags.iter().any(|s| &s == t)

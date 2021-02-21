@@ -4,7 +4,7 @@ use common::payloads::post_body::{Command, Node, PostLink};
 use std::fmt::Write;
 use yew::{html, Html};
 
-pub fn render<'s, 'c, PC>(c: &Ctx<'s, 'c, PC>, n: &Node) -> Html
+pub fn render<'c, PC>(c: &Ctx<'c, PC>, n: &Node) -> Html
 where
 	PC: PostComponent + 'static,
 {
@@ -54,7 +54,7 @@ where
 	}
 }
 
-fn render_post_link<'s, 'c, PC>(c: &Ctx<'s, 'c, PC>, l: PostLink) -> Html
+fn render_post_link<'c, PC>(c: &Ctx<'c, PC>, l: PostLink) -> Html
 where
 	PC: PostComponent + 'static,
 {
@@ -63,7 +63,7 @@ where
 	// TODO: Persist all single post fetches from server in global post
 	// collection
 	let mut extra = String::new();
-	if match &c.app.location.feed {
+	if match &c.app_state().location.feed {
 		// If thread = 0, link has not had it's parenthood looked up yet on the
 		// server
 		state::FeedID::Thread { id, .. } => l.thread != 0 && id != &l.thread,
@@ -71,7 +71,7 @@ where
 	} {
 		extra += " ➡";
 	}
-	if c.app.mine.contains(&l.id) {
+	if c.app_state().mine.contains(&l.id) {
 		extra.push(' ');
 		extra += localize!("you");
 	}
@@ -90,7 +90,7 @@ where
 				}
 			</a>
 			<a
-				onclick=c.ctx.link.callback(move |_| {
+				onclick=c.link().callback(move |_| {
 					// TODO:  Handle middle click
 
 					state::navigate_to(state::Location{

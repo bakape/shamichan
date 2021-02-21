@@ -18,10 +18,51 @@ impl Default for PostLocation {
 	}
 }
 
+/// Generate functions for safely accessing global variable behind a RWLock
+#[macro_export]
+macro_rules! gen_global {
+	(
+		$(#[$meta:meta])*
+		$type:ty {
+			$vis_read:vis fn $fn_read:ident();
+			$vis_write:vis fn $fn_write:ident();
+		}
+	) => {
+		static __ONCE: std::sync::Once = std::sync::Once::new();
+		static mut __GLOBAL: Option<std::sync::RwLock<$type>> = None;
+
+		fn __init() {
+			__ONCE.call_once(|| {
+				unsafe { __GLOBAL = Some(Default::default()) };
+			});
+		}
+
+		#[allow(unused)]
+		$(#[$meta])*
+		$vis_read fn $fn_read<F, R>(cb: F) -> R
+		where
+			F: FnOnce(&$type) -> R,
+		{
+			__init();
+			cb(&*unsafe { __GLOBAL.as_ref().unwrap().read().unwrap() })
+		}
+
+		#[allow(unused)]
+		$(#[$meta])*
+		$vis_write fn $fn_write<F, R>(cb: F) -> R
+		where
+			F: FnOnce(&mut $type) -> R,
+		{
+			__init();
+			cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
+		}
+	};
+}
+
 /// Can't pass generic types to the macro
 type PostLocationCache = HashMap<u64, Arc<RwLock<PostLocation>>>;
 
-common::gen_global! {
+gen_global! {
 	/// Cache of post locations for post links
 	PostLocationCache {
 		fn read();

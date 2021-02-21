@@ -26,7 +26,7 @@ pub struct Scheduler {
 
 	// Prevent dropping
 	#[allow(unused)]
-	bridge: state::HookBridge,
+	app_state: state::StateBridge,
 	#[allow(unused)]
 	interval: IntervalTask,
 
@@ -202,12 +202,12 @@ impl Agent for Scheduler {
 	fn create(link: AgentLink<Self>) -> Self {
 		use state::Change;
 
-		let mut s = Self {
+		let mut this = Self {
 			interval: IntervalService::spawn(
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			bridge: state::hook(
+			app_state: state::hook(
 				&link,
 				vec![Change::Options, Change::TimeCorrection],
 				|| Message::StateUpdated,
@@ -218,29 +218,26 @@ impl Agent for Scheduler {
 			time_correction: 0,
 			queue: Default::default(),
 		};
-		let (r, c) =
-			state::read(|s| (s.options.relative_timestamps, s.time_correction));
-		s.use_relative = r;
-		s.time_correction = c;
-		s.update_now();
-		s
+		let s = this.app_state.get();
+		this.use_relative = s.options.relative_timestamps;
+		this.time_correction = s.time_correction;
+		this.update_now();
+		this
 	}
 
 	fn update(&mut self, msg: Self::Message) {
 		match msg {
 			Message::StateUpdated => {
-				let (new_relative, new_time_correction) = state::read(|s| {
-					(s.options.relative_timestamps, s.time_correction)
-				});
 				let mut resend = false;
+				let s = self.app_state.get();
 
-				if new_relative != self.use_relative {
-					self.use_relative = new_relative;
+				if s.options.relative_timestamps != self.use_relative {
+					self.use_relative = s.options.relative_timestamps;
 					resend = true;
 				}
 
-				if self.time_correction != new_time_correction {
-					self.time_correction = new_time_correction;
+				if self.time_correction != s.time_correction {
+					self.time_correction = s.time_correction;
 					self.update_now();
 					resend = true;
 					for t in self.queue.iter_mut() {

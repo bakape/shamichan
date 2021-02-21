@@ -10,19 +10,19 @@ pub type ThreadPost = PostCommon<Inner>;
 impl PostComponent for Inner {
 	type MessageExtra = ();
 
-	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
-		super::body::render(c, &c.post.body)
+	fn render_body<'c>(&self, c: &Ctx<'c, Self>) -> Html {
+		super::body::render(c, &c.post().body)
 	}
 
-	fn should_render(&self, props: &super::common::Props) -> bool {
-		crate::state::read(|s| match s.open_post_id {
-			Some(open) => open != props.id,
+	fn should_render<'c>(&self, c: &Ctx<'c, Self>) -> bool {
+		match c.app_state().open_post_id {
+			Some(open) => open != c.props().id,
 			None => true,
-		})
+		}
 	}
 
-	fn is_draggable(_: &super::common::Props) -> bool {
+	fn is_draggable<'c>(&self, c: &Ctx<'c, Self>) -> bool {
 		// TODO: inlined posts should never be draggable
-		crate::state::read(|s| s.location.is_thread())
+		c.app_state().location.is_thread()
 	}
 }

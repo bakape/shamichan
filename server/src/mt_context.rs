@@ -8,7 +8,7 @@ use std::{
 	sync::{Arc, RwLock},
 	time::Duration,
 };
-use tokio::sync::{Mutex as AsyncMutex, OwnedMutexGuard};
+use tokio::sync::Mutex as AsyncMutex;
 
 // TODO: MTWeakAddr
 // TODO: thorough unit tests

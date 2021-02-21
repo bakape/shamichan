@@ -87,15 +87,16 @@ where
 	I: Inner + 'static,
 {
 	props: I::Properties,
-	pub link: yew::ComponentLink<HookedComponent<I>>,
-	pub bridge: crate::state::HookBridge,
+	link: yew::ComponentLink<HookedComponent<I>>,
+	app_state: crate::state::StateBridge,
 }
 
 impl<I> Ctx<I>
 where
 	I: Inner + 'static,
 {
-	/// Get reference to component properties
+	/// Get reference to component's properties
+	#[inline]
 	pub fn props(&self) -> &I::Properties {
 		&self.props
 	}
@@ -106,11 +107,12 @@ where
 			let old = I::subscribe_to(&self.props);
 			let new = I::subscribe_to(&props);
 			if old != new {
-				self.bridge
-					.send(crate::state::Request::ChangeNotifications {
+				self.app_state.send(
+					crate::state::Request::ChangeNotifications {
 						remove: old,
 						add: new,
-					});
+					},
+				);
 			}
 			common::debug_log!(format! {
 				"setting props: {:?} -> {:?}",
@@ -122,6 +124,18 @@ where
 		} else {
 			false
 		}
+	}
+
+	/// Get reference to component's properties
+	#[inline]
+	pub fn link(&self) -> &yew::ComponentLink<HookedComponent<I>> {
+		&self.link
+	}
+
+	/// Get reference to the global application state.
+	#[inline]
+	pub fn app_state(&self) -> std::cell::Ref<'static, crate::state::State> {
+		self.app_state.get()
 	}
 }
 
@@ -170,9 +184,11 @@ where
 	fn create(props: Self::Properties, link: yew::ComponentLink<Self>) -> Self {
 		let mut inner: I = Default::default();
 		let mut ctx = Ctx {
-			bridge: crate::state::hook(&link, I::subscribe_to(&props), || {
-				I::update_message()
-			}),
+			app_state: crate::state::hook(
+				&link,
+				I::subscribe_to(&props),
+				|| I::update_message(),
+			),
 			link,
 			props,
 		};

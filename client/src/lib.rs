@@ -31,9 +31,7 @@ struct App {
 	dragging: bool,
 
 	// Keep here to load global state first and never drop the agents
-	#[allow(unused)]
-	state: Box<dyn Bridge<state::Agent>>,
-
+	app_state: state::StateBridge,
 	#[allow(unused)]
 	mouse: Box<dyn Bridge<mouse::Agent>>,
 }
@@ -48,13 +46,8 @@ impl Component for App {
 	type Message = Message;
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut a = state::Agent::bridge(yew::Callback::noop());
-		state::read(|s| {
-			a.send(state::Request::FetchFeed(s.location.clone()));
-		});
-
-		let s = Self {
-			state: a,
+		let mut s = Self {
+			app_state: state::hook(&link, vec![], || Message::NOP),
 			mouse: mouse::Agent::bridge(link.callback(|msg| match msg {
 				mouse::Response::IsDragging(d) => Message::DraggingChange(d),
 				_ => Message::NOP,
@@ -62,6 +55,9 @@ impl Component for App {
 			dragging: false,
 			link,
 		};
+		s.app_state.send(state::Request::FetchFeed(
+			s.app_state.get().location.clone(),
+		));
 
 		// Static global event listeners. Put here to avoid overhead of spamming
 		// a lot of event listeners and handlers on posts.
@@ -116,7 +112,7 @@ impl Component for App {
 					// z-index increases down
 					<div class="overlay" id="post-form-overlay">
 						<post::posting::PostForm
-							id=state::read(|s| s.open_post_id.unwrap_or(0))
+							id=self.app_state.get().open_post_id.unwrap_or(0)
 						/>
 					</div>
 					<div class="overlay" id="modal-overlay">

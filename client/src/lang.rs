@@ -5,8 +5,6 @@ use std::fmt;
 use std::fmt::Write;
 use wasm_bindgen::JsCast;
 
-// TODO: Live language pack updates
-
 #[derive(Deserialize, Default)]
 struct LanguagePack {
 	/// One to one mapping of string literals
@@ -22,10 +20,16 @@ struct LanguagePack {
 	pub plurals: HashMap<String, (String, String)>,
 }
 
-common::gen_global! {
-	LanguagePack {
-		fn read();
-		fn write();
+static mut LANGUAGE_PACK: *mut LanguagePack = std::ptr::null_mut();
+
+/// Returns reference to global language pack. Callable only after init().
+#[inline]
+fn get_lp() -> &'static LanguagePack {
+	unsafe {
+		match LANGUAGE_PACK.as_ref() {
+			Some(lp) => lp,
+			None => std::hint::unreachable_unchecked(),
+		}
 	}
 }
 
@@ -102,17 +106,18 @@ macro_rules! localize {
 }
 
 /// Language pack is immutable after load, so this is fine
+#[inline]
 fn to_static_str(s: &String) -> &'static str {
 	unsafe { std::mem::transmute(s.as_str()) }
 }
 
 /// Localize string literal
 pub fn localize_literal(key: &str) -> &'static str {
-	read(|l| match l.literals.get(key) {
-		// Language pack is immutable after load, so this is fine
-		Some(v) => to_static_str(v),
-		None => "localization not found",
-	})
+	get_lp()
+		.literals
+		.get(key)
+		.map(to_static_str)
+		.unwrap_or("localization not found")
 }
 
 /// Localize pluralizable string literal
@@ -120,18 +125,18 @@ pub fn pluralize<T>(key: &str, n: T) -> &'static str
 where
 	T: std::cmp::Ord + From<u8>,
 {
-	read(|l| match l.plurals.get(key) {
-		// Language pack is immutable after load, so this is fine
-		Some(v) => to_static_str(if n == 1.into() { &v.0 } else { &v.1 }),
-		None => "localization not found",
-	})
+	get_lp()
+		.plurals
+		.get(key)
+		.map(|v| to_static_str(if n == 1.into() { &v.0 } else { &v.1 }))
+		.unwrap_or("localization not found")
 }
 
 /// Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 	use Token::*;
 
-	read(|l| match l.format_strings.get(key) {
+	match get_lp().format_strings.get(key) {
 		Some(fmt) => {
 			let mut w = String::new();
 			for t in fmt.0.iter() {
@@ -148,20 +153,20 @@ pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 			w
 		}
 		None => format!("localization not found: {}", key),
-	})
+	}
 }
 
 #[test]
 fn test_localization() {
-	write(|l| {
-		l.format_strings.insert(
-			"test".into(),
-			serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
-		);
-		l.literals.insert("test".into(), "anon a BWAAKA".into());
-		l.plurals
-			.insert("post".into(), ("post".into(), "posts".into()));
-	});
+	let mut lp = LanguagePack::default();
+	lp.format_strings.insert(
+		"test".into(),
+		serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
+	);
+	lp.literals.insert("test".into(), "anon a BWAAKA".into());
+	lp.plurals
+		.insert("post".into(), ("post".into(), "posts".into()));
+	unsafe { LANGUAGE_PACK = Box::into_raw(lp.into()) };
 
 	assert_eq!(
 		localize!("test", {"name" => "anon" "adjective" => "BWAAKA"}),
@@ -175,7 +180,7 @@ fn test_localization() {
 
 pub async fn load_language_pack() -> util::Result {
 	// Async closures still unstable as of writing
-	let lp = serde_json::from_str(&String::from(
+	let lp: LanguagePack = serde_json::from_str(&String::from(
 		wasm_bindgen_futures::JsFuture::from(
 			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
 				.dyn_into::<js_sys::Promise>()?,
@@ -184,7 +189,7 @@ pub async fn load_language_pack() -> util::Result {
 		.dyn_into::<js_sys::JsString>()?,
 	))?;
 
-	write(|l| *l = lp);
+	unsafe { LANGUAGE_PACK = Box::into_raw(lp.into()) };
 
 	Ok(())
 }

@@ -1,8 +1,8 @@
-use super::{write, FeedID, Focus, Location, Post, Thread};
+use super::{state, FeedID, Focus, Location, State};
 use crate::{connection::send, util};
 use common::{
 	debug_log,
-	payloads::{ThreadCreationNotice, ThreadWithPosts},
+	payloads::{Post, Thread, ThreadCreationNotice, ThreadWithPosts},
 	util::DoubleSetMap,
 	MessageType,
 };
@@ -113,6 +113,9 @@ pub enum Change {
 
 	/// Change in time correction value
 	TimeCorrection,
+
+	/// Change of the open allocated post ID
+	OpenPostID,
 }
 
 /// Abstraction over AgentLink and ComponentLink
@@ -146,27 +149,35 @@ impl<C: Component> Link for ComponentLink<C> {
 	}
 }
 
-/// Helper for storing a hook into state updates in the client struct
-pub struct HookBridge {
-	#[allow(unused)]
+/// Helper for storing a hook into state updates and read-only access to the
+/// app state in the client struct
+pub struct StateBridge {
 	bridge: Box<dyn Bridge<Agent>>,
 }
 
-impl HookBridge {
+impl StateBridge {
+	/// Send a message to the state app agent
 	pub fn send(&mut self, req: Request) {
 		self.bridge.send(req);
 	}
+
+	/// Returns an immutable reference to the app state
+	#[inline]
+	pub fn get(&self) -> std::cell::Ref<'static, State> {
+		state::get_ref()
+	}
 }
 
-/// Crate hooks into state changes
-pub fn hook<L, F>(link: &L, changes: Vec<Change>, f: F) -> HookBridge
+/// Create hooks into state changes and gain read-only access to reading the
+/// app state
+pub fn hook<L, F>(link: &L, changes: Vec<Change>, f: F) -> StateBridge
 where
 	L: Link,
 	F: Fn() -> L::Message + 'static,
 {
 	use yew::agent::Bridged;
 
-	let mut b = HookBridge {
+	let mut b = StateBridge {
 		bridge: Agent::bridge(link.make_callback(move |_| f())),
 	};
 	if !changes.is_empty() {
@@ -329,52 +340,50 @@ impl yew::agent::Agent for Agent {
 				self.try_sync_feed(&loc, 0);
 			}
 			SetKeyID(id) => util::with_logging(|| {
-				write(|s| {
-					s.key_pair.id = id;
-					s.key_pair.store()?;
-					Ok(())
-				})
+				let mut s = state::get_mut();
+				s.key_pair.id = id;
+				s.key_pair.store()
 			}),
 			InsertThread(n) => {
-				write(|s| {
-					s.threads.insert(
-						n.id,
-						Thread {
-							id: n.id,
-							page_count: 1,
-							subject: n.subject,
-							tags: n.tags,
-							bumped_on: n.time,
-							created_on: n.time,
-							post_count: 1,
-							image_count: 0,
-						},
-					);
-					s.register_post(Post {
+				let mut s = state::get_mut();
+				s.threads.insert(
+					n.id,
+					Thread {
 						id: n.id,
-						thread: n.id,
-						page: 0,
-
+						page_count: 1,
+						subject: n.subject,
+						tags: n.tags,
+						bumped_on: n.time,
 						created_on: n.time,
-						open: true,
+						post_count: 1,
+						image_count: 0,
+					},
+				);
+				s.register_post(Post {
+					id: n.id,
+					thread: n.id,
+					page: 0,
 
-						// TODO: set this from the modal
-						sage: Default::default(),
-						name: Default::default(),
-						trip: Default::default(),
+					created_on: n.time,
+					open: true,
 
-						// TODO: figure out, if wee need special handling for
-						// setting a flag on the OP of a thread, before thread
-						// options can be set
-						flag: Default::default(),
+					// TODO: set this from the modal
+					sage: Default::default(),
+					name: Default::default(),
+					trip: Default::default(),
 
-						body: Default::default(),
-						image: Default::default(),
-					});
-					self.trigger(&Change::ThreadList);
-					self.trigger(&Change::Thread(n.id));
-					self.trigger(&Change::Post(n.id));
+					// TODO: figure out, if wee need special handling for
+					// setting a flag on the OP of a thread, before thread
+					// options can be set
+					flag: Default::default(),
+
+					body: Default::default(),
+					image: Default::default(),
 				});
+
+				self.trigger(&Change::ThreadList);
+				self.trigger(&Change::Thread(n.id));
+				self.trigger(&Change::Post(n.id));
 			}
 			RegisterPage(posts) => self.register_page(posts),
 			RegisterThreads(threads) => self.register_threads(threads),
@@ -388,42 +397,22 @@ impl yew::agent::Agent for Agent {
 			},
 			SetMine(id) => {
 				// TODO: persist to DB
-				write(|s| s.mine.insert(id));
+				state::get_mut().mine.insert(id);
 			}
 			SetOpenPostID(id) => {
-				write(|s| {
-					s.open_post_id = id;
-					if let Some(id) = s.open_post_id {
-						use crate::post::posting;
-
-						posting::Agent::dispatcher()
-							.send(posting::Request::SetAllocated(id));
-						if let Some(affected) =
-							self.hooks.get_by_key(&Change::Post(id))
-						{
-							for h in affected {
-								self.link.respond(*h, ());
-							}
-						}
-					}
-				});
+				state::get_mut().open_post_id = id;
+				self.trigger(&Change::OpenPostID);
 			}
 			SetUsedTags(tags) => {
-				write(|s| {
-					s.used_tags = tags.into();
-				});
+				state::get_mut().used_tags = tags.into();
 				self.trigger(&Change::UsedTags);
 			}
 			SetTimeCorrection(c) => {
-				write(|s| {
-					s.time_correction = c;
-				});
+				state::get_mut().time_correction = c;
 				self.trigger(&Change::TimeCorrection);
 			}
 			SetConfigs(c) => {
-				write(|s| {
-					s.configs = c;
-				});
+				state::get_mut().configs = c;
 				self.trigger(&Change::Configs);
 			}
 		};
@@ -464,50 +453,49 @@ impl Agent {
 
 	/// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
-		write(|s| {
-			let old = s.location.clone();
-			if old == new {
-				return;
-			}
+		let mut s = state::get_mut();
+		let old = s.location.clone();
+		if old == new {
+			return;
+		}
 
-			debug_log!(
-				"set_location",
-				format!("{:?} -> {:?}, flags={}", s.location, new, flags)
-			);
+		debug_log!(
+			"set_location",
+			format!("{:?} -> {:?}, flags={}", s.location, new, flags)
+		);
 
-			let mut try_to_sync = true;
+		let mut try_to_sync = true;
 
-			// Check, if feed did not change, only requesting a new page
-			match (&mut self.feed_sync_state, &new.feed) {
-				(
-					FeedSyncState::Synced { feed, pages },
-					FeedID::Thread { id, page: new_page },
-				) if &feed.as_u64() == id => {
-					let mut new_page = *new_page;
-					if new_page < -1 {
-						util::log_and_alert_error(
-							&"requested negative page ID smaller than -1",
-						);
-						return;
-					}
-					if new_page < 0 {
-						new_page += s.get_synced_thread(id).page_count as i32;
-					}
-					if let Entry::Vacant(e) = pages.entry(new_page as u32) {
-						e.insert(false);
-						send(MessageType::Page, &new_page);
-						try_to_sync = false;
-					}
+		// Check, if feed did not change, only requesting a new page
+		match (&mut self.feed_sync_state, &new.feed) {
+			(
+				FeedSyncState::Synced { feed, pages },
+				FeedID::Thread { id, page: new_page },
+			) if &feed.as_u64() == id => {
+				let mut new_page = *new_page;
+				if new_page < -1 {
+					util::log_and_alert_error(
+						&"requested negative page ID smaller than -1",
+					);
+					return;
 				}
-				_ => (),
-			};
-
-			if try_to_sync && self.try_sync_feed(&new, flags) {
-				return;
+				if new_page < 0 {
+					new_page += s.get_synced_thread(id).page_count as i32;
+				}
+				if let Entry::Vacant(e) = pages.entry(new_page as u32) {
+					e.insert(false);
+					send(MessageType::Page, &new_page);
+					try_to_sync = false;
+				}
 			}
+			_ => (),
+		};
 
-			self.set_location_no_sync(s, new, flags);
-		});
+		if try_to_sync && self.try_sync_feed(&new, flags) {
+			return;
+		}
+
+		self.set_location_no_sync(&mut *s, new, flags);
 	}
 
 	/// Set app location and propagate changes without trying to sync the feed
@@ -590,45 +578,43 @@ impl Agent {
 							.collect(),
 					};
 
-					write(|s| {
-						self.trigger(&Change::ThreadList);
-						self.trigger(&Change::Thread(thread_id));
-						s.threads.insert(thread.id, thread);
+					let mut s = state::get_mut();
+					self.trigger(&Change::ThreadList);
+					self.trigger(&Change::Thread(thread_id));
+					s.threads.insert(thread.id, thread);
 
-						for p in pages
-							.into_iter()
-							.filter(|(id, _)| *id >= 0)
-							.map(|(_, p)| p.unwrap().into_iter())
-							.flatten()
-						{
-							self.trigger(&Change::Post(p.id));
-							s.register_post(p);
-						}
+					for p in pages
+						.into_iter()
+						.filter(|(id, _)| *id >= 0)
+						.map(|(_, p)| p.unwrap().into_iter())
+						.flatten()
+					{
+						self.trigger(&Change::Post(p.id));
+						s.register_post(p);
+					}
 
-						// Normalize page number
-						match &mut loc.feed {
-							FeedID::Thread { page, .. } => {
-								if *page < 0 {
-									*page += page_count;
-								}
+					// Normalize page number
+					match &mut loc.feed {
+						FeedID::Thread { page, .. } => {
+							if *page < 0 {
+								*page += page_count;
 							}
-							_ => unreachable!(),
-						};
+						}
+						_ => unreachable!(),
+					};
 
-						self.set_location_no_sync(s, loc, flags);
-					});
+					self.set_location_no_sync(&mut *s, loc, flags);
 				}
 			}
 			Synced { feed, pages } if feed.as_u64() == thread_id => {
 				pages.insert(page, true);
 
 				self.trigger(&Change::Thread(thread_id));
-				write(|s| {
-					for p in posts {
-						self.trigger(&Change::Post(p.id));
-						s.register_post(p);
-					}
-				});
+				let mut s = state::get_mut();
+				for p in posts {
+					self.trigger(&Change::Post(p.id));
+					s.register_post(p);
+				}
 			}
 			_ => (),
 		};
@@ -647,20 +633,20 @@ impl Agent {
 					pages: Default::default(),
 				};
 
-				write(|s| {
-					self.trigger(&Change::ThreadList);
-					for t in threads {
-						self.trigger(&Change::Thread(t.thread.id));
-						s.threads.insert(t.thread.id, t.thread);
+				let mut s = state::get_mut();
 
-						for (_, p) in t.posts {
-							self.trigger(&Change::Post(p.id));
-							s.register_post(p);
-						}
+				self.trigger(&Change::ThreadList);
+				for t in threads {
+					self.trigger(&Change::Thread(t.thread.id));
+					s.threads.insert(t.thread.id, t.thread);
+
+					for (_, p) in t.posts {
+						self.trigger(&Change::Post(p.id));
+						s.register_post(p);
 					}
+				}
 
-					self.set_location_no_sync(s, loc, flags);
-				});
+				self.set_location_no_sync(&mut *s, loc, flags);
 			}
 			_ => (),
 		};
