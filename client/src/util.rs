@@ -9,36 +9,42 @@ use web_sys;
 pub struct Error(String);
 
 impl Error {
+	#[inline]
 	pub fn new(msg: String) -> Self {
 		Self(msg)
 	}
 }
 
 impl Into<JsValue> for Error {
+	#[inline]
 	fn into(self) -> JsValue {
 		JsValue::from(&self.0)
 	}
 }
 
 impl Into<String> for Error {
+	#[inline]
 	fn into(self) -> String {
 		self.0
 	}
 }
 
 impl AsRef<str> for Error {
+	#[inline]
 	fn as_ref(&self) -> &str {
 		&self.0
 	}
 }
 
 impl From<JsValue> for Error {
+	#[inline]
 	fn from(v: JsValue) -> Error {
 		Error(format!("{:?}", v))
 	}
 }
 
 impl std::fmt::Display for Error {
+	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.0)
 	}
@@ -49,6 +55,7 @@ macro_rules! from_display {
 	($($type:ty),+) => {
 		$(
 			impl From<$type> for Error {
+				#[inline]
 				fn from(err: $type) -> Error {
 					Error(err.to_string())
 				}
@@ -96,6 +103,7 @@ macro_rules! def_cached_getter {
 		}
 	) => {
 		$(#[$meta])*
+		#[inline]
 		$vis fn $name() -> &'static $type {
 			$crate::cache_variable! { $type, || $get }
 		}
@@ -170,6 +178,7 @@ where
 }
 
 /// Log any error to console
+#[cold]
 pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
 		log_error(&err.into());
@@ -177,23 +186,27 @@ pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 }
 
 /// Log error to console
+#[cold]
 pub fn log_error(err: &impl std::fmt::Display) {
 	web_sys::console::error_1(&JsValue::from(err.to_string()));
 }
 
 /// Log a warning Message
 #[allow(unused)]
+#[cold]
 pub fn log_warn(msg: impl AsRef<str>) {
 	web_sys::console::warn_1(&msg.as_ref().into());
 }
 
 /// Display error alert message
+#[cold]
 pub fn alert(msg: &impl std::fmt::Display) {
 	// Ignore result
 	window().alert_with_message(&msg.to_string()).ok();
 }
 
 /// Log error to console and display it in an alert message
+#[cold]
 pub fn log_and_alert_error(err: &impl std::fmt::Display) {
 	log_error(&err);
 	alert(&err);
@@ -202,6 +215,7 @@ pub fn log_and_alert_error(err: &impl std::fmt::Display) {
 /// Run closure, logging any errors to both console error log and alert dialogs.
 //
 /// Returns default value in case of an error.
+#[inline]
 pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
 	match f() {
 		Ok(v) => v,
@@ -212,13 +226,10 @@ pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
 	}
 }
 
-/// Run async function, logging any errors to both console error log and alert
-/// dialogs
-pub async fn with_logging_async<R, A>(f: impl FnOnce(A) -> R, arg: A)
-where
-	R: futures::Future<Output = Result>,
-{
-	if let Err(e) = f(arg).await {
+/// Run future, logging any errors to both console error log and alert dialogs
+#[inline]
+pub async fn with_logging_async(f: impl std::future::Future<Output = Result>) {
+	if let Err(e) = f.await {
 		log_error(&e);
 	}
 }

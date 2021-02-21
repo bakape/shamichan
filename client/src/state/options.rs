@@ -55,6 +55,7 @@ impl Default for Options {
 
 impl Options {
 	/// Read saved options, if any
+	#[cold]
 	pub fn load(&mut self) {
 		if let Some(v) = util::local_storage().get_item(OPTIONS_KEY).unwrap() {
 			if let Ok(opts) = serde_json::from_str(&v) {

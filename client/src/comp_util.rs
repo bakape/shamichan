@@ -146,6 +146,7 @@ pub trait Inner: Default {
 
 	/// Extra initialization logic
 	#[allow(unused_variables)]
+	#[inline]
 	fn init(&mut self, c: &mut Ctx<Self>) {}
 
 	/// Return Self::Message to pass to HookedInner to signal global state has
@@ -154,6 +155,7 @@ pub trait Inner: Default {
 
 	/// Vector of global state changes to subscribe to
 	#[allow(unused_variables)]
+	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<crate::state::Change> {
 		Default::default()
 	}

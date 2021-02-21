@@ -16,6 +16,7 @@ pub enum FeedID {
 }
 
 impl Default for FeedID {
+	#[inline]
 	fn default() -> Self {
 		Self::Index
 	}
@@ -23,6 +24,7 @@ impl Default for FeedID {
 
 impl FeedID {
 	/// Return corresponding integer feed code used by the server
+	#[inline]
 	pub fn as_u64(&self) -> u64 {
 		use FeedID::*;
 
@@ -42,6 +44,7 @@ pub enum Focus {
 }
 
 impl Default for Focus {
+	#[inline]
 	fn default() -> Focus {
 		Focus::Top
 	}
@@ -128,6 +131,7 @@ impl Location {
 	}
 
 	/// Returns, if this is a single thread page
+	#[inline]
 	pub fn is_thread(&self) -> bool {
 		matches!(self.feed, FeedID::Thread { .. })
 	}

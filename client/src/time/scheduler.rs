@@ -49,6 +49,7 @@ pub enum Unit {
 }
 
 impl Default for Unit {
+	#[inline]
 	fn default() -> Self {
 		Self::Seconds
 	}
@@ -136,12 +137,14 @@ struct Tick {
 }
 
 impl PartialEq for Tick {
+	#[inline]
 	fn eq(&self, other: &Tick) -> bool {
 		self.pending_on == other.pending_on
 	}
 }
 
 impl PartialOrd for Tick {
+	#[inline]
 	fn partial_cmp(&self, other: &Tick) -> Option<std::cmp::Ordering> {
 		self.pending_on.partial_cmp(&other.pending_on)
 	}
@@ -149,6 +152,7 @@ impl PartialOrd for Tick {
 
 impl Tick {
 	/// Create a new tick at the current moment in time
+	#[inline]
 	fn new(id: HandlerId, val: u32, now: u32) -> Self {
 		Self {
 			id,
@@ -199,6 +203,7 @@ impl Agent for Scheduler {
 	type Input = Request;
 	type Output = Response;
 
+	#[cold]
 	fn create(link: AgentLink<Self>) -> Self {
 		use state::Change;
 
@@ -314,6 +319,7 @@ impl Scheduler {
 	}
 
 	/// Update current Unix timestamp corrected for drift between server and client
+	#[inline]
 	fn update_now(&mut self) {
 		self.now = ((Date::now() / 1000.0) as i64 + self.time_correction as i64)
 			as u32;
@@ -324,6 +330,7 @@ impl Scheduler {
 struct HandlerIDKey<'a>(&'a HandlerId);
 
 impl<'a> PartialEq<Tick> for HandlerIDKey<'a> {
+	#[inline]
 	fn eq(&self, other: &Tick) -> bool {
 		self.0 == &other.id
 	}

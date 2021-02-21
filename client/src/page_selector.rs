@@ -32,14 +32,17 @@ impl comp_util::Inner for Inner {
 	type Message = Message;
 	type Properties = Props;
 
+	#[inline]
 	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
 		self.fetch_page_count(c);
 	}
 
+	#[inline]
 	fn update_message() -> Self::Message {
 		Message::ThreadUpdate
 	}
 
+	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
 		vec![state::Change::Thread(props.thread)]
 	}

@@ -130,6 +130,7 @@ pub trait Link {
 impl<A: yew::agent::Agent> Link for AgentLink<A> {
 	type Message = A::Message;
 
+	#[inline]
 	fn make_callback<F>(&self, f: F) -> Callback<()>
 	where
 		F: Fn(()) -> Self::Message + 'static,
@@ -141,6 +142,7 @@ impl<A: yew::agent::Agent> Link for AgentLink<A> {
 impl<C: Component> Link for ComponentLink<C> {
 	type Message = C::Message;
 
+	#[inline]
 	fn make_callback<F>(&self, f: F) -> Callback<()>
 	where
 		F: Fn(()) -> Self::Message + 'static,
@@ -157,6 +159,7 @@ pub struct StateBridge {
 
 impl StateBridge {
 	/// Send a message to the state app agent
+	#[inline]
 	pub fn send(&mut self, req: Request) {
 		self.bridge.send(req);
 	}
@@ -254,6 +257,7 @@ impl yew::agent::Agent for Agent {
 	type Input = Request;
 	type Output = ();
 
+	#[cold]
 	fn create(link: AgentLink<Self>) -> Self {
 		util::add_static_listener(
 			util::window(),

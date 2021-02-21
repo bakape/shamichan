@@ -71,6 +71,7 @@ impl PostComponent for Inner {
 		self.agent = a.into();
 	}
 
+	#[inline]
 	fn should_render<'c>(&self, _: &Ctx<'c, Self>) -> bool {
 		use State::*;
 
@@ -84,6 +85,7 @@ impl PostComponent for Inner {
 		}
 	}
 
+	#[inline]
 	fn is_draggable<'c>(&self, _: &Ctx<'c, Self>) -> bool {
 		true
 	}
@@ -215,6 +217,7 @@ impl PostComponent for Inner {
 		})
 	}
 
+	#[inline]
 	fn extra_classes<'c>(&self, _: &Ctx<'c, Self>) -> &'static [&'static str] {
 		&["post-form"]
 	}
@@ -340,6 +343,7 @@ pub enum State {
 }
 
 impl Default for State {
+	#[inline]
 	fn default() -> Self {
 		Self::Ready
 	}
@@ -423,6 +427,7 @@ impl yew::agent::Agent for Agent {
 	type Input = Request;
 	type Output = Response;
 
+	#[cold]
 	fn create(link: AgentLink<Self>) -> Self {
 		util::add_static_listener(
 			util::document(),
@@ -606,6 +611,7 @@ impl Agent {
 		}
 	}
 
+	#[inline]
 	fn send_current_state(&self, subscriber: HandlerId) {
 		self.link.respond(subscriber, Response::State(self.state));
 	}

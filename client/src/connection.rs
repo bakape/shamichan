@@ -81,6 +81,7 @@ pub enum State {
 }
 
 impl Default for State {
+	#[inline]
 	fn default() -> Self {
 		Self::Loading
 	}
@@ -164,6 +165,7 @@ impl Agent for Connection {
 	type Input = Request;
 	type Output = State;
 
+	#[cold]
 	fn create(link: AgentLink<Self>) -> Self {
 		use state::Change;
 
@@ -283,6 +285,7 @@ impl Agent for Connection {
 		self.send_current_state(id);
 	}
 
+	#[cold]
 	fn disconnected(&mut self, id: HandlerId) {
 		self.subscribers.remove(&id);
 	}
@@ -325,10 +328,12 @@ impl Connection {
 		}
 	}
 
+	#[inline]
 	fn send_current_state(&self, subscriber: HandlerId) {
 		self.link.respond(subscriber, self.state)
 	}
 
+	#[cold]
 	fn handle_disconnect(&mut self) {
 		self.reconn_attempts += 1;
 		self.reconn_timer = Some(TimeoutService::spawn(
@@ -344,6 +349,7 @@ impl Connection {
 		self.set_state(State::Disconnected);
 	}
 
+	#[cold]
 	fn close_socket(&mut self) {
 		if let Some(s) = &self.socket {
 			util::log_error_res(s.close());
@@ -368,6 +374,7 @@ impl Connection {
 		self.reconn_attempts = 0;
 	}
 
+	#[inline]
 	fn reset_reconn_timer(&mut self) {
 		self.reconn_timer = None;
 	}
@@ -405,6 +412,7 @@ impl Connection {
 		Ok(())
 	}
 
+	#[cold]
 	fn connect(&mut self) {
 		self.close_socket();
 		if !util::window().navigator().on_line() {
@@ -519,6 +527,7 @@ impl Connection {
 			}
 
 			// Send a request to the app state agent
+			#[inline]
 			fn send(req: Request) {
 				state::Agent::dispatcher().send(req);
 			}
@@ -642,56 +651,57 @@ impl Connection {
 	}
 
 	/// Asynchronously generate and send a handshake request message
+	#[cold]
 	fn send_handshake_req(key_pair: KeyPair) {
 		use common::payloads::Authorization;
 
-		async fn inner(key_pair: KeyPair) -> util::Result {
-			let crypto = util::window().crypto()?;
-			let mut enc = common::Encoder::new(Vec::new());
-			encode_msg(
-				&mut enc,
-				MessageType::Handshake,
-				&common::payloads::HandshakeReq {
-					protocol_version: common::VERSION,
-					auth: match &key_pair.id {
-						Some(id) => {
-							let mut nonce: [u8; 32] = unsafe {
-								std::mem::MaybeUninit::uninit().assume_init()
-							};
-							crypto
-								.get_random_values_with_u8_array(&mut nonce)?;
-
-							Authorization::Saved {
-								id: id.clone(),
-								nonce,
-								signature: key_pair
-									.sign(&mut {
-										let mut buf =
-											Vec::with_capacity(16 + 32);
-										buf.extend(id.as_bytes());
-										buf.extend(&nonce);
-										buf
-									})
-									.await?,
-							}
-						}
-						None => {
-							Authorization::NewPubKey(key_pair.public.clone())
-						}
-					},
-				},
-			)?;
-
-			Connection::dispatcher().send(Request::Handshake {
-				key_pair,
-				message: enc.finish()?,
-			});
-
-			Ok(())
-		}
-
 		wasm_bindgen_futures::spawn_local(util::with_logging_async(
-			inner, key_pair,
+			async move {
+				let crypto = util::window().crypto()?;
+				let mut enc = common::Encoder::new(Vec::new());
+				encode_msg(
+					&mut enc,
+					MessageType::Handshake,
+					&common::payloads::HandshakeReq {
+						protocol_version: common::VERSION,
+						auth: match &key_pair.id {
+							Some(id) => {
+								let mut nonce: [u8; 32] = unsafe {
+									std::mem::MaybeUninit::uninit()
+										.assume_init()
+								};
+								crypto.get_random_values_with_u8_array(
+									&mut nonce,
+								)?;
+
+								Authorization::Saved {
+									id: id.clone(),
+									nonce,
+									signature: key_pair
+										.sign(&mut {
+											let mut buf =
+												Vec::with_capacity(16 + 32);
+											buf.extend(id.as_bytes());
+											buf.extend(&nonce);
+											buf
+										})
+										.await?,
+								}
+							}
+							None => Authorization::NewPubKey(
+								key_pair.public.clone(),
+							),
+						},
+					},
+				)?;
+
+				Connection::dispatcher().send(Request::Handshake {
+					key_pair,
+					message: enc.finish()?,
+				});
+
+				Ok(())
+			},
 		));
 	}
 }
@@ -708,6 +718,7 @@ impl Component for SyncCounter {
 	comp_no_props! {}
 	type Message = State;
 
+	#[cold]
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
 			conn: Connection::bridge(link.callback(|s| s)),

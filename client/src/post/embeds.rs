@@ -72,10 +72,14 @@ where
 	}
 
 	fn update(&mut self, msg: Self::Message) -> bool {
-		todo!()
+		// TODO
+		false
 	}
 
 	fn view(&self) -> Html {
-		todo!()
+		// TODO
+		html! {
+			<b>{"TODO: embeds"}</b>
+		}
 	}
 }

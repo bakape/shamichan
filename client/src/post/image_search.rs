@@ -26,6 +26,7 @@ pub enum Provider {
 impl Provider {
 	/// Return string identifier of this provider
 	#[allow(unused)] // TODO: remove it
+	#[inline]
 	pub fn key(&self) -> &'static str {
 		use Provider::*;
 
@@ -41,6 +42,7 @@ impl Provider {
 	}
 
 	/// Return short string symbol of this provider
+	#[inline]
 	pub fn symbol(&self) -> &'static str {
 		use Provider::*;
 

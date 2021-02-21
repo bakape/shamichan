@@ -11,6 +11,7 @@ pub struct Coordinates {
 }
 
 impl Coordinates {
+	#[inline]
 	pub fn is_zero(&self) -> bool {
 		self.x == 0 && self.y == 0
 	}
@@ -19,6 +20,7 @@ impl Coordinates {
 impl std::ops::Add for Coordinates {
 	type Output = Self;
 
+	#[inline]
 	fn add(mut self, rhs: Self) -> Self {
 		self.x += rhs.x;
 		self.y += rhs.y;
@@ -29,6 +31,7 @@ impl std::ops::Add for Coordinates {
 impl std::ops::Sub for Coordinates {
 	type Output = Self;
 
+	#[inline]
 	fn sub(mut self, rhs: Self) -> Self {
 		self.x -= rhs.x;
 		self.y -= rhs.y;
@@ -37,12 +40,14 @@ impl std::ops::Sub for Coordinates {
 }
 
 impl std::ops::AddAssign for Coordinates {
+	#[inline]
 	fn add_assign(&mut self, rhs: Self) {
 		*self = *self + rhs;
 	}
 }
 
 impl From<&web_sys::MouseEvent> for Coordinates {
+	#[inline]
 	fn from(e: &web_sys::MouseEvent) -> Self {
 		Self {
 			x: e.client_x(),
@@ -91,6 +96,7 @@ impl yew::agent::Agent for Agent {
 	type Input = Request;
 	type Output = Response;
 
+	#[cold]
 	fn create(link: AgentLink<Self>) -> Self {
 		let doc = crate::util::document();
 		crate::util::add_static_listener(

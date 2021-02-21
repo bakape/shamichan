@@ -14,6 +14,7 @@ impl PostComponent for Inner {
 		super::body::render(c, &c.post().body)
 	}
 
+	#[inline]
 	fn should_render<'c>(&self, c: &Ctx<'c, Self>) -> bool {
 		match c.app_state().open_post_id {
 			Some(open) => open != c.props().id,
@@ -21,6 +22,7 @@ impl PostComponent for Inner {
 		}
 	}
 
+	#[inline]
 	fn is_draggable<'c>(&self, c: &Ctx<'c, Self>) -> bool {
 		// TODO: inlined posts should never be draggable
 		c.app_state().location.is_thread()

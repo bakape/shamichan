@@ -47,10 +47,12 @@ struct TokenVisitor();
 impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 	type Value = FormatStr;
 
+	#[cold]
 	fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
 		formatter.write_str("localization format string")
 	}
 
+	#[cold]
 	fn visit_str<E>(self, mut s: &str) -> Result<Self::Value, E>
 	where
 		E: serde::de::Error,
@@ -83,6 +85,7 @@ impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 }
 
 impl<'de> Deserialize<'de> for FormatStr {
+	#[cold]
 	fn deserialize<D>(d: D) -> Result<FormatStr, D::Error>
 	where
 		D: serde::de::Deserializer<'de>,
@@ -156,8 +159,25 @@ pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 	}
 }
 
+#[cold]
+pub async fn load_language_pack() -> util::Result {
+	let lp: LanguagePack = serde_json::from_str(&String::from(
+		wasm_bindgen_futures::JsFuture::from(
+			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
+				.dyn_into::<js_sys::Promise>()?,
+		)
+		.await?
+		.dyn_into::<js_sys::JsString>()?,
+	))?;
+
+	unsafe { LANGUAGE_PACK = Box::into_raw(lp.into()) };
+
+	Ok(())
+}
+
 #[test]
 fn test_localization() {
+	// TODO: init by reading JSON instead
 	let mut lp = LanguagePack::default();
 	lp.format_strings.insert(
 		"test".into(),
@@ -176,20 +196,4 @@ fn test_localization() {
 
 	assert_eq!(pluralize("post", 1), "post");
 	assert_eq!(pluralize("post", 2), "posts");
-}
-
-pub async fn load_language_pack() -> util::Result {
-	// Async closures still unstable as of writing
-	let lp: LanguagePack = serde_json::from_str(&String::from(
-		wasm_bindgen_futures::JsFuture::from(
-			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
-				.dyn_into::<js_sys::Promise>()?,
-		)
-		.await?
-		.dyn_into::<js_sys::JsString>()?,
-	))?;
-
-	unsafe { LANGUAGE_PACK = Box::into_raw(lp.into()) };
-
-	Ok(())
 }

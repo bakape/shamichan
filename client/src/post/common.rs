@@ -23,10 +23,12 @@ pub trait PostComponent: Default {
 
 	/// Extra initialization logic
 	#[allow(unused_variables)]
+	#[inline]
 	fn init(&mut self, link: &ComponentLink<PostCommon<Self>>) {}
 
 	/// MessageExtra handler. Returns, if component should be rerendered
 	#[allow(unused_variables)]
+	#[inline]
 	fn update_extra<'c>(
 		&mut self,
 		c: &mut Ctx<'c, Self>,
@@ -46,6 +48,7 @@ pub trait PostComponent: Default {
 
 	/// Should post even render?
 	#[allow(unused_variables)]
+	#[inline]
 	fn should_render<'c>(&self, c: &Ctx<'c, Self>) -> bool {
 		true
 	}
@@ -55,6 +58,7 @@ pub trait PostComponent: Default {
 
 	/// Extra classes to assign to the post's root element
 	#[allow(unused_variables)]
+	#[inline]
 	fn extra_classes<'c>(&self, c: &Ctx<'c, Self>) -> &'static [&'static str] {
 		Default::default()
 	}
@@ -82,6 +86,7 @@ impl<'c, PC> ParentCtxRef<'c, PC>
 where
 	PC: PostComponent + 'static,
 {
+	#[inline]
 	fn as_ref(&'c self) -> &'c comp_util::Ctx<PostCommonInner<PC>> {
 		match self {
 			Self::Const(p) => p,
@@ -196,6 +201,7 @@ impl<'c, PC> AsRef<Self> for Ctx<'c, PC>
 where
 	PC: PostComponent + 'static,
 {
+	#[inline]
 	fn as_ref(&self) -> &Self {
 		self
 	}
@@ -205,6 +211,7 @@ impl<'c, PC> AsMut<Self> for Ctx<'c, PC>
 where
 	PC: PostComponent + 'static,
 {
+	#[inline]
 	fn as_mut(&mut self) -> &mut Self {
 		self
 	}
@@ -257,14 +264,17 @@ where
 	type Properties = Props;
 	type Message = Message<PC::MessageExtra>;
 
+	#[inline]
 	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
 		self.inner.init(&c.link());
 	}
 
+	#[inline]
 	fn update_message() -> Self::Message {
 		Message::Rerender
 	}
 
+	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
 		use state::Change::*;
 
@@ -931,6 +941,7 @@ where
 }
 
 /// Get the thumbnail path of an upload
+#[inline]
 fn thumb_path(img: &Image) -> String {
 	format!(
 		"/assets/images/thumb/{}.{}",
@@ -940,6 +951,7 @@ fn thumb_path(img: &Image) -> String {
 }
 
 /// Resolve the path to the source file of an upload
+#[inline]
 fn source_path(img: &Image) -> String {
 	format!(
 		"/assets/images/thumb/{}.{}",
@@ -948,6 +960,7 @@ fn source_path(img: &Image) -> String {
 	)
 }
 
+#[inline]
 fn is_expandable(t: FileType) -> bool {
 	use FileType::*;
 

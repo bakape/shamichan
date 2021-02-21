@@ -17,14 +17,17 @@ impl comp_util::Inner for Inner {
 	type Properties = super::common::Props;
 	type Message = Message;
 
+	#[inline]
 	fn update_message() -> Self::Message {
 		Message::Rerender
 	}
 
+	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<Change> {
 		vec![Change::Post(props.id)]
 	}
 
+	#[inline]
 	fn update(
 		&mut self,
 		_: &mut comp_util::Ctx<Self>,

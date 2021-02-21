@@ -20,6 +20,7 @@ pub struct KeyPair {
 
 impl KeyPair {
 	/// Store in local storage
+	#[cold]
 	pub fn store(&self) -> util::Result {
 		let mut dst = Vec::with_capacity(1 << 10);
 		{
@@ -41,6 +42,7 @@ impl KeyPair {
 	}
 
 	/// Load from local storage or generate a new one
+	#[cold]
 	pub async fn load() -> util::Result<KeyPair> {
 		Ok(match util::local_storage().get_item(LOCAL_STORAGE_KEY)? {
 			Some(s) => {
@@ -100,6 +102,7 @@ impl KeyPair {
 	}
 
 	/// Generate a new key pair
+	#[cold]
 	async fn generate() -> util::Result<KeyPair> {
 		let pair = wasm_bindgen_futures::JsFuture::from(
 			Self::crypto()?.generate_key_with_object(

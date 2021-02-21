@@ -45,6 +45,7 @@ impl Component for App {
 	comp_no_props! {}
 	type Message = Message;
 
+	#[cold]
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		let mut s = Self {
 			app_state: state::hook(&link, vec![], || Message::NOP),

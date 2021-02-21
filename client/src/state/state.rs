@@ -115,6 +115,7 @@ impl State {
 }
 
 /// Initialize application state
+#[cold]
 pub async fn init() -> util::Result {
 	let mut s = State::default();
 

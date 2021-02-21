@@ -19,6 +19,7 @@ pub enum PostSet {
 }
 
 impl Default for PostSet {
+	#[inline]
 	fn default() -> Self {
 		Self::Last5Posts
 	}
@@ -38,10 +39,12 @@ impl comp_util::Inner for Inner {
 		()
 	}
 
+	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
 		vec![state::Change::Thread(props.id)]
 	}
 
+	#[inline]
 	fn update(
 		&mut self,
 		_: &mut comp_util::Ctx<Self>,
