@@ -1,9 +1,10 @@
-use super::Result;
+use crate::{db, util};
 use common::payloads::post_body::{Node, PendingNode, PostLink};
 use std::{
 	collections::HashMap,
 	sync::{Arc, RwLock},
 };
+use tokio::sync::RwLock as AsyncRWLock;
 
 #[derive(Clone)]
 pub enum PostLocation {
@@ -18,115 +19,78 @@ impl Default for PostLocation {
 	}
 }
 
-/// Generate functions for safely accessing global variable behind a RWLock
-#[macro_export]
-macro_rules! gen_global {
-	(
-		$(#[$meta:meta])*
-		$type:ty {
-			$vis_read:vis fn $fn_read:ident();
-			$vis_write:vis fn $fn_write:ident();
-		}
-	) => {
-		static __ONCE: std::sync::Once = std::sync::Once::new();
-		static mut __GLOBAL: Option<std::sync::RwLock<$type>> = None;
+type PostLocationCache = HashMap<u64, Arc<AsyncRWLock<PostLocation>>>;
+static __ONCE: std::sync::Once = std::sync::Once::new();
+static mut __GLOBAL: Option<std::sync::RwLock<PostLocationCache>> = None;
 
-		fn __init() {
-			__ONCE.call_once(|| {
-				unsafe { __GLOBAL = Some(Default::default()) };
-			});
-		}
+#[inline]
+fn __init() {
+	__ONCE.call_once(|| {
+		unsafe { __GLOBAL = Some(Default::default()) };
+	});
+}
 
-		#[allow(unused)]
-		$(#[$meta])*
-		$vis_read fn $fn_read<F, R>(cb: F) -> R
-		where
-			F: FnOnce(&$type) -> R,
-		{
-			__init();
-			cb(&*unsafe { __GLOBAL.as_ref().unwrap().read().unwrap() })
-		}
+/// Open post location cache for reading
+#[inline]
+fn read_cache<F, R>(cb: F) -> R
+where
+	F: FnOnce(&PostLocationCache) -> R,
+{
+	__init();
+	cb(&*unsafe { __GLOBAL.as_ref().unwrap().read().unwrap() })
+}
 
-		#[allow(unused)]
-		$(#[$meta])*
-		$vis_write fn $fn_write<F, R>(cb: F) -> R
-		where
-			F: FnOnce(&mut $type) -> R,
-		{
-			__init();
-			cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
-		}
+/// Open post location cache for writing
+#[inline]
+fn write_cache<F, R>(cb: F) -> R
+where
+	F: FnOnce(&mut PostLocationCache) -> R,
+{
+	__init();
+	cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
+}
+
+/// Fetch post location from the DB or cache
+pub async fn post_location(id: u64) -> util::DynResult<PostLocation> {
+	use PostLocation::*;
+
+	let rec = write_cache(|c| c.entry(id).or_default().clone());
+	match &*rec.read().await {
+		l @ Exists { .. } | l @ DoesNotExist => return Ok(l.clone()),
+		NotFetched => (),
 	};
-}
 
-/// Can't pass generic types to the macro
-type PostLocationCache = HashMap<u64, Arc<RwLock<PostLocation>>>;
+	let mut rec = rec.write().await;
+	Ok(match &mut *rec {
+		// Race with another thread
+		l @ Exists { .. } | l @ DoesNotExist => l.clone(),
 
-gen_global! {
-	/// Cache of post locations for post links
-	PostLocationCache {
-		fn read();
-		fn write();
-	}
-}
-
-/// Read post location from cache
-pub fn post_location(id: u64) -> Result<PostLocation> {
-	Ok(write(|c| c.entry(id).or_default().clone())
-		.read()
-		.map_err(|e| e.to_string())?
-		.clone())
-
-	// TODO: async fetch function with DB lookup; must properly handle all the
-	// PostLocation enum transitions
-
-	// use PostLocation::*;
-
-	// let store = write(|c| c.entry(id).or_default().clone());
-	// let read_loc = || -> Result<PostLocation> {
-	// 	Ok(store.read().map_err(|e| e.to_string())?.clone())
-	// };
-
-	// let loc = read_loc()?;
-	// Ok(match loc {
-	// 	// Dedup concurrent DB fetches with write lock
-	// 	NotFetched if fetch => match store.try_write() {
-	// 		Ok(mut store) => {
-	// 			let loc = match crate::bindings::get_post_parenthood(id) {
-	// 				Ok(Some((thread, page))) => Exists { thread, page },
-	// 				Ok(None) => DoesNotExist,
-	// 				Err(e) => Err(e)?,
-	// 			};
-	// 			*store = loc.clone();
-	// 			loc
-	// 		}
-	// 		Err(TryLockError::Poisoned(e)) => Err(e.to_string())?,
-	// 		Err(TryLockError::WouldBlock) => {
-	// 			let loc = read_loc()?;
-	// 			match loc {
-	// 				DoesNotExist | Exists { .. } => loc,
-	// 				NotFetched => Err("concurrent lookup failed".to_owned())?,
-	// 			}
-	// 		}
-	// 	},
-	// 	_ => loc,
-	// })
+		// Perform fetch
+		l @ NotFetched => {
+			let loc = match db::get_post_parenthood(id).await? {
+				Some((thread, page)) => PostLocation::Exists { thread, page },
+				None => DoesNotExist,
+			};
+			*l = loc.clone();
+			loc
+		}
+	})
 }
 
 /// Insert a post location into the cache
 pub fn cache_location(id: u64, thread: u64, page: u32) {
-	write(|c| {
+	write_cache(|c| {
 		c.insert(
 			id,
-			Arc::new(RwLock::new(PostLocation::Exists { thread, page })),
+			Arc::new(AsyncRWLock::new(PostLocation::Exists { thread, page })),
 		);
 	});
 }
 
 /// Parse post links and configured references
-pub fn parse_link(word: &str, flags: u8) -> Result<Option<Node>> {
+pub fn parse_link(word: &str, flags: u8) -> Option<Node> {
 	if !word.starts_with(">>") {
-		return Ok(None);
+		return None;
 	}
 
 	let prepend_extra_gt = |n: Node, extra_gt: usize| -> Node {
@@ -137,28 +101,40 @@ pub fn parse_link(word: &str, flags: u8) -> Result<Option<Node>> {
 		}
 	};
 
-	let parse_post_link = |extra_gt: usize| -> Result<Option<Node>> {
+	let parse_post_link = |extra_gt: usize| -> Option<Node> {
 		use PostLocation::*;
 
-		Ok(match word[2 + extra_gt as usize..].parse() {
-			Ok(id) => match post_location(id)? {
-				DoesNotExist => None,
-				NotFetched => Some(if flags & super::OPEN != 0 {
-					Node::PostLink(PostLink {
-						id,
-						thread: 0,
-						page: 0,
-					})
-				} else {
-					Node::Pending(PendingNode::PostLink(id))
-				}),
-				Exists { page, thread } => {
-					Some(Node::PostLink(PostLink { id, thread, page }))
+		word[2 + extra_gt as usize..]
+			.parse()
+			.ok()
+			.map(|id| {
+				match match read_cache(|c| c.get(&id).cloned()) {
+					Some(m) => m.try_read().map(|m| m.clone()),
+					None => Ok(NotFetched),
+				} {
+					Ok(DoesNotExist) => None,
+					Ok(Exists { page, thread }) => {
+						Some(Node::PostLink(PostLink {
+							id,
+							thread: thread,
+							page: page,
+						}))
+					}
+					// Error is always tokio::sync::TryLockError - failure to
+					// lock
+					Ok(NotFetched) | Err(_) => {
+						if flags & super::OPEN != 0 {
+							// Will need to fetch later
+							Some(Node::Pending(PendingNode::PostLink(id)))
+						} else {
+							// Just keep as text for now
+							None
+						}
+					}
 				}
-			},
-			_ => None,
-		}
-		.map(|n| prepend_extra_gt(n, extra_gt)))
+			})
+			.flatten()
+			.map(|n| prepend_extra_gt(n, extra_gt))
 	};
 
 	let parse_reference = |mut extra_gt: usize| -> Option<Node> {
@@ -205,9 +181,9 @@ pub fn parse_link(word: &str, flags: u8) -> Result<Option<Node>> {
 				extra_gt += 1;
 			}
 			'0'..='9' => return parse_post_link(extra_gt),
-			'/' => return Ok(parse_reference(extra_gt)),
-			_ => return Ok(None),
+			'/' => return parse_reference(extra_gt),
+			_ => return None,
 		}
 	}
-	Ok(None)
+	None
 }

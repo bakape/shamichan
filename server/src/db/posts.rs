@@ -75,3 +75,16 @@ pub async fn insert_post<'a>(
 
 	Ok((r.id as u64, r.page as u32))
 }
+
+/// Return the thread and page of a post, if any
+pub async fn get_post_parenthood(id: u64) -> DynResult<Option<(u64, u32)>> {
+	Ok(sqlx::query!(
+		"select thread, page
+		from posts
+		where id = $1",
+		id as i64,
+	)
+	.fetch_optional(&pool())
+	.await?
+	.map(|r| (r.thread as u64, r.page as u32)))
+}

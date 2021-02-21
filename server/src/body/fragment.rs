@@ -61,7 +61,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 			}
 
 			// Post links and configured references
-			Some('>') => super::links::parse_link(word, flags)?,
+			Some('>') => super::links::parse_link(word, flags),
 
 			_ => {
 				word.chars()

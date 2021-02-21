@@ -49,6 +49,32 @@
       "nullable": []
     }
   },
+  "634a6e2d3b30988b61f24ce18e8ec66d35b6bc0b74659b444ebef365fd6377ce": {
+    "query": "select thread, page\n\t\tfrom posts\n\t\twhere id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "thread",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "page",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
   "74f108a187a6365ffd07b0810fb88268827fdc3c82ef2a2c290ecb842c609520": {
     "query": "select jsonb_agg(encode(p) order by id) page\n\t\t\tfrom posts p\n\t\t\twhere thread = $1 and page = $2",
     "describe": {
