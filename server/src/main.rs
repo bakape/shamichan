@@ -85,7 +85,7 @@ async fn main() -> Result<(), std::io::Error> {
             });
         let index_feed = registry.send(registry::GetIndexFeed).await?;
 
-        HttpServer::new(move || {
+        let s = HttpServer::new(move || {
             use actix_files::Files;
             use actix_web::middleware::{
                 normalize::TrailingSlash, Compress, Logger, NormalizePath,
@@ -133,9 +133,11 @@ async fn main() -> Result<(), std::io::Error> {
 
             app
         })
-        .bind(&config::SERVER.address)?
-        .run()
-        .await?;
+        .bind(&config::SERVER.address)?;
+
+        log::info!("server started on http://{}", config::SERVER.address);
+
+        s.run().await?;
 
         Ok::<(), util::Err>(())
     }
