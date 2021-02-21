@@ -6,30 +6,35 @@ use common::Decoder;
 pub struct Message(Bytes);
 
 impl Message {
+	#[inline]
 	pub fn new(buf: impl Into<Bytes>) -> Self {
 		Self(buf.into())
 	}
 }
 
 impl AsRef<[u8]> for Message {
+	#[inline]
 	fn as_ref(&self) -> &[u8] {
 		self.0.as_ref()
 	}
 }
 
 impl From<Bytes> for Message {
+	#[inline]
 	fn from(v: Bytes) -> Self {
 		Self(v)
 	}
 }
 
 impl From<Vec<u8>> for Message {
+	#[inline]
 	fn from(v: Vec<u8>) -> Self {
 		Self::new(v)
 	}
 }
 
 impl Into<Bytes> for Message {
+	#[inline]
 	fn into(self) -> Bytes {
 		self.0
 	}
@@ -72,6 +77,7 @@ pub struct MessageSet {
 
 impl MessageSet {
 	#[allow(unused)]
+	#[inline]
 	pub fn is_empty(&self) -> bool {
 		self.global_feed_messages.is_empty() && self.thread_messages.is_empty()
 	}

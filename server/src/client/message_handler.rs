@@ -306,6 +306,7 @@ impl MessageHandler {
 	}
 
 	/// Synchronize to a specific thread or board index
+	#[cold]
 	async fn synchronize(&mut self, feed: u64) -> DynResult {
 		self.conn_state = ConnState::Synchronized {
 			id: feed,
@@ -358,6 +359,7 @@ impl MessageHandler {
 	}
 
 	/// Trim and replace String
+	#[inline]
 	fn trim(src: &mut String) {
 		let t = src.trim();
 		// Don't always reallocate
@@ -367,6 +369,7 @@ impl MessageHandler {
 	}
 
 	/// Assert client does not already have an open post
+	#[inline]
 	fn assert_no_open_post(&self) -> Result<(), String> {
 		if self.open_post.is_some() {
 			str_err!("already have an open post")

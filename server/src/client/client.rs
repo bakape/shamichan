@@ -43,6 +43,7 @@ impl Actor for Client {
 			.wait(ctx);
 	}
 
+	#[cold]
 	fn stopped(&mut self, _: &mut Self::Context) {
 		let ref s: super::State = *self.state;
 		s.registry.do_send(registry::UnregisterClient(s.id));
@@ -159,6 +160,7 @@ impl Handler<SendMessage> for Client {
 pub struct SendMessageBatch(Arc<Vec<Msg>>);
 
 impl SendMessageBatch {
+	#[inline]
 	pub fn new(messages: Vec<Msg>) -> Self {
 		Self(messages.into())
 	}
@@ -201,6 +203,7 @@ impl Client {
 	}
 
 	/// Log critical client error and send it to the client and stop the Actor
+	#[cold]
 	fn fail(&self, ctx: &mut <Self as Actor>::Context, err: &util::Err) {
 		// TODO: filter errors somehow (probably using error classes and an
 		// internal error type instead of just util::Error)

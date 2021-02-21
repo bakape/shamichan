@@ -25,11 +25,13 @@ pub enum AnyFeed {
 
 impl AnyFeed {
 	/// Notify a feed it has some external state changes to check.
+	#[inline]
 	pub fn wake_up(&self) {
 		self.do_send(crate::util::WakeUp);
 	}
 
 	/// Send a request to a a feed, if both feed kinds support it
+	#[inline]
 	pub fn do_send<R>(&self, req: R)
 	where
 		R: Send + 'static,

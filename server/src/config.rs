@@ -43,6 +43,7 @@ pub struct SpamScores {
 }
 
 impl Default for SpamScores {
+	#[inline]
 	fn default() -> Self {
 		Self {
 			character: 85,
@@ -71,6 +72,7 @@ pub struct Config {
 }
 
 impl Default for Config {
+	#[inline]
 	fn default() -> Self {
 		Self {
 			public: Default::default(),
@@ -86,11 +88,13 @@ impl Default for Config {
 }
 
 /// Get a snapshot of the current configuration
+#[inline]
 pub fn get() -> Arc<Config> {
 	CONFIG.read().unwrap().clone()
 }
 
 /// Set the configurations to a new value
+#[cold]
 pub fn set(c: Config) {
 	// TODO: send new configs to all clients
 	let c = Arc::new(c);

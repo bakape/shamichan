@@ -66,6 +66,7 @@ impl Writer {
 	}
 
 	/// Register a new post ID in the thread
+	#[inline]
 	pub fn register_post_id(&mut self, id: u64) {
 		self.last_5_posts.push(id);
 	}

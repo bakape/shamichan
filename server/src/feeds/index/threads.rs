@@ -65,6 +65,7 @@ impl Threads {
 	}
 
 	/// Retrieve a cached message, if any
+	#[inline]
 	pub fn get_cached_message(&self) -> Option<Message> {
 		self.cache.clone()
 	}
@@ -97,12 +98,14 @@ impl Threads {
 impl Deref for Threads {
 	type Target = HashMap<u64, MessageCacher<ThreadWithPosts>>;
 
+	#[inline]
 	fn deref(&self) -> &Self::Target {
 		&self.threads
 	}
 }
 
 impl DerefMut for Threads {
+	#[inline]
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.cache = None;
 		self.used_tags = None;

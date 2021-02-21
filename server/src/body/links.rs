@@ -14,6 +14,7 @@ pub enum PostLocation {
 }
 
 impl Default for PostLocation {
+	#[inline]
 	fn default() -> Self {
 		Self::NotFetched
 	}
@@ -24,6 +25,7 @@ static __ONCE: std::sync::Once = std::sync::Once::new();
 static mut __GLOBAL: Option<std::sync::RwLock<PostLocationCache>> = None;
 
 #[inline]
+#[cold]
 fn __init() {
 	__ONCE.call_once(|| {
 		unsafe { __GLOBAL = Some(Default::default()) };

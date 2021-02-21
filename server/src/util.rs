@@ -15,6 +15,7 @@ pub struct IDGenerator {
 
 impl IDGenerator {
 	/// Return the next unique ID
+	#[inline]
 	pub fn next(&self) -> u64 {
 		let mut ptr = self.counter.lock().unwrap();
 		*ptr += 1;
@@ -62,6 +63,7 @@ pub struct MessageCacher<T: Serialize> {
 
 impl<T: Serialize> MessageCacher<T> {
 	/// Create a new wrapped value
+	#[inline]
 	pub fn new(val: T) -> MessageCacher<T> {
 		MessageCacher::<T> { val, cached: None }
 	}
@@ -83,6 +85,7 @@ impl<T: Serialize> MessageCacher<T> {
 	}
 
 	/// Consume message cacher and return inner value
+	#[inline]
 	pub fn get(self) -> T {
 		self.val
 	}
@@ -91,18 +94,21 @@ impl<T: Serialize> MessageCacher<T> {
 impl<T: Serialize> Deref for MessageCacher<T> {
 	type Target = T;
 
+	#[inline]
 	fn deref(&self) -> &Self::Target {
 		&self.val
 	}
 }
 
 impl<T: Serialize> AsRef<T> for MessageCacher<T> {
+	#[inline]
 	fn as_ref(&self) -> &T {
 		&self.val
 	}
 }
 
 impl<T: Serialize> DerefMut for MessageCacher<T> {
+	#[inline]
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.cached = None;
 		&mut self.val
@@ -110,6 +116,7 @@ impl<T: Serialize> DerefMut for MessageCacher<T> {
 }
 
 impl<T: Serialize> From<T> for MessageCacher<T> {
+	#[inline]
 	fn from(v: T) -> MessageCacher<T> {
 		Self::new(v)
 	}
@@ -140,6 +147,7 @@ pub struct SnapshotSource<T: Clone + Sync> {
 
 impl<T: Clone + Sync> SnapshotSource<T> {
 	/// Create new SnapshotSource initialized with val
+	#[inline]
 	pub fn new(val: T) -> Self {
 		Self {
 			val,
@@ -168,12 +176,14 @@ impl<T: Clone + Sync> SnapshotSource<T> {
 }
 
 impl<T: Clone + Sync> From<T> for SnapshotSource<T> {
+	#[inline]
 	fn from(val: T) -> Self {
 		Self::new(val)
 	}
 }
 
 impl<T: Clone + Sync> PartialEq<Snapshot<T>> for SnapshotSource<T> {
+	#[inline]
 	fn eq(&self, other: &Snapshot<T>) -> bool {
 		self.last_snapshot.is_some()
 			&& self.snapshot_version == other.snapshot_version
@@ -183,12 +193,14 @@ impl<T: Clone + Sync> PartialEq<Snapshot<T>> for SnapshotSource<T> {
 impl<T: Clone + Sync> Deref for SnapshotSource<T> {
 	type Target = T;
 
+	#[inline]
 	fn deref(&self) -> &T {
 		&self.val
 	}
 }
 
 impl<T: Clone + Sync> DerefMut for SnapshotSource<T> {
+	#[inline]
 	fn deref_mut(&mut self) -> &mut T {
 		// Invalidate any saved snapshots because val might be modified
 		self.last_snapshot = None;
@@ -211,6 +223,7 @@ impl<T: Clone + Sync> actix::Message for Snapshot<T> {
 }
 
 impl<T: Clone + Sync> PartialEq<Snapshot<T>> for Snapshot<T> {
+	#[inline]
 	fn eq(&self, other: &Snapshot<T>) -> bool {
 		self.snapshot_version == other.snapshot_version
 	}
@@ -221,12 +234,13 @@ impl<T: Clone + Sync> Eq for Snapshot<T> {}
 impl<T: Clone + Sync> Deref for Snapshot<T> {
 	type Target = T;
 
+	#[inline]
 	fn deref(&self) -> &T {
 		&self.val
 	}
 }
 
-/// Run function in the Rayon thread pool and return its result
+/// Run function in the Rayon thread pool and return its result.
 pub async fn run_in_rayon<F, R>(f: F) -> DynResult<R>
 where
 	F: FnOnce() -> R + Send + 'static,
@@ -234,6 +248,7 @@ where
 {
 	let (send, receive) = tokio::sync::oneshot::channel();
 	rayon::spawn(move || {
+		// Ignore failure to receive. The parent future might have been dropped.
 		std::mem::drop(send.send(f()));
 	});
 	receive.await.map_err(|e| e.to_string().into())

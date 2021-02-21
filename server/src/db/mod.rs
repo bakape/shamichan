@@ -12,6 +12,7 @@ use sqlx::postgres::PgPool;
 static mut POOL: Option<PgPool> = None;
 
 /// Open database connection pool
+#[cold]
 pub async fn open() -> DynResult {
 	let pool = sqlx::postgres::PgPoolOptions::new()
 		.max_connections(128)
@@ -23,6 +24,7 @@ pub async fn open() -> DynResult {
 }
 
 /// Get a handle on the connection pool
+#[inline]
 fn pool() -> PgPool {
 	unsafe { POOL.clone().unwrap() }
 }

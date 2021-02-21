@@ -67,7 +67,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     // TODO: Censor DB connection string in args, if any
 
-    async fn inner() -> util::DynResult {
+    async {
         stderrlog::new().init()?;
 
         // TODO: remove this and revert tokio runtime to private, when we switch
@@ -136,10 +136,11 @@ async fn main() -> Result<(), std::io::Error> {
         .bind(&config::SERVER.address)?
         .run()
         .await?;
-        Ok(())
-    }
 
-    inner().await.map_err(|err| {
+        Ok::<(), util::Err>(())
+    }
+    .await
+    .map_err(|err| {
         std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
     })
 }

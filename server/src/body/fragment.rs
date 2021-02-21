@@ -125,6 +125,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 /// the 3 split parts. If there is no edge punctuation, the respective byte is
 /// zero.
 fn split_punctuation(word: &str) -> (char, &str, char) {
+	#[inline]
 	fn is_punctuation(b: char) -> bool {
 		match b {
 			'!' | '"' | '\'' | '(' | ')' | ',' | '-' | '.' | ':' | ';'

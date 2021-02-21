@@ -21,6 +21,7 @@ pub struct MutablePage {
 }
 
 impl MutablePage {
+	#[inline]
 	fn new(posts: HashMap<u64, MessageCacher<Post>>) -> Self {
 		Self { posts, cache: None }
 	}
@@ -65,6 +66,7 @@ impl MutablePage {
 	}
 
 	/// Retrieve a cached message, if any
+	#[inline]
 	pub fn get_cached_message(&self) -> Option<Message> {
 		self.cache.clone()
 	}
@@ -73,12 +75,14 @@ impl MutablePage {
 impl Deref for MutablePage {
 	type Target = HashMap<u64, MessageCacher<Post>>;
 
+	#[inline]
 	fn deref(&self) -> &Self::Target {
 		&self.posts
 	}
 }
 
 impl DerefMut for MutablePage {
+	#[inline]
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.cache = None;
 		&mut self.posts
@@ -100,6 +104,7 @@ pub enum PageRecord {
 }
 
 impl Default for PageRecord {
+	#[inline]
 	fn default() -> Self {
 		Self::Unfetched
 	}
@@ -134,6 +139,7 @@ impl PageRecord {
 	}
 
 	/// Returns if a page can be considered immutable
+	#[inline]
 	pub fn can_be_made_immutable<'a>(
 		mut posts: impl ExactSizeIterator<Item = &'a Post>,
 	) -> bool {

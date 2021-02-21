@@ -9,6 +9,7 @@ pub struct Last5 {
 
 impl Last5 {
 	/// Initialize the collection with 1 ID. The collection may never be empty.
+	#[inline]
 	pub fn new(first: u64) -> Self {
 		let mut s = Self {
 			len: 1,
@@ -19,17 +20,20 @@ impl Last5 {
 	}
 
 	/// Return the smallest ID in the collection
+	#[inline]
 	pub fn min(&self) -> u64 {
 		self.arr[0]
 	}
 
 	/// Return the largest ID in the collection
+	#[inline]
 	pub fn max(&self) -> u64 {
 		self.arr[self.len - 1]
 	}
 
 	// Push an ID to the collection, if it modifies the current list of last 5
 	// IDs
+	#[inline]
 	pub fn push(&mut self, id: u64) {
 		if self.len < 5 {
 			self.len += 1;

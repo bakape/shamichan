@@ -84,6 +84,7 @@ where
 	) -> Result<(), Self::Error>;
 
 	/// Handle any errors originating from handle()
+	#[cold]
 	fn handle_error(&mut self, _: &mut Self::Context, err: Self::Error) {
 		use std::any::type_name;
 
@@ -110,6 +111,7 @@ impl<A> Clone for MTAddr<A>
 where
 	A: Actor<Context = MTContext<A>> + Send,
 {
+	#[inline]
 	fn clone(&self) -> Self {
 		Self {
 			scheduler: self.scheduler.clone(),
@@ -121,6 +123,7 @@ impl<A> MTAddr<A>
 where
 	A: Actor<Context = MTContext<A>> + Send,
 {
+	#[inline]
 	fn new(scheduler: Addr<Scheduler<A>>) -> Self {
 		Self { scheduler }
 	}
@@ -142,6 +145,7 @@ where
 {
 	/// Returns the address of the context
 	#[allow(unused)]
+	#[inline]
 	pub fn address(&self) -> MTAddr<A> {
 		MTAddr::new(self.scheduler.clone())
 	}
@@ -247,6 +251,7 @@ where
 	A: Actor<Context = MTContext<A>> + Send + AsyncHandler<M>,
 	M: Send + Clone,
 {
+	#[inline]
 	fn clone(&self) -> Self {
 		Self {
 			msg: self.msg.clone(),
@@ -274,6 +279,7 @@ where
 	A: Actor<Context = MTContext<A>> + Send + AsyncHandler<M>,
 	M: Send + Clone + 'static,
 {
+	#[inline]
 	fn as_wrapped_message(&self) -> Box<dyn WrappedMessage<A>> {
 		Box::new(self.clone()) as Box<dyn WrappedMessage<A>>
 	}
@@ -308,16 +314,19 @@ impl<A> ActorContext for MTContext<A>
 where
 	A: Actor<Context = MTContext<A>> + Send,
 {
+	#[inline]
 	fn stop(&mut self) {
 		self.stopped_self = true;
 		set_stopping_state(&self.state, ActorState::Stopping);
 	}
 
+	#[inline]
 	fn terminate(&mut self) {
 		self.stopped_self = true;
 		set_stopping_state(&self.state, ActorState::Stopped);
 	}
 
+	#[inline]
 	fn state(&self) -> ActorState {
 		*self.state.read().unwrap()
 	}
@@ -453,6 +462,7 @@ where
 		}
 	}
 
+	#[cold] // Assume actors don't stop as often
 	fn stopped(&mut self, ctx: &mut Self::Context) {
 		*self.state.write().unwrap() = ActorState::Stopped;
 

@@ -52,6 +52,7 @@ pub struct Registry {
 impl Actor for Registry {
 	type Context = Context<Self>;
 
+	#[cold]
 	fn started(&mut self, ctx: &mut Self::Context) {
 		// This is a central synchronization point.
 		// The default of 16 is not enough.
@@ -363,6 +364,7 @@ impl Message for SnapshotClients {
 
 // Implemented here because it's not derivable
 impl MessageResponse<Registry, SnapshotClients> for feeds::Clients {
+	#[inline]
 	fn handle<R: ResponseChannel<SnapshotClients>>(
 		self,
 		_: &mut <Registry as Actor>::Context,
@@ -398,6 +400,7 @@ impl Message for GetIndexFeed {
 
 // Implemented here because it's not derivable
 impl MessageResponse<Registry, GetIndexFeed> for MTAddr<IndexFeed> {
+	#[inline]
 	fn handle<R: ResponseChannel<GetIndexFeed>>(
 		self,
 		_: &mut <Registry as Actor>::Context,
@@ -412,6 +415,7 @@ impl MessageResponse<Registry, GetIndexFeed> for MTAddr<IndexFeed> {
 impl Handler<GetIndexFeed> for Registry {
 	type Result = MTAddr<IndexFeed>;
 
+	#[inline]
 	fn handle(
 		&mut self,
 		_: GetIndexFeed,
