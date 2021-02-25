@@ -63,11 +63,20 @@ async fn connect(
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
-    dotenv::dotenv().ok();
-
-    // TODO: Censor DB connection string in args, if any
+    dotenv::dotenv().ok(); // Ignore missing .env file
 
     async {
+        // Set's a more descriptive process title - only port number because of
+        // 12 char limit.
+        // Also prevents exposing DB connection string in args, if any.
+        proctitle::set_title(format!(
+            "meguca @ :{}",
+            config::SERVER
+                .address
+                .parse::<std::net::SocketAddr>()?
+                .port(),
+        ));
+
         stderrlog::new().init()?;
 
         // TODO: remove this and revert tokio runtime to private, when we switch

@@ -36,6 +36,7 @@ syntect = "4.5.0"
 tripcode = "0.2.1"
 url = "2.2.0"
 uuid = "0.8.2"
+proctitle = "0.1.1"
 
 [dependencies.clap]
 features = ["suggestions", "color", "wrap_help"]

@@ -1657,6 +1657,7 @@ dependencies = [
  "log",
  "memmap",
  "openssl",
+ "proctitle",
  "rand 0.8.3",
  "rayon",
  "regex",
@@ -2167,6 +2168,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "proctitle"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "924cd8a0de90723d63fed19c5035ea129913a0bc998b37686a67f1eaf6a2aab5"
+dependencies = [
+ "lazy_static",
+ "libc",
+ "winapi 0.3.8",
 ]
 
 [[package]]
