@@ -63,9 +63,19 @@ async fn connect(
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
-    dotenv::dotenv().ok(); // Ignore missing .env file
-
     async {
+        stderrlog::new().init()?;
+
+        match dotenv::dotenv() {
+            Ok(_) => (),
+            Err(e) => {
+                // Ignore missing .env file
+                if !e.not_found() {
+                    Err(e)?
+                }
+            }
+        };
+
         // Set's a more descriptive process title - only port number because of
         // 12 char limit.
         // Also prevents exposing DB connection string in args, if any.
@@ -76,8 +86,6 @@ async fn main() -> Result<(), std::io::Error> {
                 .parse::<std::net::SocketAddr>()?
                 .port(),
         ));
-
-        stderrlog::new().init()?;
 
         // TODO: remove this and revert tokio runtime to private, when we switch
         // to actix_web, askama and actix_web_actors to 4.0.
