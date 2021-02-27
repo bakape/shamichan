@@ -12,8 +12,6 @@ use yew::{
 	Bridge, Bridged, Component, ComponentLink, Html,
 };
 
-// TODO: fix crash on server connection loss (likely in the error handler)
-
 // TODO: break up into submodules
 
 // TODO: send open post reclamation request with a full text body for any open
@@ -242,9 +240,8 @@ impl Agent for Connection {
 				self.reset_socket_and_timer();
 				self.handle_disconnect();
 			}
-			Error(e) => {
+			Error(_) => {
 				self.reset_socket_and_timer();
-				util::log_error(&e.message());
 				self.set_state(State::Disconnected);
 			}
 			TryReconnecting => {
