@@ -321,8 +321,8 @@ impl Scheduler {
 	/// Update current Unix timestamp corrected for drift between server and client
 	#[inline]
 	fn update_now(&mut self) {
-		self.now = ((Date::now() / 1000.0) as i64 + self.time_correction as i64)
-			as u32;
+		self.now =
+			(crate::util::now() as i32 + self.time_correction as i32) as u32;
 	}
 }
 

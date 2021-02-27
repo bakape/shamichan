@@ -96,6 +96,10 @@ impl PostComponent for Inner {
 
 			Ok(match msg {
 				SetState(s) => {
+					if self.state == s {
+						return Ok(false);
+					}
+
 					match &s {
 						State::Allocated { post } if post != &c.props().id => {
 							let mut old = c.props().clone();
@@ -104,7 +108,19 @@ impl PostComponent for Inner {
 						}
 						_ => (),
 					};
+
+					// Focus input right after opening form
+					if self.state == State::Ready {
+						c.link().send_message(super::common::Message::Extra(
+							Focus {
+								pos: 0,
+								first: true,
+							},
+						));
+					}
+
 					self.state = s;
+
 					true
 				}
 				TextInput(s) => {

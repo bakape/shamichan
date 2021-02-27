@@ -56,6 +56,9 @@ pub enum Request {
 	/// Insert a new thread into the registry
 	InsertThread(ThreadCreationNotice),
 
+	/// Insert a new post into the registry
+	InsertPost(Post),
+
 	/// Set post as created by this user
 	SetMine(u64),
 
@@ -386,6 +389,11 @@ impl yew::agent::Agent for Agent {
 				self.trigger(&Change::ThreadList);
 				self.trigger(&Change::Thread(n.id));
 				self.trigger(&Change::Post(n.id));
+			}
+			InsertPost(p) => {
+				self.trigger(&Change::Thread(p.thread));
+				self.trigger(&Change::Post(p.id));
+				state::get_mut().register_post(p);
 			}
 			RegisterPage(posts) => self.register_page(posts),
 			RegisterThreads(threads) => self.register_threads(threads),

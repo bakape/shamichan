@@ -566,7 +566,18 @@ impl Connection {
 				InsertThreadAck => {
 					let id: u64 = decode!();
 					send(Request::SetMine(id));
+
+					// Insert a placeholder post, so the postform has something
+					// to render
+					send(Request::InsertPost(common::payloads::Post::new(
+						id,
+						id,
+						0,
+						util::now(),
+						Default::default(),
+					)));
 					send(Request::SetOpenPostID(id.into()));
+
 					state::navigate_to(state::Location {
 						feed: state::FeedID::Thread { id, page: 0 },
 						focus: None,
@@ -574,6 +585,9 @@ impl Connection {
 				}
 				InsertThread => {
 					send(Request::InsertThread(decode!()));
+				}
+				InsertPost => {
+					send(Request::InsertPost(decode!()));
 				}
 				PartitionedPageStart => {
 					skip_payload!();
