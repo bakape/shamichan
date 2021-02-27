@@ -208,8 +208,6 @@ impl Agent for Connection {
 	fn update(&mut self, msg: Event) {
 		use Event::*;
 
-		debug_log!("connection event", msg);
-
 		match msg {
 			Open => {
 				self.reset_reconn_attempts();
