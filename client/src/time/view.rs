@@ -53,6 +53,11 @@ impl Component for View {
 	}
 
 	fn view(&self) -> Html {
+		// Placeholder post
+		if self.props.time == 0 {
+			return html! {};
+		}
+
 		static MONTHS: [&str; 12] = [
 			"january",
 			"february",
