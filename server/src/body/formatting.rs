@@ -1,4 +1,4 @@
-use super::{util::parse_siblings, Result};
+use super::Result;
 use common::payloads::post_body::Node;
 
 /// Implements a function that wraps matched content in a tag
