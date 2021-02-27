@@ -421,6 +421,7 @@ where
 			None => return html! {},
 		};
 		let c = c.as_ref();
+		let p = c.post();
 
 		if !self.inner.should_render(&c) {
 			debug_log!("post specified to not render", c.props().id);
@@ -429,7 +430,7 @@ where
 
 		let mut cls = vec!["glass"];
 		cls.extend(self.inner.extra_classes(&c));
-		if c.post().open {
+		if p.open {
 			cls.push("open");
 		}
 
@@ -440,7 +441,7 @@ where
 				self.translation.x, self.translation.y
 			);
 			cls.push("translated");
-		} else if c.post().id == c.post().thread {
+		} else if p.id == p.thread {
 			// Moved OPs need to not blend into the background
 			cls.push("no-border");
 		}
@@ -448,7 +449,7 @@ where
 		#[rustfmt::skip]
 			macro_rules! with_image {
 				($method:ident) => {
-					match &c.post().image {
+					match &p.image {
 						Some(img) => self.$method(&c, img),
 						None => html! {},
 					}
@@ -494,11 +495,17 @@ where
 
 	fn render_header<'c>(&self, c: &Ctx<'c, PC>) -> Html {
 		let s = c.app_state();
-		let thread = if c.post().id == c.post().thread {
-			s.threads.get(&c.post().thread)
+		let p = c.post();
+		let thread = if p.id == p.thread {
+			s.threads.get(&p.thread)
 		} else {
 			None
 		};
+
+		// Copy to move into the closures
+		let post_id = p.id;
+		let thread_id = p.thread;
+		let page_id = p.page;
 
 		let inner = html! {
 			<>
@@ -523,7 +530,7 @@ where
 				}
 				{self.render_name(c)}
 				{
-					match &c.post().flag {
+					match &p.flag {
 						Some(code) => match super::countries::get_name(&code) {
 							Some(name) => html! {
 								<img
@@ -537,15 +544,27 @@ where
 						None => html! {},
 					}
 				}
-				<crate::time::view::View time=c.post().created_on />
+				<crate::time::view::View time=p.created_on />
 				<nav class="spaced">
-					// TODO: focus this post
-					<a>{"#"}</a>
+					<a
+						onclick=c.link().callback(move |_| {
+							state::navigate_to(Location{
+								feed: FeedID::Thread{
+									id: thread_id,
+									page: page_id as i32,
+								},
+								focus: Some(Focus::Post(post_id)),
+							});
+							Message::NOP
+						})
+					>
+						{"#"}
+					</a>
 					<a
 						class="quote"
 						onclick=c.link().callback(|_| Message::QuoteSelf)
 					>
-						{c.post().id}
+						{p.id}
 					</a>
 				</nav>
 				{
@@ -553,7 +572,6 @@ where
 					&& !PC::is_preview()
 					&& !c.app_state().location.is_thread()
 					{
-						let id = c.post().id;
 						html! {
 							<>
 								<SpanButton
@@ -561,7 +579,7 @@ where
 									on_click=c.link().callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
-												id,
+												id: thread_id,
 												page: 0,
 											},
 											focus: Some(Focus::Top),
@@ -574,7 +592,7 @@ where
 									on_click=c.link().callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
-												id,
+												id: thread_id,
 												page: -1,
 											},
 											focus: Some(Focus::Bottom),
@@ -588,7 +606,7 @@ where
 						html! {}
 					}
 				}
-				<super::menu::Menu id=c.post().id />
+				<super::menu::Menu id=p.id />
 			</>
 		};
 
@@ -618,33 +636,34 @@ where
 	fn render_name<'c>(&self, c: &Ctx<'c, PC>) -> Html {
 		// TODO: Staff titles
 		let mut w: Vec<Html> = Default::default();
+		let p = c.post();
 
 		if c.app_state().options.forced_anonymity
-			|| (c.post().name.is_none() && c.post().trip.is_none())
+			|| (p.name.is_none() && p.trip.is_none())
 		{
 			w.push(html! {
 				<span>{localize!("anon")}</span>
 			});
 		} else {
-			if let Some(name) = &c.post().name {
+			if let Some(name) = &p.name {
 				w.push(html! {
 					<span>{name}</span>
 				});
 			}
-			if let Some(trip) = &c.post().trip {
+			if let Some(trip) = &p.trip {
 				w.push(html! {
 					<code>{trip}</code>
 				});
 			}
 		}
-		if c.app_state().mine.contains(&c.post().id) {
+		if c.app_state().mine.contains(&p.id) {
 			w.push(html! {
 				<i>{localize!("you")}</i>
 			});
 		}
 
 		let mut cls = vec!["name"];
-		if c.post().sage {
+		if p.sage {
 			cls.push("sage");
 		}
 		// TODO: Add admin class, if staff title
