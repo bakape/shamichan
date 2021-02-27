@@ -503,7 +503,7 @@ impl Connection {
 			macro_rules! skip_payload {
 				($t:expr) => {
 					dec.skip_next();
-					common::log_msg_in!(t, ());
+					common::log_msg_in!($t, ());
 				};
 				() => {
 					skip_payload!(t);
