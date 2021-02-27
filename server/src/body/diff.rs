@@ -4,7 +4,10 @@ use common::payloads::post_body::{Node, PatchNode};
 // (like code tags) and first perform a simple source string comparison to
 // ascertain regeneration is in fact needed.
 
-/// Diff the new post body against the old
+/// Diff the new post body against the old.
+///
+/// All performed on one thread to maximize thread locality.
+/// Yields of work sharing here are doubtable.
 pub fn diff(old: &Node, new: &Node) -> Option<PatchNode> {
 	use Node::*;
 
@@ -13,11 +16,11 @@ pub fn diff(old: &Node, new: &Node) -> Option<PatchNode> {
 		(Siblings(old), Siblings(new)) => {
 			macro_rules! diff {
 				($i:expr) => {
-					|| diff(&*old[$i], &*new[$i])
+					diff(&*old[$i], &*new[$i])
 				};
 			}
 
-			match rayon::join(diff!(0), diff!(1)) {
+			match (diff!(0), diff!(1)) {
 				(None, None) => None,
 				(l @ _, r @ _) => Some(PatchNode::Siblings([
 					l.map(|p| p.into()),

@@ -1,20 +1,18 @@
 use super::{Result, AT_LINE_START};
 use common::payloads::post_body::Node;
 
-/// Parse a split sibling pair (if resources allow)
+/// Parse a split sibling pair.
+#[inline]
 pub fn parse_siblings(
-	left: impl FnOnce() -> Result + Send,
-	right: impl FnOnce() -> Result + Send,
+	left: impl FnOnce() -> Result,
+	right: impl FnOnce() -> Result,
 ) -> Result {
-	let (left_res, right_res) = rayon::join(left, right);
+	Ok(match (left()?, right()?) {
+		// Avoid  and extra Node and boxing, if one is empty
+		(l @ _, Node::Empty) => l,
+		(Node::Empty, r @ _) => r,
 
-	// Avoid  and extra Node and boxing, if one is empty
-	let left_n = left_res?;
-	let right_n = right_res?;
-	Ok(match (&left_n, &right_n) {
-		(_, Node::Empty) => left_n,
-		(Node::Empty, _) => right_n,
-		_ => Node::Siblings([left_n.into(), right_n.into()]),
+		(l @ _, r @ _) => Node::Siblings([l.into(), r.into()]),
 	})
 }
 
@@ -22,7 +20,7 @@ pub fn parse_siblings(
 /// segments
 ///
 /// Always inlined, because it is only used in very small function that only
-/// call this split_and_parse().
+/// call split_and_parse().
 #[inline(always)]
 pub fn split_and_parse(
 	frag: &str,
