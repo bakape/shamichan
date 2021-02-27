@@ -3,6 +3,7 @@ use actix::prelude::*;
 use common::MessageType;
 use serde::Serialize;
 use std::{
+	fmt::Debug,
 	ops::{Deref, DerefMut},
 	sync::{Arc, Mutex},
 };
@@ -56,12 +57,18 @@ pub struct Pulse;
 //
 // TODO: bind to specific MessageType, when const generics stabilize,
 #[derive(Debug, Default)]
-pub struct MessageCacher<T: Serialize> {
+pub struct MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	val: T,
 	cached: Option<(MessageType, Message)>,
 }
 
-impl<T: Serialize> MessageCacher<T> {
+impl<T> MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	/// Create a new wrapped value
 	#[inline]
 	pub fn new(val: T) -> MessageCacher<T> {
@@ -73,6 +80,7 @@ impl<T: Serialize> MessageCacher<T> {
 		&mut self,
 		typ: common::MessageType,
 	) -> std::io::Result<Message> {
+		common::log_msg_out!(typ, self.val);
 		Ok(match &mut self.cached {
 			Some((t, m)) if &typ == t => m.clone(),
 			_ => {
@@ -91,7 +99,10 @@ impl<T: Serialize> MessageCacher<T> {
 	}
 }
 
-impl<T: Serialize> Deref for MessageCacher<T> {
+impl<T> Deref for MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	type Target = T;
 
 	#[inline]
@@ -100,14 +111,20 @@ impl<T: Serialize> Deref for MessageCacher<T> {
 	}
 }
 
-impl<T: Serialize> AsRef<T> for MessageCacher<T> {
+impl<T> AsRef<T> for MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	#[inline]
 	fn as_ref(&self) -> &T {
 		&self.val
 	}
 }
 
-impl<T: Serialize> DerefMut for MessageCacher<T> {
+impl<T> DerefMut for MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	#[inline]
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.cached = None;
@@ -115,7 +132,10 @@ impl<T: Serialize> DerefMut for MessageCacher<T> {
 	}
 }
 
-impl<T: Serialize> From<T> for MessageCacher<T> {
+impl<T> From<T> for MessageCacher<T>
+where
+	T: Serialize + Debug,
+{
 	#[inline]
 	fn from(v: T) -> MessageCacher<T> {
 		Self::new(v)
