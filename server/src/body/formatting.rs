@@ -2,44 +2,30 @@ use super::Result;
 use common::payloads::post_body::Node;
 
 /// Implements a function that wraps matched content in a tag
-macro_rules! impl_wrapper {
-	($vis:vis, $name:ident, $delimiter:expr, $tag:ident, $inner:expr) => {
-		$vis fn $name(frag: &str, flags: u8) -> Result {
-			super::util::split_and_parse(
-				frag,
-				flags,
-				$delimiter,
-				|frag, flags| -> Result {
-					Ok(Node::$tag($inner(frag, flags)?.into()))
-				},
-				$inner,
-			)
-		}
+macro_rules! impl_wrappers {
+	($(
+		$vis:vis fn $name:ident($delimiter:expr => $tag:ident || $inner:expr)
+	)+) => {
+		$(
+			$vis fn $name(frag: &str, flags: u8) -> Result {
+				super::util::split_and_parse(
+					frag,
+					flags,
+					$delimiter,
+					|frag, flags| -> Result {
+						Ok(Node::$tag($inner(frag, flags)?.into()))
+					},
+					$inner,
+				)
+			}
+		)+
 	};
 }
 
-impl_wrapper! {
-	pub,
-	parse_spoilers,
-	"**",
-	Spoiler,
-	parse_bolds
-}
-
-impl_wrapper! {
-	,
-	parse_bolds,
-	"@@",
-	Bold,
-	parse_italics
-}
-
-impl_wrapper! {
-	,
-	parse_italics,
-	"~~",
-	Italic,
-	parse_quoted
+impl_wrappers! {
+	pub fn parse_spoilers("**" => Spoiler || parse_bolds)
+	fn parse_bolds("@@" => Bold || parse_italics)
+	fn parse_italics("~~" => Italic || parse_quoted)
 }
 
 fn parse_quoted(frag: &str, flags: u8) -> Result {
