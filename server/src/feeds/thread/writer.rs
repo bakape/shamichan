@@ -73,13 +73,16 @@ impl Writer {
 
 	/// Write post-related message to pending message encoder and propagate it
 	/// to the global feed together with `change`, if needed.
-	pub fn write_post_message(
+	pub fn write_post_message<T>(
 		&mut self,
 		post_id: u64,
 		t: MessageType,
-		payload: &impl Serialize,
+		payload: &T,
 		change: Change,
-	) -> DynResult {
+	) -> DynResult
+	where
+		T: Serialize + std::fmt::Debug,
+	{
 		self.write_message(t, payload)?;
 		if post_id == self.feed || post_id >= self.last_5_posts.min() {
 			self.write_global_change(t, payload, change)?;
