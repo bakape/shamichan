@@ -88,11 +88,11 @@ impl Writer {
 	}
 
 	/// Write message to pending message encoder
-	pub fn write_message(
-		&mut self,
-		t: MessageType,
-		payload: &impl Serialize,
-	) -> DynResult {
+	pub fn write_message<T>(&mut self, t: MessageType, payload: &T) -> DynResult
+	where
+		T: Serialize + std::fmt::Debug,
+	{
+		common::log_msg_out!(t, payload);
 		self.enc
 			.get_or_insert_with(|| Default::default())
 			.write_message(t, payload)?;

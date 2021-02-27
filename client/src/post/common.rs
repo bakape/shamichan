@@ -161,10 +161,6 @@ where
 				// This fools the borrow checker
 				Some(p) => Some(p as *const Post),
 				None => {
-					debug_log!(
-						"post not found in app state",
-						parent.props().id
-					);
 					return None;
 				}
 			}
@@ -424,7 +420,6 @@ where
 		let p = c.post();
 
 		if !self.inner.should_render(&c) {
-			debug_log!("post specified to not render", c.props().id);
 			return html! {};
 		}
 

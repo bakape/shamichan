@@ -609,10 +609,7 @@ impl Agent {
 	/// Set new state and send it to all subscribers
 	fn set_state(&mut self, new: State) {
 		if self.state != new {
-			debug_log!(format!(
-				"set postform state: {:?} -> {:?}",
-				self.state, new
-			));
+			log::debug!("set postform state: {:?} -> {:?}", self.state, new);
 			self.state = new;
 			if matches!(new, State::Allocated { .. }) {
 				self.commit_pending();

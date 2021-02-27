@@ -266,22 +266,3 @@ where
 pub fn now() -> u32 {
 	(js_sys::Date::now() / 1000.0) as u32
 }
-
-/// Debug logging macro that gets optimized out in non-debug builds.
-// This helps reduce binary size via inlining and pruning dead debug code.
-#[macro_export]
-macro_rules! debug_log {
-    ($arg:expr) => {{
-        if cfg!(debug_assertions) {
-			use log::debug;
-
-			debug!("{}", &$arg);
-        }
-    }};
-	($label:expr, $arg:expr) => {
-        crate::debug_log!(format!("{}: {:?}", $label, &$arg));
-    };
-	($label:expr, $arg:expr, $($more:expr),+) => {
-        crate::debug_log!("{}: {:?}", $label, (&$arg $(, &$more)+));
-	};
-}

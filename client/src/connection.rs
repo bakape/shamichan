@@ -28,7 +28,7 @@ pub fn encode_msg<T>(
 where
 	T: Serialize + Debug,
 {
-	debug_log!(format!("<<< {:?}: {:?}", t, payload));
+	common::log_msg_out!(t, payload);
 	enc.write_message(t, payload)
 }
 
@@ -480,7 +480,7 @@ impl Connection {
 			T: for<'de> serde::Deserialize<'de> + std::fmt::Debug,
 		{
 			let payload: T = dec.read_next()?;
-			debug_log!(format!(">>> {:?}", t), payload);
+			common::log_msg_in!(t, payload);
 			Ok(payload)
 		}
 
@@ -503,7 +503,7 @@ impl Connection {
 			macro_rules! skip_payload {
 				($t:expr) => {
 					dec.skip_next();
-					debug_log!(format!(">>> {:?}", $t), ());
+					common::log_msg_in!(t, ());
 				};
 				() => {
 					skip_payload!(t);

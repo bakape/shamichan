@@ -114,11 +114,6 @@ where
 					},
 				);
 			}
-			debug_log!(format! {
-				"setting props: {:?} -> {:?}",
-				self.props,
-				props
-			});
 			self.props = props;
 			true
 		} else {

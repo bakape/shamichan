@@ -23,9 +23,10 @@ htmlescape = "0.3.1"
 include_dir = "0.6.0"
 lazy_static = "1.4.0"
 libc = "0.2.86"
-log = "0.4.14"
+log = {version = "0.4.14", features = ["release_max_level_warn"]}
 memmap = "0.7.0"
 openssl = {version = "0.10.32", features = ["vendored"]}
+proctitle = "0.1.1"
 rand = "0.8.3"
 rayon = "1.5.0"
 regex = "1.4.3"
@@ -36,7 +37,6 @@ syntect = "4.5.0"
 tripcode = "0.2.1"
 url = "2.2.0"
 uuid = "0.8.2"
-proctitle = "0.1.1"
 
 [dependencies.clap]
 features = ["suggestions", "color", "wrap_help"]

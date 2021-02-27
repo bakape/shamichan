@@ -20,12 +20,6 @@ use common::{
 use serde::Serialize;
 use std::sync::Arc;
 
-macro_rules! log_msg_in {
-	($type:expr, $msg:expr) => {
-		log::debug!(">>> {:?}: {:?}", $type, $msg);
-	};
-}
-
 /// Return with invalid length error
 macro_rules! err_invalid_length {
 	($val:expr, $len:expr) => {
@@ -183,7 +177,7 @@ impl MessageHandler {
 		T: for<'de> serde::Deserialize<'de> + std::fmt::Debug,
 	{
 		let payload: T = dec.read_next()?;
-		log_msg_in!(t, payload);
+		common::log_msg_in!(t, payload);
 		Ok(payload)
 	}
 
@@ -256,7 +250,7 @@ impl MessageHandler {
 		macro_rules! skip_payload {
 			() => {
 				dec.skip_next();
-				log_msg_in!(t, ());
+				common::log_msg_in!(t, ());
 			};
 		}
 
@@ -572,7 +566,7 @@ impl MessageHandler {
 
 	fn decode_handshake(dec: &mut Decoder) -> DynResult<HandshakeReq> {
 		let req: HandshakeReq = dec.read_next()?;
-		log_msg_in!(MessageType::Handshake, req);
+		common::log_msg_in!(MessageType::Handshake, req);
 		if req.protocol_version != common::VERSION {
 			str_err!("protocol version mismatch: {}", req.protocol_version);
 		}

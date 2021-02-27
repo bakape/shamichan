@@ -483,9 +483,11 @@ impl Agent {
 			return;
 		}
 
-		debug_log!(
-			"set_location",
-			format!("{:?} -> {:?}, flags={}", s.location, new, flags)
+		log::debug!(
+			"set_location: {:?} -> {:?}, flags={}",
+			s.location,
+			new,
+			flags
 		);
 
 		let mut try_to_sync = true;
@@ -530,9 +532,11 @@ impl Agent {
 		new: Location,
 		flags: u8,
 	) {
-		debug_log!(
-			"set_location_no_sync",
-			format!("{:?} -> {:?}, flags={}", s.location, new, flags)
+		log::debug!(
+			"set_location_no_sync: {:?} -> {:?}, flags={}",
+			s.location,
+			new,
+			flags
 		);
 
 		if flags & SET_STATE != 0 {
@@ -587,8 +591,6 @@ impl Agent {
 				// duplicate requests
 				let page_count = thread.as_ref().unwrap().page_count as i32;
 				pages.insert(-(page_count - page as i32), None);
-
-				debug_log!("received page state", pages);
 
 				if pages
 					.iter()
@@ -720,41 +722,34 @@ impl Agent {
 			{
 				false
 			}
-			_ => {
-				debug_log!("fetching", new);
-				util::with_logging(|| {
-					use crate::connection::encode_msg;
+			_ => util::with_logging(|| {
+				use crate::connection::encode_msg;
 
-					let mut e = Encoder::default();
-					let mut pages = HashMap::new();
+				let mut e = Encoder::default();
+				let mut pages = HashMap::new();
 
-					encode_msg(
-						&mut e,
-						MessageType::Synchronize,
-						&new_feed_num,
-					)?;
+				encode_msg(&mut e, MessageType::Synchronize, &new_feed_num)?;
 
-					match &new.feed {
-						FeedID::Thread { page, .. } => {
-							encode_msg(&mut e, MessageType::Page, page)?;
-							pages.insert(*page, None);
-						}
-						_ => (),
-					};
+				match &new.feed {
+					FeedID::Thread { page, .. } => {
+						encode_msg(&mut e, MessageType::Page, page)?;
+						pages.insert(*page, None);
+					}
+					_ => (),
+				};
 
-					Connection::dispatcher().send(Request::Send {
-						is_open_post_manipulation: false,
-						message: e.finish()?,
-					});
-					self.feed_sync_state = FeedSyncState::Receiving {
-						loc: new.clone(),
-						flags,
-						pages,
-						thread: None,
-					};
-					Ok(true)
-				})
-			}
+				Connection::dispatcher().send(Request::Send {
+					is_open_post_manipulation: false,
+					message: e.finish()?,
+				});
+				self.feed_sync_state = FeedSyncState::Receiving {
+					loc: new.clone(),
+					flags,
+					pages,
+					thread: None,
+				};
+				Ok(true)
+			}),
 		}
 	}
 }
