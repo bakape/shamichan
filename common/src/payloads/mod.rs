@@ -102,15 +102,6 @@ pub struct ReplyCreationOpts {
 	pub post_opts: PostCreationOpts,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ThreadCreationNotice {
-	pub id: u64,
-	pub subject: String,
-	pub tags: Vec<String>,
-	pub time: u32,
-	pub opts: PostCreationOpts,
-}
-
 /// Request to insert a new post into a thread
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PostCreationReq {

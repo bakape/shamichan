@@ -1,7 +1,7 @@
 use super::{state, FeedID, Focus, Location, State};
-use crate::{connection::send, util};
+use crate::{connection::send, thread, util};
 use common::{
-	payloads::{Post, Thread, ThreadCreationNotice, ThreadWithPosts},
+	payloads::{Post, Thread, ThreadWithPosts},
 	util::DoubleSetMap,
 	MessageType,
 };
@@ -53,29 +53,29 @@ pub enum Request {
 	/// Set or delete the ID of the currently used KeyPair
 	SetKeyID(Option<uuid::Uuid>),
 
-	/// Insert a new thread into the registry
-	InsertThread(ThreadCreationNotice),
-
-	/// Insert a new post into the registry
-	InsertPost(Post),
-
-	/// Apply a patch to an existing post body
-	PatchPostBody(common::payloads::post_body::PostBodyPatch),
-
 	/// Set post as created by this user
 	SetMine(u64),
 
 	/// Set ID of currently open post
 	SetOpenPostID(Option<u64>),
 
+	/// Insert a new post into the registry
+	RegisterPost(Post),
+
 	/// Register a page's posts in the application state
 	RegisterPage(Vec<Post>),
 
 	/// Register thread metainformation
-	RegisterThread(Thread),
+	RegisterThreadMeta(Thread),
+
+	/// Register a single thread and its posts
+	RegisterThread(ThreadWithPosts),
 
 	/// Register threads passed from the thread index feed
 	RegisterThreads(Vec<ThreadWithPosts>),
+
+	/// Apply a patch to an existing post body
+	PatchPostBody(common::payloads::post_body::PostBodyPatch),
 
 	/// Set tags used on threads
 	SetUsedTags(Vec<String>),
@@ -352,48 +352,7 @@ impl yew::agent::Agent for Agent {
 				s.key_pair.id = id;
 				s.key_pair.store()
 			}),
-			InsertThread(n) => {
-				let mut s = state::get_mut();
-				s.threads.insert(
-					n.id,
-					Thread {
-						id: n.id,
-						page_count: 1,
-						subject: n.subject,
-						tags: n.tags,
-						bumped_on: n.time,
-						created_on: n.time,
-						post_count: 1,
-						image_count: 0,
-					},
-				);
-				s.register_post(Post {
-					id: n.id,
-					thread: n.id,
-					page: 0,
-
-					created_on: n.time,
-					open: true,
-
-					// TODO: set this from the modal
-					sage: Default::default(),
-					name: Default::default(),
-					trip: Default::default(),
-
-					// TODO: figure out, if we need special handling for
-					// setting a flag on the OP of a thread, before thread
-					// options can be set
-					flag: Default::default(),
-
-					body: Default::default(),
-					image: Default::default(),
-				});
-
-				self.trigger(&Change::ThreadList);
-				self.trigger(&Change::Thread(n.id));
-				self.trigger(&Change::Post(n.id));
-			}
-			InsertPost(p) => {
+			RegisterPost(p) => {
 				self.trigger(&Change::Thread(p.thread));
 				self.trigger(&Change::Post(p.id));
 				state::get_mut().register_post(p);
@@ -411,7 +370,10 @@ impl yew::agent::Agent for Agent {
 			}
 			RegisterPage(posts) => self.register_page(posts),
 			RegisterThreads(threads) => self.register_threads(threads),
-			RegisterThread(thread) => match &mut self.feed_sync_state {
+			RegisterThread(thread) => {
+				self.register_thread(&mut *state::get_mut(), thread);
+			}
+			RegisterThreadMeta(thread) => match &mut self.feed_sync_state {
 				FeedSyncState::Receiving {
 					loc, thread: dst, ..
 				} if loc.feed.as_u64() == thread.id => {
@@ -666,23 +628,26 @@ impl Agent {
 					pages: Default::default(),
 				};
 
-				let mut s = state::get_mut();
-
-				self.trigger(&Change::ThreadList);
+				let s = &mut *state::get_mut();
 				for t in threads {
-					self.trigger(&Change::Thread(t.thread.id));
-					s.threads.insert(t.thread.id, t.thread);
-
-					for (_, p) in t.posts {
-						self.trigger(&Change::Post(p.id));
-						s.register_post(p);
-					}
+					self.register_thread(s, t);
 				}
-
-				self.set_location_no_sync(&mut *s, loc, flags);
+				self.set_location_no_sync(s, loc, flags);
 			}
 			_ => (),
 		};
+	}
+
+	/// Register thread in app state
+	fn register_thread(&mut self, s: &mut super::State, t: ThreadWithPosts) {
+		self.trigger(&Change::ThreadList);
+		self.trigger(&Change::Thread(t.thread.id));
+
+		s.threads.insert(t.thread.id, t.thread);
+		for (_, p) in t.posts {
+			self.trigger(&Change::Post(p.id));
+			s.register_post(p);
+		}
 	}
 
 	/// Fetch feed data from server, if needed.

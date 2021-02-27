@@ -569,7 +569,7 @@ impl Connection {
 
 					// Insert a placeholder post, so the postform has something
 					// to render
-					send(Request::InsertPost(common::payloads::Post::new(
+					send(Request::RegisterPost(common::payloads::Post::new(
 						id,
 						id,
 						0,
@@ -584,10 +584,10 @@ impl Connection {
 					});
 				}
 				InsertThread => {
-					send(Request::InsertThread(decode!()));
+					send(Request::RegisterThread(decode!()));
 				}
 				InsertPost => {
-					send(Request::InsertPost(decode!()));
+					send(Request::RegisterPost(decode!()));
 				}
 				PatchPostBody => {
 					send(Request::PatchPostBody(decode!()));
@@ -616,7 +616,7 @@ impl Connection {
 					}
 				}
 				ThreadMeta => {
-					send(Request::RegisterThread(decode!()));
+					send(Request::RegisterThreadMeta(decode!()));
 				}
 				PartitionedThreadIndexStart => {
 					skip_payload!();
