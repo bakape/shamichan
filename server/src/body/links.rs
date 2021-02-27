@@ -1,9 +1,6 @@
 use crate::{db, util};
 use common::payloads::post_body::{Node, PendingNode, PostLink};
-use std::{
-	collections::HashMap,
-	sync::{Arc, RwLock},
-};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock as AsyncRWLock;
 
 #[derive(Clone)]
@@ -81,12 +78,8 @@ pub async fn post_location(id: u64) -> util::DynResult<PostLocation> {
 
 /// Insert a post location into the cache
 pub fn cache_location(id: u64, thread: u64, page: u32) {
-	write_cache(|c| {
-		c.insert(
-			id,
-			Arc::new(AsyncRWLock::new(PostLocation::Exists { thread, page })),
-		);
-	});
+	let loc = Arc::new(AsyncRWLock::new(PostLocation::Exists { thread, page }));
+	write_cache(|c| c.insert(id, loc));
 }
 
 /// Parse post links and configured references
