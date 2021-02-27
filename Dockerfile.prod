@@ -2,7 +2,11 @@
 
 FROM bakape/meguca-dev
 
+# TODO: switch to focal for both
 FROM debian:buster
+
+# TODO: build dev and prod Dockerfiles via makefile to ensure 100% commit
+# matching
 
 RUN mkdir -p /meguca/images /meguca/www/videos
 WORKDIR /meguca
@@ -28,7 +32,7 @@ RUN apt-get install -y \
 	libopencv-dev \
 	libgeoip-dev \
 	libssl-dev && \
-		apt-get clean
+	apt-get clean
 RUN apt-get build-dep -y libwebp ffmpeg && apt-get clean
 RUN apt-get dist-upgrade -y && apt-get clean
 

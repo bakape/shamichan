@@ -76,7 +76,6 @@ async fn main() -> Result<(), std::io::Error> {
 
 		stderrlog::new()
 			.timestamp(stderrlog::Timestamp::Millisecond)
-			.color(stderrlog::ColorChoice::Never)
 			.verbosity(match config::SERVER.log_level {
 				log::Level::Error => 0,
 				log::Level::Warn => 1,

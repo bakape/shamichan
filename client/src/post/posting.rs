@@ -720,7 +720,11 @@ impl Agent {
 
 	/// Diff and commit text changes to server
 	fn commit_text(&mut self, new: Vec<char>) {
-		if !self.try_alloc() || !matches!(self.state, State::Allocated { .. }) {
+		if new.is_empty() && self.post_body.is_empty() {
+			return;
+		}
+
+		if !self.try_alloc() {
 			// Buffer post body till alloc
 			self.post_body = new;
 			return;

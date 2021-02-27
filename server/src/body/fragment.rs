@@ -83,7 +83,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 							None
 						};
 						if n.is_some() {
-							for _ in 0..=start {
+							for _ in 0..start {
 								text.push('>');
 							}
 						}

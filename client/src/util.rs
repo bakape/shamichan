@@ -178,7 +178,7 @@ where
 }
 
 /// Log any error to console
-#[cold]
+#[inline]
 pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
 		log_error(&err.into());

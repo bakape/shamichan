@@ -3,7 +3,6 @@
 // TODO: Write differ tests
 mod code;
 mod commands;
-mod diff;
 mod formatting;
 mod fragment;
 mod links;
@@ -11,10 +10,12 @@ pub mod persist_open;
 mod urls;
 mod util;
 
-pub use diff::diff;
 pub use links::cache_location;
 
 use common::payloads::post_body::Node;
+
+// TODO: unit tests
+// TODO: newline handling tests
 
 /// Flags post as open
 const OPEN: u8 = 1;

@@ -1,4 +1,4 @@
-use super::Result;
+use super::{util::parse_siblings, Result};
 use common::payloads::post_body::Node;
 
 /// Implements a function that wraps matched content in a tag
@@ -43,11 +43,20 @@ fn parse_quoted(frag: &str, flags: u8) -> Result {
 		})
 	}
 
+	#[inline]
+	fn append_newline(f: impl Fn() -> Result) -> Result {
+		parse_siblings(f, || Ok(Node::NewLine))
+	}
+
 	let pos = frag.find('\n');
 	if flags & AT_LINE_START != 0 {
 		match pos {
 			Some(pos) => parse_siblings(
-				|| wrap_quoted(&frag[..pos], flags & !AT_LINE_START),
+				|| {
+					append_newline(|| {
+						wrap_quoted(&frag[..pos], flags & !AT_LINE_START)
+					})
+				},
 				|| parse_quoted(&frag[pos + 1..], flags),
 			),
 			None => wrap_quoted(frag, flags & !AT_LINE_START),
@@ -55,7 +64,7 @@ fn parse_quoted(frag: &str, flags: u8) -> Result {
 	} else {
 		match pos {
 			Some(pos) => parse_siblings(
-				|| parse_fragment(&frag[..pos], flags),
+				|| append_newline(|| parse_fragment(&frag[..pos], flags)),
 				|| parse_quoted(&frag[pos + 1..], flags | AT_LINE_START),
 			),
 			None => parse_fragment(frag, flags),

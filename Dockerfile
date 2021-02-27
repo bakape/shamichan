@@ -1,3 +1,6 @@
+# TODO: separate server image from imager image
+# TODO: switch to focal for both and remove ffmpeg and webp building
+# TODO: coverage report in the CI
 FROM debian:buster
 
 EXPOSE 8000
@@ -29,7 +32,7 @@ RUN apt-get install -y \
 	git wget curl \
 	postgresql-client \
 	libssl-dev && \
-		apt-get clean
+	apt-get clean
 RUN apt-get dist-upgrade -y && apt-get clean
 
 # Build newwer libwebp and FFmpeg.

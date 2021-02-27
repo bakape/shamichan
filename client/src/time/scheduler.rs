@@ -1,7 +1,6 @@
 /// Centralized agent for efficiently scheduling timer updates
 use super::queue::Queue;
 use crate::state;
-use js_sys::Date;
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::interval::{IntervalService, IntervalTask};
 

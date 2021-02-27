@@ -59,6 +59,9 @@ pub enum Request {
 	/// Insert a new post into the registry
 	InsertPost(Post),
 
+	/// Apply a patch to an existing post body
+	PatchPostBody(common::payloads::post_body::PostBodyPatch),
+
 	/// Set post as created by this user
 	SetMine(u64),
 
@@ -106,7 +109,7 @@ pub enum Change {
 	ThreadList,
 
 	/// Subscribe to thread data changes, excluding the post content level.
-	/// This includes changes to the post set of threads.
+	/// Includes changes to the post set of threads.
 	Thread(u64),
 
 	/// Subscribe to any changes to a post
@@ -394,6 +397,17 @@ impl yew::agent::Agent for Agent {
 				self.trigger(&Change::Thread(p.thread));
 				self.trigger(&Change::Post(p.id));
 				state::get_mut().register_post(p);
+			}
+			PatchPostBody(msg) => {
+				if let Some(p) = state::get_mut().posts.get_mut(&msg.id) {
+					util::with_logging(|| {
+						let mut new = (*p.body).clone();
+						new.patch(msg.patch)?;
+						p.body = new.into();
+						self.trigger(&Change::Post(msg.id));
+						Ok(())
+					});
+				}
 			}
 			RegisterPage(posts) => self.register_page(posts),
 			RegisterThreads(threads) => self.register_threads(threads),

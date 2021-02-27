@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
+// We opt to store strings as String even at the overhead of needing to convert
+// back nad forth to Vec<char> for multibyte unicode support because it reduces
+// memory usage almost 4 times. These will be stored in memory extensively on
+// the server and client.
+
 /// Node of the post body tree
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub enum Node {
@@ -63,6 +68,99 @@ impl Default for Node {
 	#[inline]
 	fn default() -> Self {
 		Self::Empty
+	}
+}
+
+impl Node {
+	/// Diff the new post body against the old
+	//
+	// TODO: unit tests
+	pub fn diff(&self, new: &Self) -> Option<PatchNode> {
+		use Node::*;
+
+		match (self, new) {
+			(Empty, Empty) | (NewLine, NewLine) => None,
+			(Siblings(old), Siblings(new)) => {
+				macro_rules! diff {
+					($i:expr) => {
+						old[$i].diff(&*new[$i])
+					};
+				}
+
+				match (diff!(0), diff!(1)) {
+					(None, None) => None,
+					(l @ _, r @ _) => Some(PatchNode::Siblings([
+						l.map(|p| p.into()),
+						r.map(|p| p.into()),
+					])),
+				}
+			}
+			(Text(old), Text(new))
+			| (URL(old), URL(new))
+			| (Code(old), Code(new)) => {
+				// Hot path - most strings won't change and this will compare by
+				// length first anyway
+				if old == new {
+					None
+				} else {
+					Some(PatchNode::Patch(TextPatch::new(
+						&old.chars().collect::<Vec<char>>(),
+						&new.chars().collect::<Vec<char>>(),
+					)))
+				}
+			}
+			(Spoiler(old), Spoiler(new))
+			| (Bold(old), Bold(new))
+			| (Italic(old), Italic(new))
+			| (Quoted(old), Quoted(new)) => Self::diff(old, new),
+			(old @ _, new @ _) => {
+				if old != new {
+					Some(PatchNode::Replace(new.clone()))
+				} else {
+					None
+				}
+			}
+		}
+	}
+
+	/// Apply a patch AST to an existing post body AST
+	//
+	// TODO: unit tests
+	pub fn patch(&mut self, patch: PatchNode) -> Result<(), String> {
+		match (self, patch) {
+			(dst @ _, PatchNode::Replace(p)) => {
+				*dst = p;
+			}
+			(
+				Node::Siblings([dst_l @ _, dst_r @ _]),
+				PatchNode::Siblings([p_l, p_r]),
+			) => {
+				macro_rules! patch {
+					($dst:expr, $p:expr) => {
+						if let Some(p) = $p {
+							$dst.patch(*p)?;
+						}
+					};
+				}
+				patch!(dst_r, p_r);
+				patch!(dst_l, p_l);
+			}
+			(Node::Text(dst), PatchNode::Patch(p))
+			| (Node::URL(dst), PatchNode::Patch(p))
+			| (Node::Code(dst), PatchNode::Patch(p)) => {
+				let mut new =
+					String::with_capacity(p.estimate_new_size(dst.len()));
+				p.apply(&mut new, dst.chars());
+				*dst = new;
+			}
+			(dst @ _, p @ _) => {
+				return Err(format!(
+					"node type mismatch: attempting to patch {:#?}\nwith {:#?}",
+					dst, p
+				));
+			}
+		};
+		Ok(())
 	}
 }
 
@@ -209,6 +307,7 @@ impl TextPatch {
 	/// multibyte unicode compatibility
 	pub fn new(old: &[char], new: &[char]) -> Self {
 		/// Find the first differing character in 2 character iterators
+		#[inline]
 		fn diff_i<'a, 'b>(
 			a: impl Iterator<Item = &'a char>,
 			b: impl Iterator<Item = &'b char>,
@@ -217,11 +316,148 @@ impl TextPatch {
 		}
 
 		let start = diff_i(old.iter(), new.iter());
-		let end = diff_i(old[start..].iter().rev(), new[start..].iter());
+		let end = diff_i(old[start..].iter().rev(), new[start..].iter().rev());
 		Self {
 			position: start as u16,
 			remove: (old.len() - end - start) as u16,
 			insert: new[start..new.len() - end].iter().copied().collect(),
 		}
+	}
+
+	/// Apply text patch to an existing string
+	pub fn apply(
+		&self,
+		dst: &mut impl Extend<char>,
+		mut src: impl Iterator<Item = char>,
+	) {
+		for _ in 0..self.position {
+			dst.extend(src.next());
+		}
+		dst.extend(self.insert.iter().copied());
+		dst.extend(src.skip(self.remove as usize));
+	}
+
+	/// Estimate size of destination after patch, assuming all characters are
+	// single byte - true more often than not
+	pub fn estimate_new_size(&self, dst_size: usize) -> usize {
+		let mut s = dst_size as i16;
+		s -= self.remove as i16;
+		s += self.insert.len() as i16;
+
+		// Protect against client-side attacks
+		match s {
+			0..=2000 => s as usize,
+			_ => dst_size,
+		}
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use super::TextPatch;
+
+	// Test diffing and patching nodes
+	#[test]
+	fn node_diff() {
+		// TODO
+	}
+
+	// Test diffing and patching text
+	macro_rules! test_text_diff {
+		($(
+			$name:ident(
+				$in:literal
+				($pos:literal $remove:literal $insert:literal)
+				$out:literal
+			)
+		)+) => {
+			$(
+				#[test]
+				fn $name() {
+					let std_patch = TextPatch{
+						position: $pos,
+						remove: $remove,
+						insert: $insert.chars().collect(),
+					};
+
+					macro_rules! to_chars {
+						($src:literal) => {{
+							&$src.chars().collect::<Vec<char>>()
+						}};
+					}
+					assert_eq!(
+						TextPatch::new(to_chars!($in), to_chars!($out)),
+						std_patch,
+					);
+
+					let mut res = String::new();
+					std_patch.apply(&mut res, $in.chars());
+					assert_eq!(res.as_str(), $out);
+				}
+			)+
+		};
+	}
+
+	test_text_diff! {
+		append(
+			"a"
+			(1 0 "a")
+			"aa"
+		)
+		prepend(
+			"bc"
+			(0 0 "a")
+			"abc"
+		)
+		append_to_empty_body(
+			""
+			(0 0 "abc")
+			"abc"
+		)
+		backspace(
+			"abc"
+			(2 1 "")
+			"ab"
+		)
+		remove_one_from_front(
+			"abc"
+			(0 1 "")
+			"bc"
+		)
+		remove_one_multibyte_char(
+			"αΒΓΔ"
+			(2 1 "")
+			"αΒΔ"
+		)
+		inject_into_the_middle(
+			"abc"
+			(2 0 "abc")
+			"ababcc"
+		)
+		inject_multibyte_into_the_middle(
+			"αΒΓ"
+			(2 0 "Δ")
+			"αΒΔΓ"
+		)
+		replace_in_the_middle(
+			"abc"
+			(1 1 "d")
+			"adc"
+		)
+		replace_multibyte_in_the_middle(
+			"αΒΓ"
+			(1 1 "Δ")
+			"αΔΓ"
+		)
+		replace_suffix(
+			"abc"
+			(1 2 "de")
+			"ade"
+		)
+		replace_prefix(
+			"abc"
+			(0 2 "de")
+			"dec"
+		)
 	}
 }

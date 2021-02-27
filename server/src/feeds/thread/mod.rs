@@ -486,18 +486,19 @@ impl ThreadFeed {
 				})
 				.collect::<Vec<_>>();
 			for (id, body, patch) in run_in_rayon(move || {
-				use crate::body::{diff, parse};
-
 				to_diff
 					.into_par_iter()
 					.filter_map(|(id, old, new)| {
-						match parse(&new.into_iter().collect::<String>(), true)
-						{
-							Ok(new) => diff(&old, &new)
+						match crate::body::parse(
+							&new.into_iter().collect::<String>(),
+							true,
+						) {
+							Ok(new) => old
+								.diff(&new)
 								.map(|patch| (id, Arc::new(new), patch)),
 							Err(e) => {
 								log::error!(
-									"failed to parse post's {} body: {}",
+									"failed to parse post {} body: {}",
 									id,
 									e
 								);

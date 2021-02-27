@@ -57,7 +57,7 @@ test_no_race:
 	# go test ./...
 
 test_coverage:
-	cargo tarpaulin --workspace --exclude client --out Lcov
+	cargo tarpaulin --workspace --out Lcov
 
 # Prepare offline version of checked queries for compilation without a connected
 # database

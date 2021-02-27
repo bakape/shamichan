@@ -589,6 +589,9 @@ impl Connection {
 				InsertPost => {
 					send(Request::InsertPost(decode!()));
 				}
+				PatchPostBody => {
+					send(Request::PatchPostBody(decode!()));
+				}
 				PartitionedPageStart => {
 					skip_payload!();
 					let mut posts = Vec::<common::payloads::Post>::new();
