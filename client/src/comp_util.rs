@@ -114,7 +114,7 @@ where
 					},
 				);
 			}
-			common::debug_log!(format! {
+			debug_log!(format! {
 				"setting props: {:?} -> {:?}",
 				self.props,
 				props

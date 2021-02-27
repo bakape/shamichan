@@ -12,12 +12,6 @@ hex-buffer-serde = "0.2.2"
 num = "0.3.1"
 num-derive = "0.3.3"
 num-traits = "0.2.14"
-serde = { version = "1.0.123", features = ["derive", "rc"] }
+serde = {version = "1.0.123", features = ["derive", "rc"]}
 serde-big-array = "0.3.1"
-uuid = { version = "0.8.2", features = ["serde"] }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
-features = [
-  "console",
-]
-version = "0.3.47"
+uuid = {version = "0.8.2", features = ["serde"]}

@@ -188,14 +188,7 @@ pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 /// Log error to console
 #[cold]
 pub fn log_error(err: &impl std::fmt::Display) {
-	web_sys::console::error_1(&JsValue::from(err.to_string()));
-}
-
-/// Log a warning Message
-#[allow(unused)]
-#[cold]
-pub fn log_warn(msg: impl AsRef<str>) {
-	web_sys::console::warn_1(&msg.as_ref().into());
+	log::error!("{}", err);
 }
 
 /// Display error alert message
@@ -267,4 +260,23 @@ where
 		arr.push(&i.into());
 	}
 	arr
+}
+
+/// Debug logging macro that gets optimized out in non-debug builds.
+// This helps reduce binary size via inlining and pruning dead debug code.
+#[macro_export]
+macro_rules! debug_log {
+    ($arg:expr) => {{
+        if cfg!(debug_assertions) {
+			use log::debug;
+
+			debug!("{}", &$arg);
+        }
+    }};
+	($label:expr, $arg:expr) => {
+        crate::debug_log!(format!("{}: {:?}", $label, &$arg));
+    };
+	($label:expr, $arg:expr, $($more:expr),+) => {
+        crate::debug_log!("{}: {:?}", $label, (&$arg $(, &$more)+));
+	};
 }

@@ -2,7 +2,7 @@ use super::{
 	state::{self, KeyPair},
 	util,
 };
-use common::{debug_log, Decoder, Encoder, MessageType};
+use common::{Decoder, Encoder, MessageType};
 use serde::Serialize;
 use std::{collections::HashSet, fmt::Debug};
 use yew::{
@@ -12,9 +12,9 @@ use yew::{
 	Bridge, Bridged, Component, ComponentLink, Html,
 };
 
-// TODO: break up into submodules
+// TODO: fix crash on server connection loss (likely in the error handler)
 
-// TODO: after a disconnect, the first message must be a sync message
+// TODO: break up into submodules
 
 // TODO: send open post reclamation request with a full text body for any open
 // post on reconnect (via notification). Server-side it should be handled as

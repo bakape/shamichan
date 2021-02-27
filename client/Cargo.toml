@@ -23,11 +23,13 @@ gloo = "0.2.1"
 hex = "0.4.2"
 indexmap = "1.6.1"
 js-sys = "0.3.47"
+log = "0.4.14"
 serde = {version = "1.0.123", features = ["rc"]}
 serde_json = "1.0.62"
 uuid = "0.8.2"
 wasm-bindgen = "0.2.70"
 wasm-bindgen-futures = "0.4.20"
+wasm-logger = "0.2.0"
 yew = "0.17.4"
 
 [dependencies.web-sys]
