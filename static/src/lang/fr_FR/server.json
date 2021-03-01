@@ -456,7 +456,9 @@
 	"tabs": [
 		"Général",
 		"Style",
-		"Raccourcis"
+		"Raccourcis",
+		"Fun",
+		"Shortcuts"
 	],
 	"templates": {
 		"banPage": [

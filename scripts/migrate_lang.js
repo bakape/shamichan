@@ -1,94 +1,71 @@
 #!/usr/bin/env node
-// For easily migrating between version of language packs
+
+// Synchronize changes between language packs and print a unified view of the result.
 
 "use strict"
 
-const fs = require("fs");
+const fs = require("fs")
 
-const root = "static/src/lang";
-const en = {
-    server: readJSON(`${root}/en_GB/server.json`, "utf8"),
-    common: readJSON(`${root}/en_GB/common.json`, "utf8"),
-}
-const targets = fs.readdirSync(root).filter(n =>
-    n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
-
-for (let key in en) {
-    sortMaps(en[key])
-    const path = `${root}/en_GB/${key}.json`
-    fs.unlinkSync(path)
-    fs.writeFileSync(path, JSON.stringify(en[key], null, "\t"))
+function isObject(value) {
+    return typeof value === "object" && value !== null
 }
 
-for (let t of targets) {
-    const source = {
-        arrays: {},
-        strings: {},
-    }
-    const dir = `${root}/${t}`
-
-    for (let f of fs.readdirSync(dir)) {
-        const path = `${dir}/${f}`
-        traverse(source, "_lang", readJSON(path))
-        fs.unlinkSync(path)
-    }
-
-    const dest = JSON.parse(JSON.stringify(en)) // Deep clone
-    traverseCopy(source, dest)
-    for (let key in dest) {
-        const path = `${dir}/${key}.json`
-        fs.writeFileSync(path, JSON.stringify(dest[key], null, "\t"))
-    }
-}
-
-function readJSON(path) {
-    return JSON.parse(fs.readFileSync(path, "utf8"))
-}
-
-function traverse(map, key, val) {
-    if (isMap(val)) {
-        for (let key in val) {
-            traverse(map, key, val[key])
-        }
-    } else {
-        const dict = map[Array.isArray(val) ? "arrays" : "strings"]
-        dict[key] = val
-    }
-}
-
-function traverseCopy(src, dest) {
-    for (let key in dest) {
-        const val = dest[key]
-        if (isMap(val)) {
-            traverseCopy(src, val)
-            continue
-        }
-
-        const dict = src[Array.isArray(val) ? "arrays" : "strings"]
-        if (key in dict) {
-            dest[key] = dict[key]
+function walk(fn, target, ...rest) {
+    for (const key of Object.keys(target)) {
+        fn(key, target, ...rest)
+        if (isObject(target[key])) {
+            walk(fn, target[key], ...rest.map(value => isObject(value) ? value[key] : undefined))
         }
     }
 }
 
-function isMap(val) {
-    return typeof val === "object" && !Array.isArray(val)
+function clone(object, replacements) {
+    const target = {}
+    walk((key, src, dst, replace) => {
+        dst[key] = Array.isArray(src[key]) ? []
+            : isObject(src[key]) ? {}
+            : replace?.[key] ?? src[key]
+    }, object, target, replacements)
+    return target
 }
 
-// Resort objects for cleaner language packs
-function sortMaps(val) {
-    if (!isMap(val)) {
-        return
+function stringify(object) {
+    const keys = new Set()
+    walk(key => keys.add(key), object)
+    return JSON.stringify(object, [...keys].sort(), "\t") + "\n"
+}
+
+function merge(packs) {
+    const target = {}
+    for (const [lang, pack] of Object.entries(packs)) {
+        walk((key, src, dst) => {
+            if (isObject(src[key])) {
+                dst[key] ??= Array.isArray(src[key]) ? [] : {}
+            } else {
+                dst[key] ??= {}
+                dst[key][lang] = src[key]
+            }
+        }, pack, target)
     }
-    const keys = Object.keys(val).sort()
-    const copy = JSON.parse(JSON.stringify(val))
-    for (let key of keys) {
-        delete val[key]
+    return target
+}
+
+const root = "static/src/lang"
+
+const packs = {}
+for (const lang of fs.readdirSync(root)) {
+    const pack = {}
+    for (const file of fs.readdirSync(`${root}/${lang}`)) {
+        pack[file] = JSON.parse(fs.readFileSync(`${root}/${lang}/${file}`, "utf8"))
     }
-    for (let key of keys) {
-        val[key] = copy[key]
-    }
-    for (let key in val) {
-        sortMaps(val[key])
+    packs[lang] = pack
+}
+
+for (const [file, base] of Object.entries(packs["en_GB"])) {
+    for (const [lang, pack] of Object.entries(packs)) {
+        pack[file] = clone(base, pack[file])
+        fs.writeFileSync(`${root}/${lang}/${file}`, stringify(pack[file]))
     }
 }
+
+process.stdout.write(stringify(merge(packs)))
