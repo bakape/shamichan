@@ -373,8 +373,8 @@
 			"Shamiradio now playing banner"
 		],
 		"spoilers": [
-			"Text spoilers",
-			"Enable use of ** to spoiler blocks of text"
+			"Image Spoilers",
+			"Don't spoiler images"
 		],
 		"staffTitle": [
 			"Staff Title",
