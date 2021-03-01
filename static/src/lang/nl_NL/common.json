@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "BERICHTEN VAN DEZELFDE IP ZIJN BEKEKEN DOOR '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"dag",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Admin",
 		"ago": "geleden",
-		"and": "en",
 		"anon": "Anoniem",
 		"contract": "Contract",
 		"contractImages": "Contract Images",
@@ -58,7 +56,6 @@
 		"justNow": "Nu",
 		"locked": "gesloten",
 		"moderators": "Moderator",
-		"omitted": "omitted",
 		"owners": "Eigenaar",
 		"seeAll": "Bekijk alles",
 		"show": "Tonen",
@@ -113,7 +110,6 @@
 		"googleSong": "Click om liedje te googlen",
 		"importCorrupt": "Importeren mislukt. Bestand corrupt",
 		"importDone": "Importeren succesvol. De pagina wordt nu opnieuw geladen.",
-		"invalidCaptcha": "Onjuiste captcha",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Laatste",
 		"lockThread": "Schakel topic vergrendeling in",

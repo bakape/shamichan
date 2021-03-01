@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"deň",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Admin",
 		"ago": "pred",
-		"and": "a",
 		"anon": "Janonymous",
 		"contract": "Contract",
 		"contractImages": "Zmenši obrázky",
@@ -58,7 +56,6 @@
 		"justNow": "Práve teraz",
 		"locked": "locked",
 		"moderators": "Moderátori",
-		"omitted": "vynechané",
 		"owners": "Majiteľ dosky",
 		"seeAll": "Zobraziť všetky",
 		"show": "Zobraziť",
@@ -113,7 +110,6 @@
 		"googleSong": "Klikni pre vygúglenie pesničky",
 		"importCorrupt": "Import zlyhal. Poškodený súbor.",
 		"importDone": "Naimportované. Stárnka sa načíta znovu.",
-		"invalidCaptcha": "Neplatná kapča",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Posledné",
 		"lockThread": "Prepni uzamknutie vlákna",

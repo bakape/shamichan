@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"день",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Admin",
 		"ago": "тому",
-		"and": "та",
 		"anon": "Анонім",
 		"contract": "Contract",
 		"contractImages": "Contract Images",
@@ -58,7 +56,6 @@
 		"justNow": "щойно",
 		"locked": "locked",
 		"moderators": "Moderator",
-		"omitted": "пропущенно",
 		"owners": "Board Owner",
 		"seeAll": "Показати все",
 		"show": "Показати",
@@ -113,7 +110,6 @@
 		"googleSong": "Клікніть для гугль пісні",
 		"importCorrupt": "Import failed. File corrupt",
 		"importDone": "Import successful. The page will now reload.",
-		"invalidCaptcha": "Invalid captcha",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Останні",
 		"lockThread": "Toggle thread lock",

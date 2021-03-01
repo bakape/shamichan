@@ -220,10 +220,6 @@
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
 		],
-		"lang": [
-			"Мова",
-			"Змінити мову інтерфейсу"
-		],
 		"links": [
 			"Зовнніші посилання",
 			"Додавати видаляти та редагувати зовнішні посилання >>>/4chan/"
@@ -471,7 +467,6 @@
 		"FAQ": "ФАКю",
 		"account": "Аккаунт і менеджмент борди",
 		"add": "Додати",
-		"apply": "Прийняти",
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
@@ -479,7 +474,6 @@
 		"captcha": "Captcha",
 		"changePassword": "Змінити пароль",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Налаштувати борду",
 		"configureServer": "Налаштувати сервер",
@@ -510,7 +504,6 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Set banners",
 		"setLoading": "Set loading animation",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Відсортувати треди за",
 		"spoilerImage": "Spoiler image",

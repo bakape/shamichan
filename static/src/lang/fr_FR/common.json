@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"jour",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Administrateur",
 		"ago": "Il y a",
-		"and": "et",
 		"anon": "Anonyme",
 		"contract": "Contract",
 		"contractImages": "Réduire les images",
@@ -58,7 +56,6 @@
 		"justNow": "à l'instant",
 		"locked": "locked",
 		"moderators": "Modérateur",
-		"omitted": "ignorés",
 		"owners": "Propriétaire",
 		"seeAll": "Tout voir",
 		"show": "Afficher",
@@ -113,7 +110,6 @@
 		"googleSong": "Click to google song",
 		"importCorrupt": "L'importation a échoué pour cause de fichier corrompu.",
 		"importDone": "L'importation a réussi. La page va maintenant être rechargée.",
-		"invalidCaptcha": "Captcha incorrect",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "derniers",
 		"lockThread": "Verrouiller",

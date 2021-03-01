@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"gün",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Admin",
 		"ago": "ago",
-		"and": "and",
 		"anon": "Anon",
 		"contract": "Contract",
 		"contractImages": "Contract Images",
@@ -58,7 +56,6 @@
 		"justNow": "şimdi",
 		"locked": "locked",
 		"moderators": "Moderator",
-		"omitted": "omitted",
 		"owners": "Board Owner",
 		"seeAll": "Hepsini göster",
 		"show": "Göster",
@@ -113,7 +110,6 @@
 		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
 		"importCorrupt": "Import failed. File corrupt",
 		"importDone": "Import successful. The page will now reload.",
-		"invalidCaptcha": "Invalid captcha",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Son",
 		"lockThread": "Toggle thread lock",

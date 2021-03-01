@@ -220,10 +220,6 @@
 			"板務助理",
 			"板務助理的帳號 ID。板務助理只可以刪除貼文。"
 		],
-		"lang": [
-			"語言",
-			"更改界面語言"
-		],
 		"links": [
 			"外部鏈接",
 			"新增、刪除或編輯外部 >>>/4chan/-類型參考"
@@ -471,7 +467,6 @@
 		"FAQ": "信息",
 		"account": "帳號和看板管理",
 		"add": "新增",
-		"apply": "應用",
 		"assignStaff": "指派版務人員",
 		"ban": "封鎖",
 		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WEBM 文件，最大尺寸為 300x100，最大文件大小為 100 KB，無聲音。",
@@ -479,7 +474,6 @@
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
 		"charCount": "Amount of characters in the post body",
-		"classic": "經典",
 		"clear": "清除",
 		"configureBoard": "配置看板",
 		"configureServer": "配置伺服器",
@@ -510,7 +504,6 @@
 		"searchTooltip": "以標題、內文或包裹著反斜線的看板名稱來過濾。接受正規表達式。",
 		"setBanners": "設置橫幅",
 		"setLoading": "設置加載動畫",
-		"shadow": "隱藏",
 		"shadowBin": "隱藏箱",
 		"sortMode": "排序討論串以",
 		"spoilerImage": "劇透圖片",

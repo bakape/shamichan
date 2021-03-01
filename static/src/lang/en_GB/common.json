@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"day",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Admin",
 		"ago": "ago",
-		"and": "and",
 		"anon": "Anonymous",
 		"contract": "Contract",
 		"contractImages": "Contract Images",
@@ -58,7 +56,6 @@
 		"justNow": "just now",
 		"locked": "locked",
 		"moderators": "Meido++",
-		"omitted": "omitted",
 		"owners": "Head Meido",
 		"seeAll": "See all",
 		"show": "Show",
@@ -113,7 +110,6 @@
 		"googleSong": "Click to google song",
 		"importCorrupt": "Import failed. File corrupt",
 		"importDone": "Import successful. The page will now reload.",
-		"invalidCaptcha": "Invalid captcha",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Last",
 		"lockThread": "Toggle thread lock",

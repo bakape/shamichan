@@ -220,10 +220,6 @@
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
 		],
-		"lang": [
-			"Jazyk",
-			"Change interface language"
-		],
 		"links": [
 			"Externé odkazy",
 			"Pridať, zmazať alebo editovať externé >>>/4chan/ odkazy"
@@ -471,7 +467,6 @@
 		"FAQ": "Informácie",
 		"account": "Správa účtu a dosky",
 		"add": "Pridať",
-		"apply": "Použiť",
 		"assignStaff": "Priraď osadenstvo",
 		"ban": "Ban",
 		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
@@ -479,7 +474,6 @@
 		"captcha": "Kapča",
 		"changePassword": "Zmeniť heslo",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Vyčisti",
 		"configureBoard": "Nastaviť dosku",
 		"configureServer": "Nastaviť server",
@@ -510,7 +504,6 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Nastav bannery",
 		"setLoading": "Nastav animáciu načítania",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Zoradiť vlákna podľa",
 		"spoilerImage": "Spoiler image",

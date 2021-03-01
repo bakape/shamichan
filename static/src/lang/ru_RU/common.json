@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"день",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "Админ",
 		"ago": "тому",
-		"and": "и",
 		"anon": "Аноним",
 		"contract": "Contract",
 		"contractImages": "Свернуть изображения",
@@ -58,7 +56,6 @@
 		"justNow": "только что",
 		"locked": "locked",
 		"moderators": "Модератор",
-		"omitted": "пропущено",
 		"owners": "Владелец доски",
 		"seeAll": "Смотреть все",
 		"show": "Показать",
@@ -113,7 +110,6 @@
 		"googleSong": "Нажмите чтобы искать песню",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
 		"importDone": "Импорт завершён. Страница будет перезагружена.",
-		"invalidCaptcha": "Неверная капча",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Последний",
 		"lockThread": "Toggle thread lock",

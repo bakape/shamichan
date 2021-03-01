@@ -220,10 +220,6 @@
 			"Janitors",
 			"Janitor account IDs. Janitors kunnen bericht alleen verwijderen."
 		],
-		"lang": [
-			"Taal",
-			"Verander interface taal"
-		],
 		"links": [
 			"Externe links",
 			"Toevoegen, Verwijderen of berwerk externe >>>/4chan/-type referenties"
@@ -471,7 +467,6 @@
 		"FAQ": "Informatie",
 		"account": "Account en board management",
 		"add": "Toevoegen",
-		"apply": "Toepassen",
 		"assignStaff": "staff toewijzen",
 		"ban": "Verbannen",
 		"bannerSpecs": "Accepteert maximaal 20 JPEG-, PNG-, GIF- of WEBM-bestanden met maximale afmetingen van 300x100, maximale bestandsgrootte van 100 kB en geen geluid.",
@@ -479,7 +474,6 @@
 		"captcha": "Captcha",
 		"changePassword": "Verander wachtwoord",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Ontruimen",
 		"configureBoard": "board configureren",
 		"configureServer": "Server configureren",
@@ -510,7 +504,6 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Zet banners",
 		"setLoading": "Zet ladende animatie",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Sorteer topics op",
 		"spoilerImage": "Spoiler afbeelding",

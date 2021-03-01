@@ -220,10 +220,6 @@
 			"Concierges",
 			"Peut seulement supprimer les messages"
 		],
-		"lang": [
-			"Langue",
-			"Change la langue de l'interface"
-		],
 		"links": [
 			"Liens externes",
 			"Ajouter, supprimer ou éditer les liens de type >>>/4chan/"
@@ -471,7 +467,6 @@
 		"FAQ": "Information",
 		"account": "Compte",
 		"add": "Ajouter",
-		"apply": "Appliquer",
 		"assignStaff": "Équipe",
 		"ban": "Bannir",
 		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WEBM sans son (dimension : 300x100, taille : 100 KB).",
@@ -479,7 +474,6 @@
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Vider",
 		"configureBoard": "Configurer une planche",
 		"configureServer": "Configurer le serveur",
@@ -510,7 +504,6 @@
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Trier les fils par",
 		"spoilerImage": "Dissimuler l'image",
