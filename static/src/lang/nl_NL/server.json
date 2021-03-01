@@ -491,7 +491,7 @@
 		"identity": "Identiteit",
 		"illegal": "Illegaal inhoud",
 		"loadCaptcha": "Click om captcha te laden",
-		"loadingSpecs": "Accepteert een GIF- of WEBM-bestand met maximale afmetingen van 300x300, maximale bestandsgrootte van 100 kB en geen geluid.",
+		"loadingSpecs": "Accepteert een GIF- of WEBM-bestand met maximale afmetingen van 400x400, maximale bestandsgrootte van 100 kB en geen geluid.",
 		"logout": "Uitloggen",
 		"logoutAll": "uitloggen van alle apparaten",
 		"notification": "Notificatie",

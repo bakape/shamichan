@@ -491,7 +491,7 @@
 		"identity": "Identité",
 		"illegal": "Contenu illégal",
 		"loadCaptcha": "Charger le captcha",
-		"loadingSpecs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 300x300, taille : 100 KB).",
+		"loadingSpecs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 400x400, taille : 100 KB).",
 		"logout": "Déconnexion",
 		"logoutAll": "Déconnexion globale",
 		"notification": "Notification",

@@ -491,7 +491,7 @@
 		"identity": "Identity",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Click to load captcha",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"notification": "Notification",
