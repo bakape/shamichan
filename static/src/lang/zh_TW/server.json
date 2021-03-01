@@ -80,9 +80,9 @@
 			"預設語言",
 			"預設情況下要加載的語言包"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org 圖片搜尋"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org 圖片搜尋"
 		],
 		"disableRobots": [
 			"防止爬蟲",

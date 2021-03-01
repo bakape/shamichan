@@ -267,8 +267,8 @@ export const specs: { [id: string]: OptionSpec } = {
 	tracemoe: {
 		exec: toggleImageSearch("tracemoe"),
 	},
-	desustorage: {
-		exec: toggleImageSearch("desustorage"),
+	desuarchive: {
+		exec: toggleImageSearch("desuarchive"),
 	},
 	exhentai: {
 		exec: toggleImageSearch("exhentai"),

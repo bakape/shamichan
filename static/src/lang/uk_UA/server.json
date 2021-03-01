@@ -80,9 +80,9 @@
 			"Дефолтна мова",
 			"Мова що відображається по дефолту"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Пошук зображень по desustorage.org"
+		"desuarchive": [
+			"Desuarchive",
+			"Пошук зображень по desuarchive.org"
 		],
 		"disableRobots": [
 			"Prevent crawlers",

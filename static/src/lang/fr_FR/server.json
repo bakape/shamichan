@@ -80,9 +80,9 @@
 			"Langue par défaut",
 			"Langue à charger par défaut"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Recheche d'image desustorage.org"
+		"desuarchive": [
+			"Desuarchive",
+			"Recheche d'image desuarchive.org"
 		],
 		"disableRobots": [
 			"Bloquer les robots",

@@ -80,9 +80,9 @@
 			"Default language",
 			"Language pack to load by default"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org image search"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org image search"
 		],
 		"disableRobots": [
 			"Prevent crawlers",

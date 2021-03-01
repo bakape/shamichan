@@ -80,9 +80,9 @@
 			"Default language",
 			"Language pack to load by default"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org resim arama"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org resim arama"
 		],
 		"disableRobots": [
 			"Prevent crawlers",

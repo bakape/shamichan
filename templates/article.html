@@ -225,8 +225,8 @@ Render image search links according to file type
 	</a>
 	{% switch img.FileType %}
 	{% case common.JPEG, common.PNG, common.GIF, common.WEBM %}
-		<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
-			Ds
+		<a class="image-search desuarchive" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
+			Da
 		</a>
 	{% endswitch %}
 	{% switch img.FileType %}

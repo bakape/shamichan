@@ -80,9 +80,9 @@
 			"Язык по умолчанию",
 			"Используемый по умолчанию язык"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org поиск по картинкам"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org поиск по картинкам"
 		],
 		"disableRobots": [
 			"Блокировать роботов",
