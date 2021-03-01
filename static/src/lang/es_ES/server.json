@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
+			"Board allows material that is not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Siempre bloquear a la parte inferior",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Board expiry time",
@@ -125,12 +125,12 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org búsqueda de imágenes"
 		],
 		"expandAll": [
 			"Expandir todas las imágenes",
-			"Expande todas las imagenes. Webm, PDF y MP3 y tu propio post no son afectados. Nuevos posts también son expandidos."
+			"Expande todas las imagenes. WebM, PDF, MP3 y tu propio posts no son afectados. Nuevos posts también son expandidos."
 		],
 		"export": [
 			"Exportar",
@@ -174,7 +174,7 @@
 		],
 		"hideRecursively": [
 			"Recursive post hiding",
-			"Hide all posts, that replied to a hidden post recursively"
+			"Hide all posts that replied to a hidden post recursively"
 		],
 		"hideThumbs": [
 			"Hide thumbnails",
@@ -342,7 +342,7 @@
 		],
 		"replyRight": [
 			"[Responder] a la derecha",
-			" Mueve el botón Responder a la derecha de la pagina"
+			"Mueve el botón Responder a la derecha de la pagina"
 		],
 		"rootURL": [
 			"Root URL",
@@ -361,7 +361,7 @@
 			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 characters long."
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com búsqueda de imágenes"
 		],
 		"sessionExpiry": [
@@ -469,7 +469,7 @@
 		"add": "Add",
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
-		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Change password",
@@ -491,7 +491,7 @@
 		"identity": "Identity",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Click to load captcha",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"notification": "Notification",
@@ -501,7 +501,7 @@
 		"purgePost": "Purge post/image",
 		"redirectIP": "Redirect by IP",
 		"redirectThread": "Redirect by thread",
-		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts regular expressions.",
 		"setBanners": "Set banners",
 		"setLoading": "Set loading animation",
 		"shadowBin": "Shadow bin",

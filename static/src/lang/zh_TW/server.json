@@ -6,7 +6,7 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
@@ -125,12 +125,12 @@
 			"錯誤 email 伺服器的子網域。"
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org 圖片搜尋"
 		],
 		"expandAll": [
 			"展開所有圖片",
-			"展開所有圖片。Webm、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
+			"展開所有圖片。WebM、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
 		],
 		"export": [
 			"匯出",
@@ -361,7 +361,7 @@
 			"鹽用於安全的 tripcode 和助記符的生成。建議長度至少為 40 個字符。"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com 圖片搜尋"
 		],
 		"sessionExpiry": [
@@ -469,7 +469,7 @@
 		"add": "新增",
 		"assignStaff": "指派版務人員",
 		"ban": "封鎖",
-		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WEBM 文件，最大尺寸為 300x100，最大文件大小為 100 KB，無聲音。",
+		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WebM 文件，最大尺寸為 300x100，最大文件大小為 100 KB，無聲音。",
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
@@ -491,7 +491,7 @@
 		"identity": "身分",
 		"illegal": "非法內容",
 		"loadCaptcha": "單擊以加載驗證碼",
-		"loadingSpecs": "接受最大尺寸為 400x400，最大文件大小為 100 KB 且無聲音的 GIF 或 WEBM 文件。",
+		"loadingSpecs": "接受最大尺寸為 400x400，最大文件大小為 100 KB 且無聲音的 GIF 或 WebM 文件。",
 		"logout": "登出",
 		"logoutAll": "在所有裝置上登出",
 		"notification": "通知",

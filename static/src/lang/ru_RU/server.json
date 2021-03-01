@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
+			"Board allows material that is not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Закрепить внизу",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Время жизни доски",
@@ -125,7 +125,7 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org поиск по картинкам"
 		],
 		"expandAll": [
@@ -174,7 +174,7 @@
 		],
 		"hideRecursively": [
 			"Recursive post hiding",
-			"Hide all posts, that replied to a hidden post recursively"
+			"Hide all posts that replied to a hidden post recursively"
 		],
 		"hideThumbs": [
 			"Скрыть превью",
@@ -361,7 +361,7 @@
 			"Соль для генерации трипкодов и мнемоник, рекомендуемо не менее 40 символов в длину"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com поиск по картинкам"
 		],
 		"sessionExpiry": [
@@ -469,7 +469,7 @@
 		"add": "Добавить",
 		"assignStaff": "Назначить модератора",
 		"ban": "Бан",
-		"bannerSpecs": "Возможно указать до 20 JPEG, PNG, GIF или WEBM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
+		"bannerSpecs": "Возможно указать до 20 JPEG, PNG, GIF или WebM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
 		"by": "От",
 		"captcha": "Капча",
 		"changePassword": "Сменить пароль",
@@ -491,7 +491,7 @@
 		"identity": "Личность",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Кликните для загрузки капчи",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Выход",
 		"logoutAll": "Разлогинить все сессии",
 		"notification": "Уведомление",

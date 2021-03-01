@@ -4,9 +4,9 @@
 		"deleted": "DELETED BY '%s'",
 		"imageDeleted": "IMAGE DELETED BY '%s'",
 		"imageSpoilered": "IMAGE SPOILERED BY '%s'",
-		"newPostsInThread": "%d new posts in thread.",
-		"postsAndImagesOmitted": "%d posts(s) and %d image(s) omitted",
-		"postsOmitted": "%d posts(s) omitted",
+		"newPostsInThread": "%d new post(s) in thread.",
+		"postsAndImagesOmitted": "%d post(s) and %d image(s) omitted",
+		"postsOmitted": "%d post(s) omitted",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"redirectIP": "POSTER REDIRECTED TO \"%s\" BY '%s'",
 		"redirectThread": "THREAD REDIRECTED TO \"%s\" BY '%s'",
@@ -66,11 +66,11 @@
 		"you": "(Ви)"
 	},
 	"sync": [
-		"Від'єднано",
-		"Приєднуємось",
-		"Синхронізуємо",
-		"Синхронізовано",
-		"Розсинхронізовано"
+		"від'єднано",
+		"приєднуємось",
+		"синхронізуємо",
+		"синхронізовано",
+		"розсинхронізовано"
 	],
 	"time": {
 		"calendar": [
@@ -105,10 +105,10 @@
 		"clickToCancel": "Click to cancel",
 		"deleteBoard": "Delete board",
 		"done": "Done",
-		"fileTooLarge": "file too large",
+		"fileTooLarge": "File too large",
 		"finished": "Готово.",
 		"googleSong": "Клікніть для гугль пісні",
-		"importCorrupt": "Import failed. File corrupt",
+		"importCorrupt": "Import failed. File corrupt.",
 		"importDone": "Import successful. The page will now reload.",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Останні",

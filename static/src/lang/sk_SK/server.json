@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Nevhodné do práce",
-			"Doska povoľuje materiál, ktorý nie je bezpečné prezerať v pracovnom prostredí"
+			"Doska povoľuje materiál ktorý nie je bezpečné prezerať v pracovnom prostredí"
 		],
 		"alwaysLock": [
 			"Vždy zamýkaj k spodku",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Čas expirácie dosky",
@@ -125,12 +125,12 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org image search"
 		],
 		"expandAll": [
 			"Expand All Images",
-			"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+			"Expand all images. WebM, PDF, MP3 and your own posts aren't affected. New post images are also expanded."
 		],
 		"export": [
 			"Exportovať",
@@ -174,7 +174,7 @@
 		],
 		"hideRecursively": [
 			"Recursive post hiding",
-			"Hide all posts, that replied to a hidden post recursively"
+			"Hide all posts that replied to a hidden post recursively"
 		],
 		"hideThumbs": [
 			"Schovať náhľady",
@@ -361,7 +361,7 @@
 			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 charecters long."
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com image search"
 		],
 		"sessionExpiry": [
@@ -469,7 +469,7 @@
 		"add": "Pridať",
 		"assignStaff": "Priraď osadenstvo",
 		"ban": "Ban",
-		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Kapča",
 		"changePassword": "Zmeniť heslo",
@@ -491,7 +491,7 @@
 		"identity": "Identita",
 		"illegal": "Nelegálny obsah",
 		"loadCaptcha": "Klikni pre načítanie kapči",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Odhlásiť",
 		"logoutAll": "Odhlásiť zo všetkých zariadení",
 		"notification": "Upozornenia",
@@ -501,7 +501,7 @@
 		"purgePost": "Purge post/image",
 		"redirectIP": "Redirect by IP",
 		"redirectThread": "Redirect by thread",
-		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts regular expressions.",
 		"setBanners": "Nastav bannery",
 		"setLoading": "Nastav animáciu načítania",
 		"shadowBin": "Shadow bin",

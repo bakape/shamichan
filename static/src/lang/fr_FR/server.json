@@ -6,7 +6,7 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"NSFW",
@@ -125,7 +125,7 @@
 			"Sous-domaine du serveur de courriel d'erreur."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"Recherche d'image exhentai.org"
 		],
 		"expandAll": [
@@ -361,7 +361,7 @@
 			"Permet de renforcer la sécurité (le code doit faire au moins 40 caractères)"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"Recherche d'image saucenao.com"
 		],
 		"sessionExpiry": [
@@ -469,7 +469,7 @@
 		"add": "Ajouter",
 		"assignStaff": "Équipe",
 		"ban": "Bannir",
-		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WEBM sans son (dimension : 300x100, taille : 100 KB).",
+		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WebM sans son (dimension : 300x100, taille : 100 KB).",
 		"by": "Par",
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",
@@ -491,7 +491,7 @@
 		"identity": "Identité",
 		"illegal": "Contenu illégal",
 		"loadCaptcha": "Charger le captcha",
-		"loadingSpecs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 400x400, taille : 100 KB).",
+		"loadingSpecs": "Accepte les fichiers GIF ou WebM sans son (dimension : 400x400, taille : 100 KB).",
 		"logout": "Déconnexion",
 		"logoutAll": "Déconnexion globale",
 		"notification": "Notification",
