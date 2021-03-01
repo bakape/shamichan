@@ -404,6 +404,10 @@
 			"Spojler obrázka",
 			"Prepnúť spojler obrázka v novom plagáte"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Custom Background",
 			"Toggle custom page background"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"Expandovať WebM pod kurzorom",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Work mode",

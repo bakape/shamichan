@@ -404,6 +404,10 @@
 			"Приховування зображення",
 			"Перемкнути приховування зображень"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Власний фон сторінки",
 			"Перемкнути власний фон сторінки"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"Розгортання WebM",
 			"WebMки розгротаються при наведенні мишки"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Робочий режим",

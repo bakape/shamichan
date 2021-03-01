@@ -404,6 +404,10 @@
 			"Resim spoiler",
 			"Spoiler ekle"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Kişisel arkaplan",
 			"Kişisel arkaplanı ayarla"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"İş modu",

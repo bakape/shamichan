@@ -180,6 +180,7 @@ export function initOptions() {
 				}
 		}
 	})
+	migrateOption("whatAnime", value => localStorage.setItem("tracemoe", value))
 
 	// Populate option model collection and central model
 	for (let id in specs) {

@@ -226,7 +226,7 @@ export default class ImageHandler extends View<Post> {
 		url = `/assets/images/${root}/${sha1}.${fileTypes[type]}`
 		url = encodeURI(location.origin + url)
 
-		const [google, yandex, iqdb, saucenao, whatanime, desuarchive, exhentai] =
+		const [google, yandex, iqdb, saucenao, tracemoe, desuarchive, exhentai] =
 			Array.from(el.children) as HTMLElement[]
 		google.setAttribute(
 			"href",
@@ -244,7 +244,7 @@ export default class ImageHandler extends View<Post> {
 			"href",
 			"http://saucenao.com/search.php?db=999&url=" + url,
 		)
-		whatanime.setAttribute(
+		tracemoe.setAttribute(
 			"href",
 			"https://trace.moe/?url=" + url,
 		)

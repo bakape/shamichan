@@ -404,6 +404,10 @@
 			"Image Spoiler",
 			"Toggle spoiler in the open post"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Custom Background",
 			"Toggle custom page background"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"WebM Hover Expansion",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Work mode",

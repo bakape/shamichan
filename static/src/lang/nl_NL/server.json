@@ -404,6 +404,10 @@
 			"Afbeelding Spoiler",
 			"Toggle spoiler in de opening van een bericht"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot zoeken"
+		],
 		"userBG": [
 			"Eigen Achtergrond",
 			"Toggle eigen pagina achtergrond"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"WebM Hover uitbreiding",
 			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot zoeken"
 		],
 		"workMode": [
 			"Work mode",

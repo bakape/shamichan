@@ -404,6 +404,10 @@
 			"Spoiler de imagen",
 			"Activa spoiler en el post abierto"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Fondo personalizado",
 			"Activa fondo de pagina personalizado"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"Expansión de WebM al pasar el ratón",
 			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Modo de trabajo",

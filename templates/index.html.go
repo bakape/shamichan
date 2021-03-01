@@ -105,7 +105,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 		{"yandex", "Yd"},
 		{"iqdb", "Iq"},
 		{"saucenao", "Sn"},
-		{"whatAnime", "Wa"},
+		{"tracemoe", "Tm"},
 		{"desustorage", "Ds"},
 		{"exhentai", "Ex"},
 	}

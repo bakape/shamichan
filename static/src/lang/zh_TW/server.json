@@ -404,6 +404,10 @@
 			"圖片劇透標籤",
 			"在開啟的貼文切換劇透標籤"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe 動漫截圖搜尋"
+		],
 		"userBG": [
 			"自定義背景",
 			"切換自定義背景"
@@ -419,10 +423,6 @@
 		"webmHover": [
 			"WebM 滑過展開",
 			"當滑過去時顯示 WebM 預覽。需要打開「圖片滑過展開」。"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga 動漫截圖搜尋"
 		],
 		"workMode": [
 			"工作模式",
