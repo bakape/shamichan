@@ -166,7 +166,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 			return common.ErrInvalidThread(op, board)
 		}
 
-		post, msg, err := websockets.CreatePost(op, board, ip, req)
+		post, msg, err := websockets.CreatePost(op, board, ip, req, "")
 		if err != nil {
 			// TODO: Not all codes are actually 400. Need to differentiate
 			return common.StatusError{err, 400}
