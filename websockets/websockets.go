@@ -5,7 +5,6 @@ package websockets
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -136,7 +135,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	h, _, _ := net.SplitHostPort(r.Host)
+	h := r.Host
 	if i := strings.LastIndex(h, "."); i != -1 {
 		h = h[:i]
 	}
