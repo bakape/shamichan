@@ -168,6 +168,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		f = "sachi"
 	case "sexdok.ooo":
 		h = "slut"
+		f = "sex"
 	case "shamik.ooo":
 		h = "shami"
 		f = "shami"
