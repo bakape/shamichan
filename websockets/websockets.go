@@ -51,7 +51,7 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	host string
+	domainTeam, domainFlag string
 
 	// Client is requesting only the last 100 posts
 	last100 bool
@@ -134,37 +134,52 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	var h string
+	var h, f string
 	switch r.Host {
 	case "cute.reisen":
 		h = "cute"
+		f = "reise"
 	case "desun.ooo":
 		h = "desu"
+		f = "desu"
 	case "dind.in":
 		h = "din"
+		f = "din"
 	case "gosenz.ooo":
 		h = "gosenzo"
+		f = "gosen"
 	case "jinboch.ooo":
 		h = "snek"
+		f = "jinbo"
 	case "mcdoogle.cafe":
 		h = "melody"
+		f = "mcdoo"
 	case "megu.ca":
 		h = "dotka"
+		f = "dotka"
 	case "monm.ooo":
 		h = "monmo"
+		f = "monmo"
 	case "nopan.club":
 		h = "nopan"
+		f = "nopan"
 	case "sachik.ooo":
 		h = "sachi"
+		f = "sachi"
 	case "sexdok.ooo":
 		h = "slut"
 	case "shamik.ooo":
 		h = "shami"
+		f = "shami"
 	case "yangel.ooo":
 		h = "yangelo"
+		f = "yange"
 	}
 	if h != "" {
-		c.host = h
+		c.domainTeam = h
+	}
+	if f != "" {
+		c.domainFlag = f
 	}
 
 	return c.listen()

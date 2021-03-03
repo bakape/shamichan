@@ -61,7 +61,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	if err != nil {
 		return
 	}
-	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
+	post, err = constructPost(req.ReplyCreationRequest, conf, ip, "")
 	if err != nil {
 		return
 	}
@@ -117,6 +117,7 @@ func CreatePost(
 	op uint64,
 	board, ip string,
 	req ReplyCreationRequest,
+	flagOverride string,
 ) (
 	post db.Post, msg []byte, err error,
 ) {
@@ -147,7 +148,7 @@ func CreatePost(
 		return
 	}
 
-	post, err = constructPost(req, conf, ip)
+	post, err = constructPost(req, conf, ip, flagOverride)
 	if err != nil {
 		return
 	}
@@ -200,10 +201,10 @@ func (c *Client) insertPost(data []byte) (err error) {
 	req.Open = true
 
 	_, op, board := feeds.GetSync(c)
-	if board == "a" && c.host != "" {
-		req.Name = "Team " + c.host
+	if board == "a" && c.domainTeam != "" {
+		req.Name = "Team " + c.domainTeam
 	}
-	post, msg, err := CreatePost(op, board, c.ip, req)
+	post, msg, err := CreatePost(op, board, c.ip, req, c.domainFlag)
 	if err != nil {
 		return
 	}
@@ -251,7 +252,7 @@ func getBoardConfig(board string) (conf config.BoardConfigs, err error) {
 func constructPost(
 	req ReplyCreationRequest,
 	conf config.BoardConfigs,
-	ip string,
+	ip, flagOverride string,
 ) (
 	post db.Post, err error,
 ) {
@@ -274,7 +275,11 @@ func constructPost(
 	}
 
 	if conf.Flags {
-		post.Flag = geoip.LookUp(ip)
+		if flagOverride != "" {
+			post.Flag = flagOverride
+		} else {
+			post.Flag = geoip.LookUp(ip)
+		}
 	}
 
 	if utf8.RuneCountInString(req.Body) > common.MaxLenBody {
