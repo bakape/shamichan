@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -135,12 +134,34 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 
-	h := r.Host
-	if i := strings.LastIndex(h, "."); i != -1 {
-		h = h[:i]
-	}
-	if h != "" && h[len(h)-1] == 'k' {
-		h = h[:len(h)-1]
+	var h string
+	switch r.Host {
+	case "cute.reisen":
+		h = "cute"
+	case "desun.ooo":
+		h = "desu"
+	case "dind.in":
+		h = "din"
+	case "gosenz.ooo":
+		h = "gosenzo"
+	case "jinboch.ooo":
+		h = "snek"
+	case "mcdoogle.cafe":
+		h = "melody"
+	case "megu.ca":
+		h = "dotka"
+	case "monm.ooo":
+		h = "monmo"
+	case "nopan.club":
+		h = "nopan"
+	case "sachik.ooo":
+		h = "sachi"
+	case "sexdok.ooo":
+		h = "slut"
+	case "shamik.ooo":
+		h = "shami"
+	case "yangel.ooo":
+		h = "yangelo"
 	}
 	if h != "" {
 		c.host = h
