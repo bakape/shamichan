@@ -200,6 +200,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 	req.Open = true
 
 	_, op, board := feeds.GetSync(c)
+	if board == "a" && c.host != "" {
+		req.Name = "Team " + c.host
+	}
 	post, msg, err := CreatePost(op, board, c.ip, req)
 	if err != nil {
 		return

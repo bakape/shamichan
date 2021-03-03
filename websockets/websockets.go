@@ -5,8 +5,10 @@ package websockets
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -51,6 +53,8 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
+	host string
+
 	// Client is requesting only the last 100 posts
 	last100 bool
 
@@ -131,6 +135,18 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
+
+	h, _, _ := net.SplitHostPort(r.Host)
+	if i := strings.LastIndex(h, "."); i != -1 {
+		h = h[:i]
+	}
+	if h != "" && h[len(h)-1] == 'k' {
+		h = h[:len(h)-1]
+	}
+	if h != "" {
+		c.host = h
+	}
+
 	return c.listen()
 }
 
