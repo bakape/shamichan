@@ -4,9 +4,9 @@
 		"deleted": "DELETED BY '%s'",
 		"imageDeleted": "IMAGE DELETED BY '%s'",
 		"imageSpoilered": "IMAGE SPOILERED BY '%s'",
-		"newPostsInThread": "%d new posts in thread.",
-		"postsAndImagesOmitted": "%d posts(s) and %d image(s) omitted",
-		"postsOmitted": "%d posts(s) omitted",
+		"newPostsInThread": "%d new post(s) in thread.",
+		"postsAndImagesOmitted": "%d post(s) and %d image(s) omitted",
+		"postsOmitted": "%d post(s) omitted",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"redirectIP": "POSTER REDIRECTED TO \"%s\" BY '%s'",
 		"redirectThread": "THREAD REDIRECTED TO \"%s\" BY '%s'",
@@ -15,7 +15,6 @@
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"jour",
@@ -44,8 +43,7 @@
 	},
 	"posts": {
 		"admin": "Administrateur",
-		"ago": "Il y a",
-		"and": "et",
+		"ago": "il y a",
 		"anon": "Anonyme",
 		"contract": "Contract",
 		"contractImages": "Réduire les images",
@@ -58,7 +56,6 @@
 		"justNow": "à l'instant",
 		"locked": "locked",
 		"moderators": "Modérateur",
-		"omitted": "ignorés",
 		"owners": "Propriétaire",
 		"seeAll": "Tout voir",
 		"show": "Afficher",
@@ -69,11 +66,11 @@
 		"you": "(Vous)"
 	},
 	"sync": [
-		"Déconnecté",
-		"Connexion",
-		"Synchro...",
-		"Direct",
-		"Déconnecté"
+		"déconnecté",
+		"connexion",
+		"synchro...",
+		"direct",
+		"déconnecté"
 	],
 	"time": {
 		"calendar": [
@@ -108,12 +105,11 @@
 		"clickToCancel": "Click to cancel",
 		"deleteBoard": "Supprimer une planche",
 		"done": "Terminer",
-		"fileTooLarge": "file too large",
+		"fileTooLarge": "File too large",
 		"finished": "Terminé",
 		"googleSong": "Click to google song",
 		"importCorrupt": "L'importation a échoué pour cause de fichier corrompu.",
 		"importDone": "L'importation a réussi. La page va maintenant être rechargée.",
-		"invalidCaptcha": "Captcha incorrect",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "derniers",
 		"lockThread": "Verrouiller",

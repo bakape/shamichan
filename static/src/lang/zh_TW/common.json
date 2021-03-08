@@ -15,7 +15,6 @@
 		"unbanned": "被 '%s' 解除封鎖",
 		"viewedSameIP": "'%s' 查看了相同 IP 的貼文"
 	},
-	"forms": {},
 	"plurals": {
 		"day": [
 			"日",
@@ -45,7 +44,6 @@
 	"posts": {
 		"admin": "管理員",
 		"ago": "前",
-		"and": "和",
 		"anon": "匿名",
 		"contract": "收縮",
 		"contractImages": "收縮圖片",
@@ -58,7 +56,6 @@
 		"justNow": "現在",
 		"locked": "鎖定",
 		"moderators": "板主",
-		"omitted": "省略",
 		"owners": "看板擁有者",
 		"seeAll": "查看全部",
 		"show": "顯示",
@@ -113,7 +110,6 @@
 		"googleSong": "點擊 google 歌曲",
 		"importCorrupt": "匯入失敗。檔案已損毀。",
 		"importDone": "匯入成功。頁面將會重新整理。",
-		"invalidCaptcha": "驗證碼無效",
 		"keepDeletingFor": "繼續刪除",
 		"last": "最後",
 		"lockThread": "切換討論串鎖定",

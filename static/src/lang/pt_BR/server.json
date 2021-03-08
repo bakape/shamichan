@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
+			"Board allows material that is not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Sempre travar no rodapé",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Board expiry time",
@@ -80,9 +80,9 @@
 			"Default language",
 			"Language pack to load by default"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org pesquisa de Imagens"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org pesquisa de Imagens"
 		],
 		"disableRobots": [
 			"Prevent crawlers",
@@ -125,12 +125,12 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org pesquisa de Imagens"
 		],
 		"expandAll": [
 			"Expandir Todas Imagens",
-			"Expande todas as imagens. Webm, PDF, MP3 e seu próprio post não são afetados. Novos posts de imagem também são expandidos"
+			"Expande todas as imagens. WebM, PDF, MP3 e seu próprio posts não são afetados. Novos posts de imagem também são expandidos"
 		],
 		"export": [
 			"Exportar",
@@ -219,10 +219,6 @@
 		"janitors": [
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
-		],
-		"lang": [
-			"Linguagem",
-			"Mudar a linguagem da interface"
 		],
 		"links": [
 			"Extrenal links",
@@ -362,10 +358,10 @@
 		],
 		"salt": [
 			"Secure salt",
-			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 0 characters long."
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 characters long."
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com pesquisa de Imagens"
 		],
 		"sessionExpiry": [
@@ -377,8 +373,8 @@
 			"Shamiradio now playing banner"
 		],
 		"spoilers": [
-			"Text spoilers",
-			"Enable use of ** to spoiler blocks of text"
+			"Image Spoilers",
+			"Don't spoiler images"
 		],
 		"staffTitle": [
 			"Staff Title",
@@ -408,6 +404,10 @@
 			"Spoiler na imagem",
 			"Ativa spoiler no post aberto"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Fundo personalizado",
 			"Ativa o fundo personalizado da página"
@@ -423,10 +423,6 @@
 		"webmHover": [
 			"Expansão de WebM ao pairar",
 			"Mostra prévias de WebM ao pairar. Requer Expansão de Imagem ao Pairar ativado."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Work mode",
@@ -471,15 +467,13 @@
 		"FAQ": "Information",
 		"account": "Account and board management",
 		"add": "Add",
-		"apply": "Apply",
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
-		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Change password",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
@@ -497,7 +491,7 @@
 		"identity": "Identity",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Click to load captcha",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"notification": "Notification",
@@ -507,10 +501,9 @@
 		"purgePost": "Purge post/image",
 		"redirectIP": "Redirect by IP",
 		"redirectThread": "Redirect by thread",
-		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts regular expressions.",
 		"setBanners": "Set banners",
 		"setLoading": "Set loading animation",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Sort threads by",
 		"spoilerImage": "Spoiler image",

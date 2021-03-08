@@ -6,7 +6,7 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
@@ -80,9 +80,9 @@
 			"預設語言",
 			"預設情況下要加載的語言包"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org 圖片搜尋"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org 圖片搜尋"
 		],
 		"disableRobots": [
 			"防止爬蟲",
@@ -125,12 +125,12 @@
 			"錯誤 email 伺服器的子網域。"
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org 圖片搜尋"
 		],
 		"expandAll": [
 			"展開所有圖片",
-			"展開所有圖片。Webm、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
+			"展開所有圖片。WebM、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
 		],
 		"export": [
 			"匯出",
@@ -219,10 +219,6 @@
 		"janitors": [
 			"板務助理",
 			"板務助理的帳號 ID。板務助理只可以刪除貼文。"
-		],
-		"lang": [
-			"語言",
-			"更改界面語言"
 		],
 		"links": [
 			"外部鏈接",
@@ -365,7 +361,7 @@
 			"鹽用於安全的 tripcode 和助記符的生成。建議長度至少為 40 個字符。"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com 圖片搜尋"
 		],
 		"sessionExpiry": [
@@ -408,6 +404,10 @@
 			"圖片劇透標籤",
 			"在開啟的貼文切換劇透標籤"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe 動漫截圖搜尋"
+		],
 		"userBG": [
 			"自定義背景",
 			"切換自定義背景"
@@ -423,10 +423,6 @@
 		"webmHover": [
 			"WebM 滑過展開",
 			"當滑過去時顯示 WebM 預覽。需要打開「圖片滑過展開」。"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga 動漫截圖搜尋"
 		],
 		"workMode": [
 			"工作模式",
@@ -471,15 +467,13 @@
 		"FAQ": "信息",
 		"account": "帳號和看板管理",
 		"add": "新增",
-		"apply": "應用",
 		"assignStaff": "指派版務人員",
 		"ban": "封鎖",
-		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WEBM 文件，最大尺寸為 300x100，最大文件大小為 100 KB，無聲音。",
+		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WebM 文件，最大尺寸為 300x100，最大文件大小為 100 KB，無聲音。",
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
 		"charCount": "Amount of characters in the post body",
-		"classic": "經典",
 		"clear": "清除",
 		"configureBoard": "配置看板",
 		"configureServer": "配置伺服器",
@@ -497,7 +491,7 @@
 		"identity": "身分",
 		"illegal": "非法內容",
 		"loadCaptcha": "單擊以加載驗證碼",
-		"loadingSpecs": "接受最大尺寸為 300x300，最大文件大小為 100 KB 且無聲音的 GIF 或 WEBM 文件。",
+		"loadingSpecs": "接受最大尺寸為 400x400，最大文件大小為 100 KB 且無聲音的 GIF 或 WebM 文件。",
 		"logout": "登出",
 		"logoutAll": "在所有裝置上登出",
 		"notification": "通知",
@@ -510,7 +504,6 @@
 		"searchTooltip": "以標題、內文或包裹著反斜線的看板名稱來過濾。接受正規表達式。",
 		"setBanners": "設置橫幅",
 		"setLoading": "設置加載動畫",
-		"shadow": "隱藏",
 		"shadowBin": "隱藏箱",
 		"sortMode": "排序討論串以",
 		"spoilerImage": "劇透圖片",

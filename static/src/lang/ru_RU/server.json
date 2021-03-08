@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
+			"Board allows material that is not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Закрепить внизу",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Время жизни доски",
@@ -80,9 +80,9 @@
 			"Язык по умолчанию",
 			"Используемый по умолчанию язык"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org поиск по картинкам"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org поиск по картинкам"
 		],
 		"disableRobots": [
 			"Блокировать роботов",
@@ -125,7 +125,7 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org поиск по картинкам"
 		],
 		"expandAll": [
@@ -174,7 +174,7 @@
 		],
 		"hideRecursively": [
 			"Recursive post hiding",
-			"Hide all posts, that replied to a hidden post recursively"
+			"Hide all posts that replied to a hidden post recursively"
 		],
 		"hideThumbs": [
 			"Скрыть превью",
@@ -219,10 +219,6 @@
 		"janitors": [
 			"Помощники",
 			"Аккаунты помощников (могут только удалять посты)"
-		],
-		"lang": [
-			"Язык",
-			"Изменить язык интерфейса"
 		],
 		"links": [
 			"Внешние ссылки",
@@ -365,7 +361,7 @@
 			"Соль для генерации трипкодов и мнемоник, рекомендуемо не менее 40 символов в длину"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com поиск по картинкам"
 		],
 		"sessionExpiry": [
@@ -408,6 +404,10 @@
 			"Спойлер изображения",
 			"Включить спойлер для открытого поста"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe поиск по аниме-скриншоту"
+		],
 		"userBG": [
 			"Пользовательский фон",
 			"Использовать пользовательский фон"
@@ -423,10 +423,6 @@
 		"webmHover": [
 			"Раскрытие WebM по наведению",
 			"Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga поиск по аниме-скриншоту"
 		],
 		"workMode": [
 			"Режим босса",
@@ -471,15 +467,13 @@
 		"FAQ": "FAQ",
 		"account": "Управление аккаунтом и доской",
 		"add": "Добавить",
-		"apply": "Применить",
 		"assignStaff": "Назначить модератора",
 		"ban": "Бан",
-		"bannerSpecs": "Возможно указать до 20 JPEG, PNG, GIF или WEBM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
+		"bannerSpecs": "Возможно указать до 20 JPEG, PNG, GIF или WebM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
 		"by": "От",
 		"captcha": "Капча",
 		"changePassword": "Сменить пароль",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Очистить",
 		"configureBoard": "Настроить доску",
 		"configureServer": "Настроить борду",
@@ -497,7 +491,7 @@
 		"identity": "Личность",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Кликните для загрузки капчи",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Выход",
 		"logoutAll": "Разлогинить все сессии",
 		"notification": "Уведомление",
@@ -510,7 +504,6 @@
 		"searchTooltip": "Фильтровать треды по теме, содержанию и имени доски (обрамлённую бэкслэшами), допустимы регулярные выражения",
 		"setBanners": "Добавить баннеры",
 		"setLoading": "Set loading animation",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Сортировать треды по",
 		"spoilerImage": "Спойлер для изображения",

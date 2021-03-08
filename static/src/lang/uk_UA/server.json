@@ -6,11 +6,11 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
+			"Board allows material that is not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Завжди прив'язувати до дна",
@@ -34,7 +34,7 @@
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Board expiry time",
@@ -80,9 +80,9 @@
 			"Дефолтна мова",
 			"Мова що відображається по дефолту"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Пошук зображень по desustorage.org"
+		"desuarchive": [
+			"Desuarchive",
+			"Пошук зображень по desuarchive.org"
 		],
 		"disableRobots": [
 			"Prevent crawlers",
@@ -125,12 +125,12 @@
 			"Error email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"Пошук зображень по exhentai.org"
 		],
 		"expandAll": [
 			"Розгорнути Всі Зображення",
-			"Розгорнути всі зображення. Файли формату Webm, PDF і MP3 не розгортаються. Зображення у нових постах також будуть розгортатися."
+			"Розгорнути всі зображення. Файли формату WebM, PDF і MP3 не розгортаються. Зображення у нових постах також будуть розгортатися."
 		],
 		"export": [
 			"Експорт",
@@ -174,7 +174,7 @@
 		],
 		"hideRecursively": [
 			"Recursive post hiding",
-			"Hide all posts, that replied to a hidden post recursively"
+			"Hide all posts that replied to a hidden post recursively"
 		],
 		"hideThumbs": [
 			"Приховати прев'ю",
@@ -219,10 +219,6 @@
 		"janitors": [
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
-		],
-		"lang": [
-			"Мова",
-			"Змінити мову інтерфейсу"
 		],
 		"links": [
 			"Зовнніші посилання",
@@ -365,7 +361,7 @@
 			"Сіль для безпечних тріпкодів та мнемонічної генерації. Рекомендовано хоча б 40 символи"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"Пошук зображень по  saucenao.com"
 		],
 		"sessionExpiry": [
@@ -377,8 +373,8 @@
 			"Shamiradio now playing banner"
 		],
 		"spoilers": [
-			"Текстові спойлери",
-			"Вмикає використання ** для блоків спойлерів"
+			"Image Spoilers",
+			"Don't spoiler images"
 		],
 		"staffTitle": [
 			"Staff Title",
@@ -408,6 +404,10 @@
 			"Приховування зображення",
 			"Перемкнути приховування зображень"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"userBG": [
 			"Власний фон сторінки",
 			"Перемкнути власний фон сторінки"
@@ -421,12 +421,8 @@
 			"Automatically add thread to watched threads on reply"
 		],
 		"webmHover": [
-			"Розгортання webm",
+			"Розгортання WebM",
 			"WebMки розгротаються при наведенні мишки"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Робочий режим",
@@ -471,15 +467,13 @@
 		"FAQ": "ФАКю",
 		"account": "Аккаунт і менеджмент борди",
 		"add": "Додати",
-		"apply": "Прийняти",
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
-		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Змінити пароль",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Налаштувати борду",
 		"configureServer": "Налаштувати сервер",
@@ -497,7 +491,7 @@
 		"identity": "Особистість",
 		"illegal": "Illegal content",
 		"loadCaptcha": "Click to load captcha",
-		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+		"loadingSpecs": "Accepts a GIF or WebM file with maximum dimensions of 400x400, maximum file size of 100 KB and no sound.",
 		"logout": "Вийти",
 		"logoutAll": "Вийти на всіх пристроях",
 		"notification": "Notification",
@@ -507,10 +501,9 @@
 		"purgePost": "Purge post/image",
 		"redirectIP": "Redirect by IP",
 		"redirectThread": "Redirect by thread",
-		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts regular expressions.",
 		"setBanners": "Set banners",
 		"setLoading": "Set loading animation",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Відсортувати треди за",
 		"spoilerImage": "Spoiler image",

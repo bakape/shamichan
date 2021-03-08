@@ -6,7 +6,7 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"NSFW",
@@ -80,9 +80,9 @@
 			"Langue par défaut",
 			"Langue à charger par défaut"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Recheche d'image desustorage.org"
+		"desuarchive": [
+			"Desuarchive",
+			"Recheche d'image desuarchive.org"
 		],
 		"disableRobots": [
 			"Bloquer les robots",
@@ -125,7 +125,7 @@
 			"Sous-domaine du serveur de courriel d'erreur."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"Recherche d'image exhentai.org"
 		],
 		"expandAll": [
@@ -219,10 +219,6 @@
 		"janitors": [
 			"Concierges",
 			"Peut seulement supprimer les messages"
-		],
-		"lang": [
-			"Langue",
-			"Change la langue de l'interface"
 		],
 		"links": [
 			"Liens externes",
@@ -365,7 +361,7 @@
 			"Permet de renforcer la sécurité (le code doit faire au moins 40 caractères)"
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"Recherche d'image saucenao.com"
 		],
 		"sessionExpiry": [
@@ -408,6 +404,10 @@
 			"Dissimuler l'image",
 			"Active l'option spoiler du message ouvert"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"Recherche de captures d'écran d'anime trace.moe"
+		],
 		"userBG": [
 			"Fond personnalisé",
 			"Active le fond personnalisé"
@@ -423,10 +423,6 @@
 		"webmHover": [
 			"WebM au passage de la souris",
 			"Affiche une prévisualisation du WebM au passage de la souris (nécessite l'option du dessus)"
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"Recherche de captures d'écran d'anime whatanime.ga"
 		],
 		"workMode": [
 			"Mode travail",
@@ -456,6 +452,8 @@
 	"tabs": [
 		"Général",
 		"Style",
+		"Image Search",
+		"Fun",
 		"Raccourcis"
 	],
 	"templates": {
@@ -469,15 +467,13 @@
 		"FAQ": "Information",
 		"account": "Compte",
 		"add": "Ajouter",
-		"apply": "Appliquer",
 		"assignStaff": "Équipe",
 		"ban": "Bannir",
-		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WEBM sans son (dimension : 300x100, taille : 100 KB).",
+		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WebM sans son (dimension : 300x100, taille : 100 KB).",
 		"by": "Par",
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",
 		"charCount": "Amount of characters in the post body",
-		"classic": "classic",
 		"clear": "Vider",
 		"configureBoard": "Configurer une planche",
 		"configureServer": "Configurer le serveur",
@@ -495,7 +491,7 @@
 		"identity": "Identité",
 		"illegal": "Contenu illégal",
 		"loadCaptcha": "Charger le captcha",
-		"loadingSpecs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 300x300, taille : 100 KB).",
+		"loadingSpecs": "Accepte les fichiers GIF ou WebM sans son (dimension : 400x400, taille : 100 KB).",
 		"logout": "Déconnexion",
 		"logoutAll": "Déconnexion globale",
 		"notification": "Notification",
@@ -508,7 +504,6 @@
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",
-		"shadow": "shadow",
 		"shadowBin": "Shadow bin",
 		"sortMode": "Trier les fils par",
 		"spoilerImage": "Dissimuler l'image",
