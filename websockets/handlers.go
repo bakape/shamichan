@@ -4,6 +4,7 @@ package websockets
 
 import (
 	"encoding/json"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/websockets/feeds"
 )
@@ -15,7 +16,7 @@ func decodeMessage(data []byte, dest interface{}) error {
 }
 
 // Run the appropriate handler for the websocket message
-func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
+func (c *Client) runHandler(typ common.MessageType, msg []byte) (err error) {
 	data := msg[2:]
 	switch typ {
 	case common.MessageSynchronise:
@@ -41,6 +42,26 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 		return c.spoilerImage()
 	case common.MessageMeguTV:
 		return feeds.SubscribeToMeguTV(c)
+	case common.MessagePM:
+		// Check to match schema
+		var req struct {
+			From uint64 `json:"from"`
+			To   uint64 `json:"to"`
+			Text string `json:"text"`
+		}
+		err = decodeMessage(data, &req)
+		if err != nil {
+			return
+		}
+		var buf []byte
+		buf, err = common.EncodeMessage(common.MessagePM, req)
+		if err != nil {
+			return
+		}
+		for _, c := range feeds.All() {
+			c.Send(buf)
+		}
+		return
 	default:
 		return errInvalidPayload(msg)
 	}

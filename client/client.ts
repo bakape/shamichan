@@ -1,7 +1,7 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts, page } from './state'
+import { posts, page, mine } from './state'
 import { Post, FormModel, PostView, lightenThread } from './posts'
 import { PostLink, Command, PostData, ImageData, ModerationEntry } from "./common"
 import { postAdded } from "./ui"
@@ -9,6 +9,7 @@ import { incrementPostCount } from "./page"
 import { getPostName } from "./options"
 import { OverlayNotification } from "./ui"
 import { setCookie } from './util';
+import { sendPM } from './pm'
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -36,6 +37,12 @@ interface ModerationMessage extends ModerationEntry {
 interface CookieMessage {
 	key: string;
 	value: string;
+}
+
+interface PM {
+	to: number
+	from: number
+	text: string
 }
 
 // Run a function on a model, if it exists
@@ -153,4 +160,10 @@ export default () => {
 
 	handlers[message.setCookie] = ({ key, value }: CookieMessage) =>
 		setCookie(key, value, 30)
+
+	handlers[message.sendPM] = (msg: PM) => {
+		if (mine.has(msg.to)) {
+			new OverlayNotification(msg.text, () => sendPM(msg.from, msg.to));
+		}
+	};
 }

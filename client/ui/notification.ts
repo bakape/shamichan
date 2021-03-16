@@ -43,13 +43,21 @@ export default function notifyAboutReply(post: Post) {
 
 // Textual notification at the top of the page
 export class OverlayNotification extends View<null> {
-	constructor(text: string) {
+	constructor(text: string, onClick?: () => void) {
 		super({
 			el: util.importTemplate("notification")
 				.firstChild as HTMLElement,
 		})
-		this.on("click", () =>
-			this.remove())
+		if (onClick) {
+			const extra = onClick;
+			onClick = () => {
+				extra();
+				this.remove();
+			};
+		} else {
+			onClick = () => this.remove();
+		}
+		this.on("click", onClick)
 		this.el.querySelector("b").textContent = text
 
 		const cont = document.getElementById("modal-overlay");

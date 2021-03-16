@@ -18,6 +18,7 @@ import assignHandlers from "./client"
 import initModeration from "./mod"
 import { persistMessages } from "./options"
 import { watchThread } from './page/thread_watcher';
+import { init as initPMs } from "./pm";
 
 // Load all stateful modules in dependency order
 async function start() {
@@ -77,6 +78,7 @@ async function start() {
 	initPosts()
 	initUI()
 	initModeration()
+	initPMs();
 }
 
 start().catch(err => {
