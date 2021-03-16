@@ -53,6 +53,9 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) (err error) {
 		if err != nil {
 			return
 		}
+		if len(req.Text) > 1000 {
+			return common.ErrTooLong("private message")
+		}
 		var buf []byte
 		buf, err = common.EncodeMessage(common.MessagePM, req)
 		if err != nil {
