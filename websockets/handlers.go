@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/websockets/feeds"
 )
 
@@ -56,6 +57,7 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) (err error) {
 		if len(req.Text) > 1000 {
 			return common.ErrTooLong("private message")
 		}
+		c.incrementSpamScore(uint(len(req.Text)) * config.Get().CharScore)
 		var buf []byte
 		buf, err = common.EncodeMessage(common.MessagePM, req)
 		if err != nil {
