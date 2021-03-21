@@ -75,14 +75,14 @@ class WatcherPanel extends BannerModal {
 					break;
 				// Mark as seen
 				case 3:
-					tc.innerHTML = '<a>[X]</a>';
+					tc.innerHTML = '<a class="mono">[✓]</a>';
 					tc.addEventListener("click", () => {
 						watchThread(thread.id, thread.postCount, 0, thread.board, thread.subject);
 					});
 					break;
 				// Unwatch
 				case 4:
-					tc.innerHTML = '<a>[X]</a>';
+					tc.innerHTML = '<a class="mono">[X]</a>';
 					tc.addEventListener("click", () => {
 						unwatchThread(thread.id);
 						for (let el of document.querySelectorAll(".watcher-toggle")) {
@@ -103,7 +103,7 @@ class WatcherPanel extends BannerModal {
 		}
 	}
 
-	private async update(row: Element ,unseen: number) {
+	private async update(row: Element, unseen: number) {
 		if (unseen === 0) {
 			let link = (row.querySelector(".thread-link") as HTMLAnchorElement);
 			if (link.href.indexOf("?") === -1) {
@@ -136,7 +136,7 @@ class WatcherPanel extends BannerModal {
 			}
 			else {
 				this.addRow(watched[id]);
-			} 
+			}
 		}
 	}
 }
@@ -211,12 +211,12 @@ async function fetchWatchedThreads() {
 		let unseen = 0;
 		// Update fn-local thread record to avoid recomputing later
 		watched[id].unseen = watched[id].unseen + diff.changed[id] - watched[id].postCount;
-		
+
 		if (!opened.has(id)) {
 			toNotify.push(parseInt(k));
 			unseen = watched[id].unseen;
 		}
-		
+
 		// Update post count of watched thread
 		proms.push(watchThread(id, diff.changed[id], unseen, watched[id].board,
 			watched[id].subject));
