@@ -104,6 +104,11 @@ async fn main() -> Result<(), std::io::Error> {
 			db::get_all_threads_short().await
 		})?;
 
+		// Might as well register them to remove the need to fetch them later
+		body::cache_locations(
+			threads.iter().map(|t| t.posts.values()).flatten(),
+		);
+
 		// Spawn registry on it's own thread to reduce contention
 		let registry =
 			Registry::start_in_arbiter(&Arbiter::new(), move |ctx| {

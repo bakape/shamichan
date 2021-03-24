@@ -1,32 +1,43 @@
-use super::Result;
+use common::payloads::post_body::Node;
 
-pub fn parse_fragment(frag: &str, flags: u8) -> Result {
-	use common::payloads::post_body::Node;
+/// Parse a text fragment not containing any formatting tags
+pub fn parse_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
+	if frag.is_empty() {
+		return;
+	}
 
-	let mut out = vec![];
-	let mut text = String::new();
+	for (i, frag) in frag.split("\n").enumerate() {
+		if i != 0 {
+			dst += Node::NewLine;
+		}
+		parse_line_fragment(dst, frag, flags);
+	}
+}
+
+/// Parse fragment of text not containing newlines
+fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
+	if frag.is_empty() {
+		return;
+	}
+
 	for (i, word) in frag.split(' ').enumerate() {
 		if i != 0 {
-			text.push(' ');
+			dst += ' ';
 		}
 
 		// Split off leading and trailing punctuation, if any
 		let (lead, word, trail) = split_punctuation(&word);
-		if lead != 0 as char {
-			text.push(lead);
+		if lead != 0 {
+			dst += lead;
 		}
 
-		let matched: Option<Node> = match word.chars().next() {
-			None => {
-				if trail != 0 as char {
-					text.push(trail);
-				}
-				continue;
-			}
+		// Not returning a Node so out.push() can be inlined
+		let matched = match word.chars().next() {
+			None => None,
 
 			// Hash commands
 			Some('#') => {
-				if flags & (super::QUOTED | super::OPEN) != 0 {
+				if flags & super::QUOTED != 0 {
 					None
 				} else {
 					use super::{
@@ -61,7 +72,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 			}
 
 			// Post links and configured references
-			Some('>') => super::links::parse_link(word, flags),
+			Some('>') => super::links::parse_link(word),
 
 			_ => {
 				word.chars()
@@ -84,7 +95,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 						};
 						if n.is_some() {
 							for _ in 0..start {
-								text.push('>');
+								dst += '>';
 							}
 						}
 						n
@@ -92,55 +103,37 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 					.flatten()
 			}
 		};
-		match matched {
-			None => {
-				text += word;
-			}
-			Some(n) => {
-				if !text.is_empty() {
-					out.push(Node::Text(std::mem::take(&mut text)));
-				}
-				out.push(n);
-			}
-		}
-		if trail != 0 as char {
-			text.push(trail);
-		}
-	}
-	if !text.is_empty() {
-		out.push(Node::Text(text))
-	}
 
-	// Pack vector as siblings
-	Ok(out
-		.into_iter()
-		.rev()
-		.fold(Node::Empty, |right, left| match right {
-			Node::Empty => left,
-			_ => Node::Siblings([left.into(), right.into()]),
-		}))
+		match matched {
+			Some(n) => dst += n,
+			_ => dst += word,
+		};
+		if trail != 0 {
+			dst += trail;
+		}
+	}
 }
 
 /// Split off one byte of leading and trailing punctuation, if any, and returns
 /// the 3 split parts. If there is no edge punctuation, the respective byte is
 /// zero.
-fn split_punctuation(word: &str) -> (char, &str, char) {
+fn split_punctuation(word: &str) -> (u8, &str, u8) {
 	#[inline]
-	fn is_punctuation(b: char) -> bool {
+	fn is_punctuation(b: u8) -> bool {
 		match b {
-			'!' | '"' | '\'' | '(' | ')' | ',' | '-' | '.' | ':' | ';'
-			| '?' | '[' | ']' => true,
+			b'!' | b'"' | b'\'' | b'(' | b')' | b',' | b'-' | b'.' | b':'
+			| b';' | b'?' | b'[' | b']' => true,
 			_ => false,
 		}
 	}
 
-	let mut out = (0 as char, word, 0 as char);
+	let mut out = (0 as u8, word, 0 as u8);
 
 	// Split off leading
 	if out.1.len() < 2 {
 		return out;
 	}
-	match out.1.chars().next() {
+	match out.1.bytes().next() {
 		Some(b) => {
 			if is_punctuation(b) {
 				out.0 = b;
@@ -154,7 +147,7 @@ fn split_punctuation(word: &str) -> (char, &str, char) {
 	if out.1.len() < 2 {
 		return out;
 	}
-	match out.1.chars().rev().next() {
+	match out.1.bytes().rev().next() {
 		Some(b) => {
 			if is_punctuation(b) {
 				out.2 = b;

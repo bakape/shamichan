@@ -107,6 +107,8 @@ where
 
 	/// comp_util::Ctx passed from upstream
 	parent: ParentCtxRef<'c, PC>,
+
+	text_spoiler_state: TextSpoilerState,
 }
 
 impl<'c, PC> Ctx<'c, PC>
@@ -118,20 +120,24 @@ where
 	/// Guarantees immutability by returning an `impl AsRef` instead of `Self`.
 	fn new(
 		parent: &'c comp_util::Ctx<PostCommonInner<PC>>,
+		inner: &PostCommonInner<PC>,
 	) -> Option<impl AsRef<Ctx<'c, PC>>> {
 		Some(Ctx::<'c, PC> {
 			post: Self::get_post(parent)?,
 			parent: ParentCtxRef::Const(parent),
+			text_spoiler_state: inner.text_spoiler_state,
 		})
 	}
 
 	/// Construct a new mutable context, if possible.
 	fn new_mut(
 		parent: &'c mut comp_util::Ctx<PostCommonInner<PC>>,
+		inner: &PostCommonInner<PC>,
 	) -> Option<impl AsMut<Ctx<'c, PC>>> {
 		Some(Ctx::<'c, PC> {
 			post: Self::get_post(parent)?,
 			parent: ParentCtxRef::Mut(parent),
+			text_spoiler_state: inner.text_spoiler_state,
 		})
 	}
 
@@ -211,6 +217,12 @@ where
 	pub fn app_state(&self) -> std::cell::Ref<'static, State> {
 		self.parent.as_ref().app_state()
 	}
+
+	/// Reveal all text spoilers inside this post's body
+	#[inline]
+	pub fn reveal_text_spoilers(&self) -> bool {
+		self.text_spoiler_state.toggled || self.text_spoiler_state.hovered_over
+	}
 }
 
 impl<'c, PC> AsRef<Self> for Ctx<'c, PC>
@@ -236,6 +248,14 @@ where
 /// Common behavior for all post PostComponents as a wrapper
 pub type PostCommon<PC> = comp_util::HookedComponent<PostCommonInner<PC>>;
 
+#[derive(Default, Copy, Clone)]
+struct TextSpoilerState {
+	/// A text spoiler has been clicked on to toggle revealing them
+	toggled: bool,
+	/// A text spoiler is currently being hovered over
+	hovered_over: bool,
+}
+
 /// Implements comp_util::Inner for PostCommon
 #[derive(Default)]
 pub struct PostCommonInner<PC>
@@ -247,6 +267,7 @@ where
 	reveal_image: bool,
 	expand_image: bool,
 	tall_image: bool,
+	text_spoiler_state: TextSpoilerState,
 
 	/// None, if not currently dragging
 	drag_agent: Option<Box<dyn yew::agent::Bridge<crate::mouse::Agent>>>,
@@ -264,6 +285,16 @@ pub enum Message<E> {
 	ImageContract,
 	ImageExpand,
 	ImageDownload,
+
+	TextSpoilerInteraction {
+		/// Click event or hover event
+		is_click: bool,
+
+		/// Value to set
+		/// Explicitly sending bool instead of toggling to protect from races
+		value: bool,
+	},
+
 	SetVolume,
 	CheckTallImage,
 	DragStart(Coordinates),
@@ -307,11 +338,19 @@ where
 		match msg {
 			Rerender => true,
 			NOP => false,
-			Extra(e) => Ctx::new_mut(c)
+			Extra(e) => Ctx::new_mut(c, self)
 				.map(|mut c| self.inner.update_extra(c.as_mut(), e))
 				.unwrap_or(false),
 			ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
+				true
+			}
+			TextSpoilerInteraction { is_click, value } => {
+				if is_click {
+					self.text_spoiler_state.toggled = value;
+				} else {
+					self.text_spoiler_state.hovered_over = value;
+				}
 				true
 			}
 			ImageExpand => {
@@ -412,7 +451,7 @@ where
 	}
 
 	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
-		let c = match Ctx::new(c) {
+		let c = match Ctx::new(c, self) {
 			Some(c) => c,
 			None => return html! {},
 		};
@@ -483,7 +522,7 @@ where
 	}
 
 	fn is_draggable(&self, c: &comp_util::Ctx<Self>) -> bool {
-		Ctx::new(c)
+		Ctx::new(c, self)
 			.map(|c| self.inner.is_draggable(c.as_ref()))
 			.unwrap_or(false)
 	}

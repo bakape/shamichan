@@ -37,3 +37,4 @@ target
 vendor
 .env
 lcov.info
+target_tarpaulin

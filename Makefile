@@ -43,7 +43,7 @@ server_debug:
 	RUST_BACKTRACE=1 ./meguca
 
 clean:
-	rm -rf meguca www/client www/js
+	rm -rf meguca www/client www/js target_tarpaulin
 	cargo clean
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean
@@ -57,7 +57,13 @@ test_no_race:
 	# go test ./...
 
 test_coverage:
-	cargo tarpaulin --workspace --out Lcov
+# --target-dir prevents it from clearing the shared target dir
+	cargo tarpaulin \
+		--workspace \
+		--out Lcov \
+		--frozen \
+		--locked \
+		--target-dir=target_tarpaulin
 
 # Prepare offline version of checked queries for compilation without a connected
 # database

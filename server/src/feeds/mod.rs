@@ -11,7 +11,10 @@ use crate::{
 };
 use actix::prelude::*;
 use common::payloads;
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
+
+/// Interval at which feeds process buffered state
+static PULSE_INTERVAL: Duration = Duration::from_millis(25);
 
 /// Shorthand for a snapshot of clients
 pub type Clients = Snapshot<HashMap<u64, Addr<Client>>>;

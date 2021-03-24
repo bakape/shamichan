@@ -266,7 +266,7 @@ impl IndexFeed {
 	fn schedule_pulse(&mut self, ctx: &mut <Self as Actor>::Context) {
 		if !self.pending_pulse {
 			self.pending_pulse = true;
-			ctx.notify_later(Pulse, std::time::Duration::from_millis(100));
+			ctx.notify_later(Pulse, super::PULSE_INTERVAL);
 		}
 	}
 

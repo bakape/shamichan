@@ -1,73 +1,213 @@
-use super::Result;
+use super::{fragment::parse_fragment, QUOTED};
 use common::payloads::post_body::Node;
 
-/// Implements a function that wraps matched content in a tag
-macro_rules! impl_wrappers {
+/// Split by delimiter and run parsing function on the matched and unmatched
+/// segments
+///
+/// Always inlined, because it is only used in very small function that only
+/// call split_and_parse().
+#[inline(always)]
+pub fn split_and_parse(
+	dst: &mut Node,
+	frag: &str,
+	flags: u8,
+	delimiter: &str,
+	matched: impl FnOnce(&mut Node, &str, u8),
+	unmatched: impl FnOnce(&mut Node, &str, u8),
+) {
+	if frag.is_empty() {
+		return;
+	}
+
+	let with_remainder = |dst: &mut Node, frag: &str| match frag.find(delimiter)
+	{
+		Some(end) if end == 0 => (),
+		Some(end) if end < frag.len() => {
+			matched(dst, &frag[..end], flags);
+			parse_code(dst, &frag[end + delimiter.len()..], flags);
+		}
+		Some(end) => matched(dst, &frag[..end], flags),
+		None => matched(dst, frag, flags),
+	};
+
+	match frag.find(delimiter) {
+		Some(start) => {
+			if start == 0 {
+				with_remainder(dst, &frag[delimiter.len()..]);
+			} else {
+				unmatched(dst, &frag[..start], flags);
+				with_remainder(dst, &frag[start + delimiter.len()..]);
+			}
+		}
+		None => unmatched(dst, frag, flags),
+	};
+}
+
+/// Implements a function that parses and applies text formatting to a text
+/// fragment
+macro_rules! impl_formatting {
+	($(
+		$vis:vis fn $name:ident(
+			$delimiter:expr => $tag:ident($wrapper:expr) || $inner:expr
+		)
+	)+) => {
+		$(
+			$vis fn $name(dst: &mut Node, frag: &str, flags: u8) {
+				split_and_parse(
+					dst,
+					frag,
+					flags,
+					$delimiter,
+					$wrapper,
+					$inner,
+				);
+			}
+		)+
+	};
 	($(
 		$vis:vis fn $name:ident($delimiter:expr => $tag:ident || $inner:expr)
 	)+) => {
 		$(
-			$vis fn $name(frag: &str, flags: u8) -> Result {
-				super::util::split_and_parse(
-					frag,
-					flags,
-					$delimiter,
-					|frag, flags| -> Result {
-						Ok(Node::$tag($inner(frag, flags)?.into()))
-					},
-					$inner,
+			impl_formatting! {
+				$vis fn $name(
+					$delimiter => $tag(
+						|mut dst: &mut Node, frag: &str, flags: u8| {
+							dst += Node::$tag(collect_node(
+								frag,
+								flags,
+								$inner,
+							));
+						}
+					)
+					|| $inner
 				)
 			}
 		)+
 	};
 }
 
-impl_wrappers! {
-	pub fn parse_spoilers("**" => Spoiler || parse_bolds)
+// TODO: don't remove line start flag after formatting
+impl_formatting! {
+	fn parse_code("``" => Code(highlight_code) || parse_spoilers)
+}
+impl_formatting! {
+	fn parse_spoilers("**" => Spoiler || parse_bolds)
 	fn parse_bolds("@@" => Bold || parse_italics)
-	fn parse_italics("~~" => Italic || parse_quoted)
+	fn parse_italics("~~" => Italic || parse_fragment)
 }
 
-fn parse_quoted(frag: &str, flags: u8) -> Result {
-	use super::{
-		fragment::parse_fragment, util::parse_siblings, AT_LINE_START, QUOTED,
+/// Collect output of inner into a fresh node
+#[inline]
+fn collect_node(
+	frag: &str,
+	flags: u8,
+	inner: impl FnOnce(&mut Node, &str, u8),
+) -> Box<Node> {
+	let mut n = Box::new(Node::Empty);
+	inner(&mut n, frag, flags);
+	n
+}
+
+/// Highlight programming code
+fn highlight_code(mut dst: &mut Node, frag: &str, _: u8) {
+	use syntect::{
+		html::{ClassStyle, ClassedHTMLGenerator},
+		parsing::SyntaxSet,
 	};
 
-	fn wrap_quoted(line: &str, flags: u8) -> Result {
-		Ok(match line.chars().next() {
-			None => Node::Empty,
-			Some('>') => {
-				Node::Quoted(parse_fragment(line, flags | QUOTED)?.into())
+	lazy_static::lazy_static! {
+		static ref SYNTAX_SET: SyntaxSet = SyntaxSet::load_defaults_newlines();
+	}
+
+	let mut gen = ClassedHTMLGenerator::new_with_class_style(
+		frag.find(|b: char| !b.is_alphabetic())
+			.map(|pos| SYNTAX_SET.find_syntax_by_token(&frag[..pos]))
+			.flatten()
+			.or_else(|| SYNTAX_SET.find_syntax_by_first_line(&frag))
+			.unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text()),
+		&SYNTAX_SET,
+		ClassStyle::SpacedPrefixed { prefix: "syntex-" },
+	);
+	let mut scratch = String::new();
+	for mut line in frag.lines() {
+		// Must ensure line ends with newline
+		match line.bytes().last() {
+			Some(b'\n') => (),
+			_ => {
+				scratch.clear();
+				scratch += line;
+				scratch.push('\n');
+				line = &scratch;
 			}
-			Some(_) => parse_fragment(line, flags)?,
-		})
+		};
+		gen.parse_html_for_line_which_includes_newline(&line)
 	}
+	dst += Node::Code(gen.finalize());
+}
 
-	#[inline]
-	fn append_newline(f: impl Fn() -> Result) -> Result {
-		parse_siblings(f, || Ok(Node::NewLine))
-	}
+/// Top level parsing function. Parses line by line and detects quotes.
+/// Must be called at line start
+pub fn parse_quoted(dst: &mut Node, frag: &str, flags: u8) {
+	// Close an exiting quotation level and commit any uncommitted text down the
+	// parser pipeline
+	let close_level = |mut dst: &mut Node,
+	                   level: usize,
+	                   start: usize,
+	                   i: usize,
+	                   frag: &str| {
+		if start != i {
+			if level == 0 {
+				// Open quotation block and commit previous unquoted text
+				parse_code(dst, &frag[start..i], flags);
+			} else {
+				dst += Node::Quoted(collect_node(
+					// Close quotation block and possibly open quotation block
+					// with a different level
+					&frag[start..i],
+					flags | QUOTED,
+					parse_code,
+				));
+			}
+		}
+	};
 
-	let pos = frag.find('\n');
-	if flags & AT_LINE_START != 0 {
-		match pos {
-			Some(pos) => parse_siblings(
-				|| {
-					append_newline(|| {
-						wrap_quoted(&frag[..pos], flags & !AT_LINE_START)
-					})
-				},
-				|| parse_quoted(&frag[pos + 1..], flags),
-			),
-			None => wrap_quoted(frag, flags & !AT_LINE_START),
+	// Find segments of unquoted text and quoted text of the same quotation
+	// level
+	let mut start = 0;
+	let mut i = 0;
+	let mut quote_level = 0;
+	while i < frag.len() {
+		let line_level = if frag.as_bytes()[i] == b'>' {
+			// Account for links right after the quote, when detecting quotation
+			// level
+			super::links::detect_link(
+				&frag[i..frag[i..]
+					.bytes()
+					.position(|b| b == b'\n' || b == b' ')
+					.map(|pos| pos + i)
+					.unwrap_or(frag.len())],
+			)
+			.unwrap_or_else(|| {
+				frag[i..].bytes().take_while(|b| b == &b'>').count()
+			})
+		} else {
+			0
+		};
+
+		if line_level != quote_level {
+			close_level(dst, quote_level, start, i, frag);
+			quote_level = line_level;
+			start = i;
 		}
-	} else {
-		match pos {
-			Some(pos) => parse_siblings(
-				|| append_newline(|| parse_fragment(&frag[..pos], flags)),
-				|| parse_quoted(&frag[pos + 1..], flags | AT_LINE_START),
-			),
-			None => parse_fragment(frag, flags),
-		}
+
+		i = frag[i..]
+			.bytes()
+			.position(|b| b == b'\n')
+			.map(|pos| {
+				// Advance past the newline
+				pos + i + 1
+			})
+			.unwrap_or(frag.len());
 	}
+	close_level(dst, quote_level, start, i, frag);
 }

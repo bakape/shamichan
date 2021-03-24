@@ -1,5 +1,5 @@
 use super::{state, FeedID, Focus, Location, State};
-use crate::{connection::send, thread, util};
+use crate::{connection::send, util};
 use common::{
 	payloads::{Post, Thread, ThreadWithPosts},
 	util::DoubleSetMap,

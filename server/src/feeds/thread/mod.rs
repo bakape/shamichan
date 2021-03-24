@@ -437,7 +437,7 @@ impl ThreadFeed {
 	fn schedule_pulse(&mut self, ctx: &mut <Self as Actor>::Context) {
 		if !self.pending_pulse {
 			self.pending_pulse = true;
-			ctx.notify_later(Pulse, Duration::from_millis(100));
+			ctx.notify_later(Pulse, super::PULSE_INTERVAL);
 		}
 	}
 
@@ -445,6 +445,7 @@ impl ThreadFeed {
 	/// Static function to avoid referencing self.
 	async fn fetch_page(thread: u64, page: u32) -> DynResult<PageRecord> {
 		let posts = crate::db::get_page(thread, page).await?;
+		crate::body::cache_locations(posts.iter());
 		Ok(if PageRecord::can_be_made_immutable(posts.iter()) {
 			PageRecord::new_immutable(&ImmutablePage {
 				thread,
@@ -460,7 +461,7 @@ impl ThreadFeed {
 	/// Diff pending open post body changes in parallel and write messages to
 	/// encoders
 	async fn diff_open_bodies(&mut self) -> DynResult {
-		use common::payloads::post_body::{PatchNode, PostBodyPatch};
+		use common::payloads::post_body::{Patch, PostBodyPatch};
 
 		if self.pending_open_bodies.len() == 0 {
 			return Ok(());
@@ -469,7 +470,7 @@ impl ThreadFeed {
 		async fn process(
 			page: &mut MutablePage,
 			pending: HashMap<u64, Vec<char>>,
-			mutation_batch: &mut Vec<(u64, PatchNode, Arc<Node>)>,
+			mutation_batch: &mut Vec<(u64, Patch, Arc<Node>)>,
 		) -> DynResult {
 			let to_diff = pending
 				.into_iter()
@@ -489,22 +490,11 @@ impl ThreadFeed {
 				to_diff
 					.into_par_iter()
 					.filter_map(|(id, old, new)| {
-						match crate::body::parse(
+						let new = crate::body::parse(
 							&new.into_iter().collect::<String>(),
 							true,
-						) {
-							Ok(new) => old
-								.diff(&new)
-								.map(|patch| (id, Arc::new(new), patch)),
-							Err(e) => {
-								log::error!(
-									"failed to parse post {} body: {}",
-									id,
-									e
-								);
-								None
-							}
-						}
+						);
+						old.diff(&new).map(|patch| (id, Arc::new(new), patch))
 					})
 					.collect::<Vec<_>>()
 			})
@@ -518,7 +508,7 @@ impl ThreadFeed {
 			Ok(())
 		}
 
-		let mut mutation_batch = Vec::<(u64, PatchNode, Arc<Node>)>::new();
+		let mut mutation_batch = Vec::<(u64, Patch, Arc<Node>)>::new();
 		for (page_id, pending) in std::mem::take(&mut self.pending_open_bodies)
 		{
 			use PageRecord::*;

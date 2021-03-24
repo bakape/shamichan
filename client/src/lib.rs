@@ -59,32 +59,6 @@ impl Component for App {
 			s.app_state.get().location.clone(),
 		));
 
-		// Static global event listeners. Put here to avoid overhead of spamming
-		// a lot of event listeners and handlers on posts.
-		util::add_static_listener(
-			util::document(),
-			"click",
-			true,
-			s.link.callback(|e: yew::events::MouseEvent| {
-				util::with_logging(|| {
-					use wasm_bindgen::JsCast;
-
-					if let Some(el) = e
-						.target()
-						.map(|el| el.dyn_into::<web_sys::Element>().ok())
-						.flatten()
-					{
-						if el.tag_name() == "DEL" {
-							el.class_list().toggle("reveal")?;
-						}
-					}
-					Ok(())
-				});
-
-				Message::NOP
-			}),
-		);
-
 		s
 	}
 

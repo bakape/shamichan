@@ -1,5 +1,8 @@
 use crate::{db, util};
-use common::payloads::post_body::{Node, PendingNode, PostLink};
+use common::payloads::{
+	post_body::{Node, PendingNode},
+	Post,
+};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock as AsyncRWLock;
 
@@ -76,98 +79,107 @@ pub async fn post_location(id: u64) -> util::DynResult<PostLocation> {
 	})
 }
 
-/// Insert a post location into the cache
-pub fn cache_location(id: u64, thread: u64, page: u32) {
-	let loc = Arc::new(AsyncRWLock::new(PostLocation::Exists { thread, page }));
-	write_cache(|c| c.insert(id, loc));
+/// Known post location that can be inserted into the cache
+pub struct KnownPostLocation {
+	pub id: u64,
+	pub thread: u64,
+	pub page: u32,
 }
 
-/// Parse post links and configured references
-pub fn parse_link(word: &str, flags: u8) -> Option<Node> {
-	if !word.starts_with(">>") {
+impl From<&Post> for KnownPostLocation {
+	fn from(p: &Post) -> Self {
+		Self {
+			id: p.id,
+			thread: p.thread,
+			page: p.page,
+		}
+	}
+}
+
+/// Register a post as not existing. Only used in tests.
+#[cfg(test)]
+pub fn register_non_existent_post(id: u64) {
+	write_cache(|c| {
+		c.insert(id, Arc::new(AsyncRWLock::new(PostLocation::DoesNotExist)));
+	});
+}
+
+/// Insert known post locations into the cache
+pub fn cache_locations<T>(it: impl Iterator<Item = T>)
+where
+	T: Into<KnownPostLocation>,
+{
+	// Collect into vector ahead of time for les cache lock contention
+	let ex = it
+		.map(|t| {
+			let loc = t.into();
+			(
+				loc.id,
+				Arc::new(AsyncRWLock::new(PostLocation::Exists {
+					thread: loc.thread,
+					page: loc.page,
+				})),
+			)
+		})
+		.collect::<Vec<_>>();
+	write_cache(|c| c.extend(ex));
+}
+
+/// Parses a potential post link and return the target post's location
+fn parse_post_link(word: &str, extra_gt: usize) -> Option<(u64, PostLocation)> {
+	word[2 + extra_gt as usize..].parse().ok().map(|id| {
+		match read_cache(|c| c.get(&id).cloned()) {
+			Some(m) => m
+				.try_read()
+				.map(|m| (id, m.clone()))
+				// Error is always tokio::sync::TryLockError - failure to
+				// lock
+				.unwrap_or((id, PostLocation::NotFetched)),
+			None => (id, PostLocation::NotFetched),
+		}
+	})
+}
+
+/// Parse a configured reference to some URI.
+/// This does not check the server configurations to validate - only the syntax.
+fn parse_reference<'a>(word: &'a str, extra_gt: &mut usize) -> Option<&'a str> {
+	if *extra_gt == 0 {
 		return None;
 	}
 
-	let prepend_extra_gt = |n: Node, extra_gt: usize| -> Node {
-		if extra_gt > 0 {
-			Node::Siblings([Node::Text(">".repeat(extra_gt)).into(), n.into()])
-		} else {
-			n
-		}
-	};
+	macro_rules! slash_pos {
+		($s:expr) => {
+			match $s.bytes().position(|b| b == b'/') {
+				Some(i) => i,
+				None => return None,
+			}
+		};
+	}
 
-	let parse_post_link = |extra_gt: usize| -> Option<Node> {
-		use PostLocation::*;
+	let start = slash_pos!(word) + 1;
+	let end = slash_pos!(word[start..]) + start;
 
-		word[2 + extra_gt as usize..]
-			.parse()
-			.ok()
-			.map(|id| {
-				match match read_cache(|c| c.get(&id).cloned()) {
-					Some(m) => m.try_read().map(|m| m.clone()),
-					None => Ok(NotFetched),
-				} {
-					Ok(DoesNotExist) => None,
-					Ok(Exists { page, thread }) => {
-						Some(Node::PostLink(PostLink {
-							id,
-							thread: thread,
-							page: page,
-						}))
-					}
-					// Error is always tokio::sync::TryLockError - failure to
-					// lock
-					Ok(NotFetched) | Err(_) => {
-						if flags & super::OPEN != 0 {
-							// Will need to fetch later
-							Some(Node::Pending(PendingNode::PostLink(id)))
-						} else {
-							// Just keep as text for now
-							None
-						}
-					}
-				}
-			})
-			.flatten()
-			.map(|n| prepend_extra_gt(n, extra_gt))
-	};
+	// Check this before requesting a lock on the configs to reduce
+	// contention
+	if end - start <= 1 || end != word.len() - 1 {
+		None
+	} else {
+		*extra_gt -= 1;
+		Some(&word[start..end])
+	}
+}
 
-	let parse_reference = |mut extra_gt: usize| -> Option<Node> {
-		if extra_gt == 0 {
-			return None;
-		}
-		extra_gt -= 1;
-
-		#[rustfmt::skip]
-		macro_rules! slash_pos {
-			($s:expr) => {
-				match $s.find('/') {
-					Some(i) => i,
-					None => return None,
-				}
-			};
-		}
-
-		let start = slash_pos!(word) + 1;
-		let end = slash_pos!(word[start..]);
-
-		// Check this before requesting a lock on the configs to reduce
-		// contention
-		if end - start <= 1 || end != word.len() - 1 {
-			return None;
-		}
-
-		let id = &word[start..end];
-		crate::config::get().public.links.get(id).map(|url| {
-			prepend_extra_gt(
-				Node::Reference {
-					label: id.into(),
-					url: url.into(),
-				},
-				extra_gt,
-			)
-		})
-	};
+/// Parse links and run handlers on any matches.
+/// The callbacks also take the number of extra preceding `>` signs as the last
+/// argument
+fn parse_links_inner<R>(
+	word: &str,
+	on_post_link_match: impl FnOnce(u64, PostLocation, usize) -> Option<R>,
+	on_reference_match: impl FnOnce(&str, usize) -> Option<R>,
+) -> Option<R> {
+	if !word.starts_with(">>") {
+		return None;
+	}
 
 	let mut extra_gt = 0;
 	for c in word.chars().skip(2) {
@@ -175,10 +187,82 @@ pub fn parse_link(word: &str, flags: u8) -> Option<Node> {
 			'>' => {
 				extra_gt += 1;
 			}
-			'0'..='9' => return parse_post_link(extra_gt),
-			'/' => return parse_reference(extra_gt),
+			'0'..='9' => {
+				return parse_post_link(word, extra_gt)
+					.map(|(id, loc)| on_post_link_match(id, loc, extra_gt))
+					.flatten()
+			}
+			'/' => {
+				return parse_reference(word, &mut extra_gt)
+					.map(|id| on_reference_match(id, extra_gt))
+					.flatten()
+			}
 			_ => return None,
 		}
 	}
 	None
+}
+
+/// Parse post links and configured references
+pub fn parse_link(word: &str) -> Option<Node> {
+	let prepend_extra_gt = |n: Node, extra_gt: usize| -> Node {
+		if extra_gt > 0 {
+			Node::Children(vec![
+				Node::Text(">".repeat(extra_gt)).into(),
+				n.into(),
+			])
+		} else {
+			n
+		}
+	};
+
+	parse_links_inner(
+		word,
+		|id, loc, extra_gt| {
+			use PostLocation::*;
+
+			match loc {
+				DoesNotExist => None,
+				Exists { page, thread } => {
+					Some(Node::PostLink { id, thread, page })
+				}
+				NotFetched => Some(Node::Pending(PendingNode::PostLink(id))),
+			}
+			.map(|n| prepend_extra_gt(n, extra_gt))
+		},
+		|id, extra_gt| {
+			crate::config::get().public.links.get(id).map(|url| {
+				prepend_extra_gt(
+					Node::Reference {
+						label: id.into(),
+						url: url.into(),
+					},
+					extra_gt,
+				)
+			})
+		},
+	)
+}
+
+/// Detect any post links and configured references and return quotation level,
+/// if any matched
+pub fn detect_link(word: &str) -> Option<usize> {
+	parse_links_inner(
+		word,
+		|_, loc, extra_gt| {
+			use PostLocation::*;
+
+			match loc {
+				DoesNotExist => None,
+				Exists { .. } | NotFetched => Some(extra_gt),
+			}
+		},
+		|id, extra_gt| {
+			if crate::config::get().public.links.contains_key(id) {
+				Some(extra_gt)
+			} else {
+				None
+			}
+		},
+	)
 }

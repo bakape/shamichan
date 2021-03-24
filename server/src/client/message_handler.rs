@@ -1,5 +1,6 @@
 use super::{client::Client, str_err};
 use crate::{
+	body::{cache_locations, KnownPostLocation},
 	config, db,
 	feeds::{self, AnyFeed, ThreadFeed},
 	message::Message,
@@ -408,7 +409,11 @@ impl MessageHandler {
 		.await?;
 
 		// Ensures old post non-existence records do not persist indefinitely
-		crate::body::cache_location(id, id, 0);
+		cache_locations(std::iter::once(KnownPostLocation {
+			id,
+			thread: id,
+			page: 0,
+		}));
 
 		let feed = self
 			.state
@@ -460,7 +465,11 @@ impl MessageHandler {
 		.await?;
 
 		// Ensures old post non-existence records do not persist indefinitely
-		crate::body::cache_location(id, req.thread, page);
+		cache_locations(std::iter::once(KnownPostLocation {
+			id,
+			thread: req.thread,
+			page,
+		}));
 
 		// Don't fetch feed address, if open post in same feed as synced
 		let feed = match &self.conn_state {

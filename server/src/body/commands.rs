@@ -40,13 +40,14 @@ pub fn parse_autobahn(word: &str) -> Option<Node> {
 
 /// Parse dice roll hash command
 pub fn parse_dice(word: &str) -> Option<Node> {
-	let d_pos = match word.find('d') {
+	let d_pos = match word.bytes().position(|b| b == b'd') {
 		Some(i) => i,
 		None => return None,
 	};
-	let sign_pos = word[d_pos + 1..].find(|c| c == '+' || c == '-');
+	let sign_pos = word[d_pos + 1..]
+		.bytes()
+		.position(|b| b == b'+' || b == b'-');
 
-	#[rustfmt::skip]
 	macro_rules! parse {
 		($s:expr) => {
 			match $s.parse().ok() {

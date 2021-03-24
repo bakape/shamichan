@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::hash::Hash;
+use std::{hash::Hash, hint::unreachable_unchecked, ops::AddAssign};
 
 // We opt to store strings as String even at the overhead of needing to convert
 // back nad forth to Vec<char> for multibyte unicode support because it reduces
@@ -7,6 +7,9 @@ use std::hash::Hash;
 // the server and client.
 
 /// Node of the post body tree
+//
+// TODO: bump allocation for entire tree to reduce allocation/deallocation
+// overhead. Depends on https://github.com/rust-lang/rust/issues/32838
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub enum Node {
 	/// No content
@@ -15,18 +18,28 @@ pub enum Node {
 	/// Start a new line
 	NewLine,
 
-	/// Contains a node and its next sibling. Allows building Node binary trees.
-	//
-	/// Using a binary tree structure instead of vectors of nodes allows writing
-	/// a cleaner multithreaded parser and differ with less for loops with
-	/// complicated exit conditions.
-	Siblings([Box<Node>; 2]),
+	/// Contains a list of child nodes.
+	///
+	/// A list with a single Node must be handled just like that singe Node.
+	Children(Vec<Node>),
 
 	/// Contains unformatted text. Can include newlines.
 	Text(String),
 
 	/// Link to another post
-	PostLink(PostLink),
+	PostLink {
+		/// Post the link points to
+		id: u64,
+
+		/// Target post's parent thread
+		///
+		/// If thread = 0, link has not had it's parenthood looked up yet on the
+		/// server
+		thread: u64,
+
+		/// Parent page of target post
+		page: u32,
+	},
 
 	/// Hash command result
 	Command(Command),
@@ -44,9 +57,6 @@ pub enum Node {
 	Code(String),
 
 	/// Spoiler tags
-	//
-	// TODO: make spoilers the top level tag (after code) to enable revealing
-	/// it all on click or hover
 	Spoiler(Box<Node>),
 
 	/// Bold formatting tags
@@ -60,7 +70,6 @@ pub enum Node {
 
 	/// Node dependant on some database access or processing and pending
 	/// finalization.
-	/// Used by the server. These must never make it to the client.
 	Pending(PendingNode),
 }
 
@@ -72,29 +81,71 @@ impl Default for Node {
 }
 
 impl Node {
+	/// Construct a new text node
+	#[inline]
+	pub fn text(s: impl Into<String>) -> Node {
+		Node::Text(s.into())
+	}
+
+	/// Construct a new quoted node
+	#[inline]
+	pub fn quote(inner: Node) -> Node {
+		Node::Quoted(inner.into())
+	}
+
+	/// Construct a new spoiler node
+	#[inline]
+	pub fn spoiler(inner: Node) -> Node {
+		Node::Spoiler(inner.into())
+	}
+
 	/// Diff the new post body against the old
-	//
-	// TODO: unit tests
-	pub fn diff(&self, new: &Self) -> Option<PatchNode> {
+	pub fn diff(&self, new: &Self) -> Option<Patch> {
 		use Node::*;
 
 		match (self, new) {
 			(Empty, Empty) | (NewLine, NewLine) => None,
-			(Siblings(old), Siblings(new)) => {
-				macro_rules! diff {
-					($i:expr) => {
-						old[$i].diff(&*new[$i])
+			(Children(old), Children(new)) => {
+				let mut patch = vec![];
+				let mut truncate = None;
+				let mut append = vec![];
+
+				let mut old_it = old.iter();
+				let mut new_it = new.iter();
+				let mut i = 0;
+				loop {
+					match (old_it.next(), new_it.next()) {
+						(Some(o), Some(n)) => {
+							if let Some(p) = o.diff(n) {
+								patch.push((i, p));
+							}
+						}
+						(None, Some(n)) => {
+							append.push(n.clone());
+							append.extend(new_it.map(Clone::clone));
+							break;
+						}
+						(Some(_), None) => {
+							truncate = Some(i);
+							break;
+						}
+						(None, None) => break,
 					};
+					i += 1;
 				}
 
-				match (diff!(0), diff!(1)) {
-					(None, None) => None,
-					(l @ _, r @ _) => Some(PatchNode::Siblings([
-						l.map(|p| p.into()),
-						r.map(|p| p.into()),
-					])),
+				if patch.is_empty() && truncate.is_none() && append.is_empty() {
+					None
+				} else {
+					Some(Patch::Children {
+						patch,
+						truncate,
+						append,
+					})
 				}
 			}
+			(Children(old), new @ _) if old.len() == 1 => old[0].diff(new),
+			(old @ _, Children(new)) if new.len() == 1 => old.diff(&new[0]),
 			(Text(old), Text(new))
 			| (URL(old), URL(new))
 			| (Code(old), Code(new)) => {
@@ -103,7 +154,7 @@ impl Node {
 				if old == new {
 					None
 				} else {
-					Some(PatchNode::Patch(TextPatch::new(
+					Some(Patch::Text(TextPatch::new(
 						&old.chars().collect::<Vec<char>>(),
 						&new.chars().collect::<Vec<char>>(),
 					)))
@@ -112,10 +163,12 @@ impl Node {
 			(Spoiler(old), Spoiler(new))
 			| (Bold(old), Bold(new))
 			| (Italic(old), Italic(new))
-			| (Quoted(old), Quoted(new)) => Self::diff(old, new),
+			| (Quoted(old), Quoted(new)) => {
+				Self::diff(old, new).map(|p| Patch::Wrapped(p.into()))
+			}
 			(old @ _, new @ _) => {
 				if old != new {
-					Some(PatchNode::Replace(new.clone()))
+					Some(Patch::Replace(new.clone()))
 				} else {
 					None
 				}
@@ -123,35 +176,66 @@ impl Node {
 		}
 	}
 
-	/// Apply a patch AST to an existing post body AST
-	//
-	// TODO: unit tests
-	pub fn patch(&mut self, patch: PatchNode) -> Result<(), String> {
-		match (self, patch) {
-			(dst @ _, PatchNode::Replace(p)) => {
+	/// Apply a patch tree to a post body tree
+	pub fn patch(&mut self, patch: Patch) -> Result<(), String> {
+		Ok(match (self, patch) {
+			(dst @ _, Patch::Replace(p)) => {
 				*dst = p;
 			}
 			(
-				Node::Siblings([dst_l @ _, dst_r @ _]),
-				PatchNode::Siblings([p_l, p_r]),
+				Node::Children(dst),
+				Patch::Children {
+					patch,
+					truncate,
+					append,
+				},
 			) => {
-				macro_rules! patch {
-					($dst:expr, $p:expr) => {
-						if let Some(p) = $p {
-							$dst.patch(*p)?;
-						}
-					};
+				for (i, p) in patch {
+					let l = dst.len();
+					dst.get_mut(i)
+						.ok_or_else(|| {
+							format!("patch out of bounds: {} >= {}", i, l)
+						})?
+						.patch(p)?;
 				}
-				patch!(dst_r, p_r);
-				patch!(dst_l, p_l);
+				if let Some(len) = truncate {
+					dst.truncate(len);
+				}
+				dst.extend(append);
 			}
-			(Node::Text(dst), PatchNode::Patch(p))
-			| (Node::URL(dst), PatchNode::Patch(p))
-			| (Node::Code(dst), PatchNode::Patch(p)) => {
+
+			// Real ugly shit because you can't bind both dst and the contents
+			// of Node::Children at the same time
+			(dst @ Node::Children(_), p @ _)
+				if match &dst {
+					Node::Children(v) => v.len() == 1,
+					_ => unsafe { unreachable_unchecked() },
+				} =>
+			{
+				*dst = match dst {
+					Node::Children(v) => std::mem::take(&mut v[0]),
+					_ => unsafe { unreachable_unchecked() },
+				};
+				dst.patch(p)?;
+			}
+
+			(dst @ _, p @ Patch::Children { .. }) => {
+				*dst = Node::Children(vec![std::mem::take(dst)]);
+				dst.patch(p)?;
+			}
+			(Node::Text(dst), Patch::Text(p))
+			| (Node::URL(dst), Patch::Text(p))
+			| (Node::Code(dst), Patch::Text(p)) => {
 				let mut new =
 					String::with_capacity(p.estimate_new_size(dst.len()));
 				p.apply(&mut new, dst.chars());
 				*dst = new;
+			}
+			(Node::Spoiler(old), Patch::Wrapped(p))
+			| (Node::Bold(old), Patch::Wrapped(p))
+			| (Node::Italic(old), Patch::Wrapped(p))
+			| (Node::Quoted(old), Patch::Wrapped(p)) => {
+				old.patch(*p)?;
 			}
 			(dst @ _, p @ _) => {
 				return Err(format!(
@@ -159,9 +243,122 @@ impl Node {
 					dst, p
 				));
 			}
-		};
-		Ok(())
+		})
 	}
+}
+
+impl AddAssign<Node> for Node {
+	/// If pushing a Children to a Children, the destination list is extended.
+	/// If pushing a Text to a Text, the destination Text is extended.
+	/// Conversions from non-Children and Empty is automatically handled.
+	fn add_assign(&mut self, rhs: Node) {
+		use Node::*;
+
+		match (self, rhs) {
+			(_, Empty) => (),
+			(dst @ Empty, n @ _) => *dst = n,
+			// Merge adjacent strings
+			(Text(s), Text(n)) => *s += &n,
+			(Children(v), Children(n)) => {
+				let mut it = n.into_iter();
+				match (v.last_mut(), it.next()) {
+					// Merge adjacent strings
+					(Some(Text(dst)), Some(Text(s))) => *dst += &s,
+					(_, Some(n @ _)) => v.push(n),
+					_ => (),
+				};
+				v.extend(it);
+			}
+			(Children(v), Text(s)) => match v.last_mut() {
+				// Merge adjacent strings
+				Some(Text(dst)) => *dst += &s,
+				_ => v.push(Text(s)),
+			},
+			(Children(v), n @ _) => v.push(n),
+			(dst @ _, n @ _) => {
+				*dst = Node::Children(vec![std::mem::take(dst), n])
+			}
+		};
+	}
+}
+
+#[inline]
+fn add_str<T>(dst: &mut Node, rhs: T)
+where
+	T: AsRef<str> + Into<String>,
+{
+	use Node::*;
+
+	match dst {
+		Text(dst) => *dst += rhs.as_ref(),
+		Children(v) => match v.last_mut() {
+			Some(Text(dst)) => *dst += rhs.as_ref(),
+			_ => v.push(Text(rhs.into())),
+		},
+		_ => {
+			*dst += Node::Text(rhs.into());
+		}
+	};
+}
+
+impl AddAssign<&str> for Node {
+	/// Avoids allocations in comparison to += Node.
+	fn add_assign(&mut self, rhs: &str) {
+		add_str(self, rhs);
+	}
+}
+
+impl AddAssign<String> for Node {
+	/// Avoids allocations in comparison to += Node.
+	fn add_assign(&mut self, rhs: String) {
+		add_str(self, rhs);
+	}
+}
+
+impl AddAssign<u8> for Node {
+	/// Avoids allocations in comparison to += Node.
+	/// Must only be used with valid non-null ASCII bytes.
+	fn add_assign(&mut self, rhs: u8) {
+		*self += rhs as char;
+	}
+}
+
+impl AddAssign<char> for Node {
+	/// Avoids allocations in comparison to += Node.
+	/// Must only be used with valid non-null ASCII characters.
+	fn add_assign(&mut self, rhs: char) {
+		use Node::*;
+
+		match self {
+			Text(dst) => dst.push(rhs),
+			Children(v) => match v.last_mut() {
+				Some(Text(dst)) => dst.push(rhs),
+				_ => v.push(Text(rhs.into())),
+			},
+			_ => {
+				*self += Node::Text(rhs.into());
+			}
+		};
+	}
+}
+
+macro_rules! impl_ref_add_assign {
+	($($typ:ty)+) => {
+		$(
+			impl AddAssign<$typ> for &mut Node {
+				fn add_assign(&mut self, rhs: $typ) {
+					**self += rhs;
+				}
+			}
+		)+
+	};
+}
+impl_ref_add_assign! {
+	Node
+	&str
+	String
+	u8
+	char
 }
 
 /// Node dependant on some database access or processing and pending
@@ -194,18 +391,6 @@ pub enum PendingNode {
 
 	/// Pending post location fetch from the DB
 	PostLink(u64),
-}
-
-/// Link to another post
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-pub struct PostLink {
-	pub id: u64,
-
-	/// If thread = 0, link has not had it's parenthood looked up yet on the
-	/// server
-	pub thread: u64,
-
-	pub page: u32,
 }
 
 /// Hash command result
@@ -269,24 +454,37 @@ pub struct Embed {
 }
 
 /// Patch to apply to an existing node
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
-pub enum PatchNode {
+pub enum Patch {
 	/// Replace node with new one
 	Replace(Node),
 
-	/// Descend deeper to patch one or both of the siblings
-	Siblings([Option<Box<PatchNode>>; 2]),
-
 	/// Partially modify an existing textual Node
-	Patch(TextPatch),
+	Text(TextPatch),
+
+	/// Patch the contents of a wrapped Node like Spoiler, Quoted, Bold and
+	/// Italic
+	Wrapped(Box<Patch>),
+
+	/// Descend deeper to patch children the specified order
+	Children {
+		/// First patch nodes at the specific indices
+		patch: Vec<(usize, Patch)>,
+
+		/// Then truncate child list to match this size
+		truncate: Option<usize>,
+
+		/// Then append these nodes
+		append: Vec<Node>,
+	},
 }
 
 /// Patch to apply to the text body of a post
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PostBodyPatch {
 	pub id: u64,
-	pub patch: PatchNode,
+	pub patch: Patch,
 }
 
 /// Partially modify an existing string
