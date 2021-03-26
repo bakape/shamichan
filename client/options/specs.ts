@@ -142,8 +142,8 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	shamiradio: {
 		exec: toggleNowPlaying(
-			"https://radio.shamik.ooo/",
-			"https://radio.shamik.ooo/status-json.xsl",
+			"https://shamiradio.imgoodatth.is/",
+			"https://shamiradio.imgoodatth.is/status-json.xsl",
 			({ icestats: { source } }) => {
 				const [fallback, main] = Array.isArray(source) ? source : [source]
 				const { listeners, server_name: streamer, title: song = "oh dear, tags aren't set" }
