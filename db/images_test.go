@@ -181,7 +181,7 @@ func TestInsertImage(t *testing.T) {
 
 	insert := func() error {
 		return InTransaction(false, func(tx *sql.Tx) (err error) {
-			buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler, false)
+			buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
 			return
 		})
 	}
@@ -220,7 +220,7 @@ func insertSampleImage(t *testing.T) {
 	token := newImageToken(t, assets.StdJPEG.SHA1)
 	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		std := assets.StdJPEG
-		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler, false)
+		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
 	})
 	if err != nil {
@@ -263,7 +263,7 @@ func TestVideoPlaylist(t *testing.T) {
 	writeSampleThread(t)
 	token := newImageToken(t, std.SHA1)
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler, false)
+		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
 	})
 	if err != nil {

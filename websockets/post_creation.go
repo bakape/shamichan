@@ -40,8 +40,8 @@ type ReplyCreationRequest struct {
 
 // ImageRequest contains data for allocating an image
 type ImageRequest struct {
-	Spoiler, Mask bool
-	Token, Name   string
+	Spoiler     bool
+	Token, Name string
 }
 
 // CreateThread creates a new tread and writes it to the database.
@@ -97,9 +97,7 @@ func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
 
 	// TODO: Get rid of this redundant decoding once we switch to a JSON-only
 	// application server
-	buf, err := db.InsertImage(
-		tx, p.ID, req.Token, req.Name, req.Spoiler, req.Mask,
-	)
+	buf, err := db.InsertImage(tx, p.ID, req.Token, req.Name, req.Spoiler)
 	if err != nil {
 		return
 	}
@@ -108,6 +106,7 @@ func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
 		return
 	}
 
+	p.Image.Name = req.Name
 	p.Image.Spoiler = req.Spoiler
 	return
 }

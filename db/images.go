@@ -150,8 +150,7 @@ func HasImage(id uint64) (has bool, err error) {
 
 // InsertImage insert an image into an existing open post and return image
 // JSON
-func InsertImage(
-	tx *sql.Tx, postID uint64, token, name string, spoiler, mask bool,
+func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
 ) (
 	json []byte, err error,
 ) {
@@ -159,9 +158,8 @@ func InsertImage(
 		`select insert_image($1::bigint,
 			$2::char(86),
 			$3::varchar(200),
-			$4::bool,
-			$5::bool)`,
-		postID, token, name, spoiler, mask).
+			$4::bool)`,
+		postID, token, name, spoiler).
 		Scan(&json)
 	if extractException(err) == "invalid image token" {
 		err = ErrInvalidToken

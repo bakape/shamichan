@@ -2,7 +2,7 @@ import lang from '../../lang';
 import { load, trigger } from '../../util';
 import { Post } from "../model";
 import { View } from "../../base";
-import { config } from "../../state";
+import { config, page } from "../../state";
 import { postSM, postEvent, postState } from ".";
 
 // Uploaded file data to be embedded in thread and reply creation or file
@@ -11,7 +11,6 @@ export type FileData = {
     token: string
     name: string
     spoiler?: boolean
-    mask?: boolean
 }
 
 interface LoadProgress {
@@ -184,20 +183,18 @@ export default class UploadForm extends View<Post> {
         this.isUploading = true;
         this.renderProgress({ total: 1, loaded: 0 });
 
+        let uploadName = file.name;
         let token: string;
-        // Detect, if the crypto API can be used
-        if (location.protocol === "https:"
-            || location.hostname === "localhost"
-        ) {
-            // First send a an sha1 hash to the server, in case it already has
-            // the file thumbnailed and we don't need to upload.
-            const r = new FileReader();
-            r.readAsArrayBuffer(file);
-            const { target: { result } }
-                = await load(r) as ArrayBufferLoadEvent;
+        // First send an sha1 hash to the server, in case it already has
+        // the file thumbnailed and we don't need to upload.
+        const sha1 = await getSHA(file);
+        if (sha1 !== "") {
+            if (this.inputElement("mask").checked) {
+                uploadName = sha1;
+            }
             const res = await fetch("/api/upload-hash", {
                 method: "POST",
-                body: bufferToHex(await crypto.subtle.digest("SHA-1", result)),
+                body: sha1,
             });
             const text = await res.text();
             if (this.handleResponse(res.status, text)) {
@@ -218,9 +215,8 @@ export default class UploadForm extends View<Post> {
         this.isUploading = false;
         return {
             token,
-            name: file.name,
+            name: uploadName,
             spoiler: this.inputElement("spoiler").checked,
-            mask: this.inputElement("mask").checked,
         };
     }
 
@@ -366,4 +362,58 @@ function bufferToHex(buf: ArrayBuffer): string {
         res[i] = precomputedHex[b[i]];
     }
     return res.join('');
+}
+
+// Return the hex-encoded SHA-1 hash of a file, or an empty string
+// if the crypto API is unavailable
+async function getSHA(file: File): Promise<string> {
+    // Detect, if the crypto API can be used
+    if (location.protocol === "https:" || location.hostname === "localhost") {
+        const r = new FileReader();
+        r.readAsArrayBuffer(file);
+        const { target: { result } }
+            = await load(r) as ArrayBufferLoadEvent;
+        return bufferToHex(await crypto.subtle.digest("SHA-1", result));
+    }
+    return "";
+}
+
+// Mask input file's filename
+async function maskFile(input: HTMLInputElement) {
+    if (input.files.length === 0) {
+        return;
+    }
+    // File.name is immutable, replace contents of input element
+    // with cloned+renamed file
+    const blob = input.files[0];
+    const name = await getSHA(blob);
+    if (name === "") {
+        return;
+    }
+    const newfile = new File([blob], name, {type: blob.type});
+    const data  = new DataTransfer();
+    data.items.add(newfile);
+    input.files = data.files;
+}
+
+export function initUpload() {
+    // Add event to optionally mask uploaded file's name when creating
+    // a new thread
+    if (!page.thread) {
+        const form = document.
+            getElementById("new-thread-form") as HTMLFormElement;
+        const mask = form.
+            querySelector("input[name=mask") as HTMLInputElement;
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (mask.checked) {
+                await maskFile(
+                    form.querySelector("input[type=file]") as HTMLInputElement
+                );
+            }
+            // Doesn't trigger submit event
+            form.submit();
+        });
+    }
 }
