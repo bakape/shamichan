@@ -124,6 +124,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 		lastN != 0, thread.Locked,
 		pos,
 		html,
+		r.URL.Query().Get("iframe") == "true",
 	)
 }
 

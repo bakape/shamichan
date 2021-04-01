@@ -75,8 +75,13 @@ func Board(w io.Writer, b, theme string, page, total int,
 
 // Thread writes thread page HTML
 func Thread(w io.Writer, id uint64, board, title, theme string, abbrev,
-	locked bool, pos common.ModerationLevel, postHTML []byte,
+	locked bool, pos common.ModerationLevel, postHTML []byte, inIframe bool,
 ) {
+	if !inIframe {
+		writerenderIndexIframes(w)
+		return
+	}
+
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
 	execIndex(w, title, theme, pos, func(w io.Writer) {
 		writerenderThread(w, postHTML, id, board, abbrev, locked, pos)

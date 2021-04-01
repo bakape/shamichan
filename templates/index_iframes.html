@@ -1,0 +1,70 @@
+{% import "github.com/bakape/meguca/config" %}
+
+{% func renderIndexIframes() %}{% stripspace %}
+	{% code confJSON, _ := config.GetClient() %}
+	<!doctype html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<meta name="application-name" content="meguca">
+		<meta name="description" content="Realtime imageboard">
+		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
+		<title id="page-title">
+			{% comment %}
+				Only expanded in the second parse of the template
+			{% endcomment %}
+			$$$
+		</title>
+		<link rel="manifest" href="/assets/mobile/manifest.json">
+		{% comment %}
+			Main and theme-specific stylesheets
+		{% endcomment %}
+		<link rel="stylesheet" href="/assets/css/base.css">
+		<link rel="stylesheet" id="theme-css" href="/assets/css/$$$.css">
+		<style id="user-background-style"></style>
+		{% comment %}
+			Hide various elements that are dysfunctional without JS
+		{% endcomment %}
+		<noscript>
+			<link rel="stylesheet" href="/assets/css/noscript.css">
+		</noscript>
+		{% comment %}
+			Configuration injection and theme adjustment
+		{% endcomment %}
+		<script>
+			var config = {%z= confJSON %};
+			if (localStorage.theme !== config.DefaultCSS) {
+				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
+			}
+		</script>
+		<style>
+			body {
+				width: 100vw;
+    			height: 100vh;
+				position: fixed;
+			}
+			body > iframe {
+				width: 50vw;
+				height: 100vw;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			window.onload = function name() {
+					let target = location.pathname;
+					if (location.search) {
+						target += location.search + "&";
+					} else {
+						target += "?";
+					}
+					target += "iframe=true" + location.hash;
+					document.body.innerHTML =
+					`<body style=>
+						<iframe frameborder="0" height="100vh" width="50vw" src="${target}"></iframe>
+						<iframe frameborder="0" height="100vh" width="50vw" src="${target}"></iframe>
+					</body>`
+			}
+		</script>
+	</body>
+{% endstripspace %}{% endfunc %}
