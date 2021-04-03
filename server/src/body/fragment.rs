@@ -20,13 +20,13 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 		return;
 	}
 
-	for (i, word) in frag.split(' ').enumerate() {
+	for (i, word_orig) in frag.split(' ').enumerate() {
 		if i != 0 {
 			dst += ' ';
 		}
 
 		// Split off leading and trailing punctuation, if any
-		let (lead, word, trail) = split_punctuation(&word);
+		let (lead, word, mut trail) = split_punctuation(&word_orig);
 		if lead != 0 {
 			dst += lead;
 		}
@@ -47,7 +47,7 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 
 					/// Generate a command node pending finalization
 					macro_rules! gen_pending {
-						($comm:tt) => {
+						($comm:ident) => {
 							Some(Node::Pending($comm))
 						};
 					}
@@ -59,13 +59,24 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 						"pyu" => gen_pending!(Pyu),
 						"pcount" => gen_pending!(PCount),
 						_ => {
-							if comm.starts_with(COUNTDOWN_PREFIX) {
-								parse_countdown(comm)
-							} else if comm.starts_with(AUTOBAHN_PREFIX) {
-								parse_autobahn(comm)
-							} else {
-								parse_dice(comm)
+							// Revert trailing `)` removal on match
+							let mut src = comm;
+							if trail == b')' {
+								// Keep `#` stripped
+								src =
+									&word_orig[if lead != 0 { 2 } else { 1 }..];
 							}
+							let res = if comm.starts_with(COUNTDOWN_PREFIX) {
+								parse_countdown(src)
+							} else if comm.starts_with(AUTOBAHN_PREFIX) {
+								parse_autobahn(src)
+							} else {
+								parse_dice(src)
+							};
+							if trail == b')' && res.is_some() {
+								trail = 0;
+							}
+							res
 						}
 					}
 				}
@@ -118,7 +129,6 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 /// the 3 split parts. If there is no edge punctuation, the respective byte is
 /// zero.
 fn split_punctuation(word: &str) -> (u8, &str, u8) {
-	#[inline]
 	fn is_punctuation(b: u8) -> bool {
 		match b {
 			b'!' | b'"' | b'\'' | b'(' | b')' | b',' | b'-' | b'.' | b':'

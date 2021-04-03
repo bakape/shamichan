@@ -44,7 +44,7 @@ pub fn parse(body: &str, open: bool) -> Node {
 #[cfg(test)]
 mod test {
 	macro_rules! test_parsing {
-		($( $name:ident($in:literal => $out:expr) )+) => {
+		($( $name:ident($in:expr => $out:expr) )+) => {
 			$( mod $name {
 				#![allow(unused_imports)]
 				#![allow(unused)]
@@ -92,7 +92,7 @@ mod test {
 							let res = parse($in, $open);
 							assert!(
 								res == $out,
-								"got:      {:#?}\nexpected: {:#?}",
+								"\ngot:      {:#?}\nexpected: {:#?}\n",
 								res,
 								$out,
 							);
@@ -293,248 +293,217 @@ mod test {
 			text("h"),
 		])
 		trailing_empty_line("foo\n" => children![text("foo"), NewLine])
+		edge_punctuation_leading(".#flip" => children![
+			text("."),
+			Pending(PendingNode::Flip),
+		])
+		edge_punctuation_trailing("#flip," => children![
+			Pending(PendingNode::Flip),
+			text(","),
+		])
+		edge_punctuation_both("(#flip," => children![
+			text("("),
+			Pending(PendingNode::Flip),
+			text(","),
+		])
+		quoted_command(">#flip" => quote(text(">#flip")))
+		flip("#flip" => Pending(PendingNode::Flip))
+		eight_ball("#8ball" => Pending(PendingNode::EightBall))
+		pyu("#pyu" => Pending(PendingNode::Pyu))
+		pcount("#pcount" => Pending(PendingNode::PCount))
+		countdown_explicit("#countdown(3)" => Pending(
+			PendingNode::Countdown(3)
+		))
+		countdown_default("#countdown" => Pending(
+			PendingNode::Countdown(10)
+		))
+		failed_command_with_trailing_parenthesis("#countdown_(3)" => text(
+			"#countdown_(3)"
+		))
+		autobahn_explicit("#autobahn(3)" => Pending(
+			PendingNode::Autobahn(3)
+		))
+		autobahn_default("#autobahn" => Pending(
+			PendingNode::Autobahn(2)
+		))
 
-			// 		//
-	// 		// 	"#flip",
-	// 		// 	open: false,
-	// 		// 	input: "",
-	// 		// 	output: Node::Pending(PendingNode::Flip),
-	// 		// },
-	// 		//
-	// 		// 	"#8ball",
-	// 		// 	open: false,
-	// 		// 	input: "#8ball",
-	// 		// 	output: Node::Pending(PendingNode::EightBall),
-	// 		// },
-	// 		//
-	// 		// 	"edge punctuation",
-	// 		// 	open: false,
-	// 		// 	input: "(#8ball?",
-	// 		// 	output: Node::Children(vec![
-	// 		// 		Node::text("("),
-	// 		// 		Node::Pending(PendingNode::EightBall),
-	// 		// 		Node::text("?"),
-	// 		// 	]),
-	// 		// },
-	// 		// TODO: commands in quote lines
-	// 		// TODO: same line code tags
-	// 		// TODO: multiline code tags
-	// {
-	// 	name: "#pyu",
-	// 	in:   "#pyu",
-	// 	out:  "<strong>#pyu (1)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Pyu,
-	// 			Pyu:  1,
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "#pcount",
-	// 	in:   "#pcount",
-	// 	out:  "<strong>#pcount (2)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Pcount,
-	// 			Pyu:  2,
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name:     "#autobahn",
-	// 	in:       "#autobahn",
-	// 	out:      "<strong class=\"dead\">#autobahn</strong>",
-	// 	commands: []common.Command{{Type: common.Autobahn}},
-	// },
-	// {
-	// 	name: "single roll dice",
-	// 	in:   "#d20",
-	// 	out:  "<strong>#d20 (21)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{21},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "dubs roll dice",
-	// 	in:   "#d20",
-	// 	out:  "<strong class=\"dubs_roll\">#d20 (11)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{11},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "max roll dice",
-	// 	in:   "#d20",
-	// 	out:  "<strong class=\"super_roll\">#d20 (20)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{20},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "multiple roll dice",
-	// 	in:   "#2d20",
-	// 	out:  "<strong>#2d20 (21 + 33 = 54)</strong>",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{21, 33},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "too many dice rolls",
-	// 	in:   "#11d20",
-	// 	out:  "#11d20",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{22, 33},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "too many dice faces",
-	// 	in:   "#2d10001",
-	// 	out:  "#2d10001",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Dice,
-	// 			Dice: []uint16{22, 33},
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "no valid commands",
-	// 	in:   "#flip",
-	// 	out:  "#flip",
-	// },
-	// {
-	// 	name: "too few commands",
-	// 	in:   "#flip\n#flip",
-	// 	out:  "<strong>#flip (flap)</strong><br>#flip",
-	// 	commands: []common.Command{
-	// 		{
-	// 			Type: common.Flip,
-	// 			Flip: true,
-	// 		},
-	// 	},
-	// },
-	// {
-	// 	name: "no links in post",
-	// 	in:   ">>20",
-	// 	out:  "<em>>>20</em>",
-	// },
-	// {
-	// 	name:  "1 invalid link",
-	// 	in:    ">>20",
-	// 	out:   "<em>>>20</em>",
-	// 	links: []common.Link{{21, 21, "a"}},
-	// },
-	// {
-	// 	name:  "valid link",
-	// 	in:    ">>21",
-	// 	out:   `<em><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
-	// 	op:    20,
-	// 	links: []common.Link{{21, 20, "a"}},
-	// },
-	// {
-	// 	name:  "valid link with extra quotes",
-	// 	in:    ">>>>21",
-	// 	out:   `<em>>><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
-	// 	op:    20,
-	// 	links: []common.Link{{21, 20, "a"}},
-	// },
-	// {
-	// 	name:  "valid cross-thread link",
-	// 	in:    ">>21",
-	// 	out:   `<em><a class="post-link" data-id="21" href="/c/22#p21">>>21 ➡</a><a class="hash-link" href="/c/22#p21"> #</a></em>`,
-	// 	op:    20,
-	// 	links: []common.Link{{21, 22, "c"}},
-	// },
-	// {
-	// 	name: "invalid reference",
-	// 	in:   ">>>/fufufu/",
-	// 	out:  `<em>>>>/fufufu/</em>`,
-	// },
-	// {
-	// 	name: "link reference",
-	// 	in:   ">>>/4chan/",
-	// 	out:  `<em><a rel="noreferrer" href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em>`,
-	// },
-	// {
-	// 	name: "board reference",
-	// 	in:   ">>>/a/",
-	// 	out:  `<em><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
-	// },
-	// {
-	// 	name: "reference with extra quotes",
-	// 	in:   ">>>>>/a/",
-	// 	out:  `<em>>><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
-	// },
-	// {
-	// 	name: "HTTP URL",
-	// 	in:   "http://4chan.org",
-	// 	out:  `<a rel="noreferrer" href="http://4chan.org" target="_blank">http://4chan.org</a>`,
-	// },
-	// {
-	// 	name: "HTTPS URL",
-	// 	in:   "https://4chan.org",
-	// 	out:  `<a rel="noreferrer" href="https://4chan.org" target="_blank">https://4chan.org</a>`,
-	// },
-	// {
-	// 	name: "magnet URL",
-	// 	in:   "magnet:?xt=urn:btih:c12fe1",
-	// 	out:  `<a rel="noreferrer" href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
-	// },
-	// {
-	// 	name: "escape generic text",
-	// 	in:   "<>&",
-	// 	out:  "&lt;&gt;&amp;",
-	// },
-	// {
-	// 	name: "youtu.be embed",
-	// 	in:   "https://youtu.be/z0f4Wgi94eo",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[YouTube] ???</a></em>",
-	// },
-	// {
-	// 	name: "youtube embed",
-	// 	in:   "https://www.youtube.com/embed/z0f4Wgi94eo",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/embed/z0f4Wgi94eo\">[YouTube] ???</a></em>",
-	// },
-	// {
-	// 	name: "youtube embed",
-	// 	in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[YouTube] ???</a></em>",
-	// },
-	// {
-	// 	name: "soundcloud embed",
-	// 	in:   "https://soundcloud.com/cd_oblongar",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em>",
-	// },
-	// {
-	// 	name: "vimeo embed",
-	// 	in:   "https://vimeo.com/174312494",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
-	// },
-	// {
-	// 	name: "bitchute embed",
-	// 	in:   "https://www.bitchute.com/embed/z0f4Wgi94eo",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/embed/z0f4Wgi94eo\">[BitChute] ???</a></em>",
-	// },
-	// {
-	// 	name: "bitchute embed",
-	// 	in:   "https://www.bitchute.com/video/z0f4Wgi94eo",
-	// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/video/z0f4Wgi94eo\">[BitChute] ???</a></em>",
-	// },
+		// TODO: same line code tags
+		// TODO: multiline code tags
+		// {
+		// 	name: "no links in post",
+		// 	in:   ">>20",
+		// 	out:  "<em>>>20</em>",
+		// },
+		// {
+		// 	name:  "1 invalid link",
+		// 	in:    ">>20",
+		// 	out:   "<em>>>20</em>",
+		// 	links: []common.Link{{21, 21, "a"}},
+		// },
+		// {
+		// 	name:  "valid link",
+		// 	in:    ">>21",
+		// 	out:   `<em><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
+		// 	op:    20,
+		// 	links: []common.Link{{21, 20, "a"}},
+		// },
+		// {
+		// 	name:  "valid link with extra quotes",
+		// 	in:    ">>>>21",
+		// 	out:   `<em>>><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
+		// 	op:    20,
+		// 	links: []common.Link{{21, 20, "a"}},
+		// },
+		// {
+		// 	name:  "valid cross-thread link",
+		// 	in:    ">>21",
+		// 	out:   `<em><a class="post-link" data-id="21" href="/c/22#p21">>>21 ➡</a><a class="hash-link" href="/c/22#p21"> #</a></em>`,
+		// 	op:    20,
+		// 	links: []common.Link{{21, 22, "c"}},
+		// },
+		// {
+		// 	name: "invalid reference",
+		// 	in:   ">>>/fufufu/",
+		// 	out:  `<em>>>>/fufufu/</em>`,
+		// },
+		// {
+		// 	name: "link reference",
+		// 	in:   ">>>/4chan/",
+		// 	out:  `<em><a rel="noreferrer" href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em>`,
+		// },
+		// {
+		// 	name: "board reference",
+		// 	in:   ">>>/a/",
+		// 	out:  `<em><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
+		// },
+		// {
+		// 	name: "reference with extra quotes",
+		// 	in:   ">>>>>/a/",
+		// 	out:  `<em>>><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
+		// },
+		// {
+		// 	name: "HTTP URL",
+		// 	in:   "http://4chan.org",
+		// 	out:  `<a rel="noreferrer" href="http://4chan.org" target="_blank">http://4chan.org</a>`,
+		// },
+		// {
+		// 	name: "HTTPS URL",
+		// 	in:   "https://4chan.org",
+		// 	out:  `<a rel="noreferrer" href="https://4chan.org" target="_blank">https://4chan.org</a>`,
+		// },
+		// {
+		// 	name: "magnet URL",
+		// 	in:   "magnet:?xt=urn:btih:c12fe1",
+		// 	out:  `<a rel="noreferrer" href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
+		// },
+		// {
+		// 	name: "escape generic text",
+		// 	in:   "<>&",
+		// 	out:  "&lt;&gt;&amp;",
+		// },
+		// {
+		// 	name: "youtu.be embed",
+		// 	in:   "https://youtu.be/z0f4Wgi94eo",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[YouTube] ???</a></em>",
+		// },
+		// {
+		// 	name: "youtube embed",
+		// 	in:   "https://www.youtube.com/embed/z0f4Wgi94eo",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/embed/z0f4Wgi94eo\">[YouTube] ???</a></em>",
+		// },
+		// {
+		// 	name: "youtube embed",
+		// 	in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[YouTube] ???</a></em>",
+		// },
+		// {
+		// 	name: "soundcloud embed",
+		// 	in:   "https://soundcloud.com/cd_oblongar",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em>",
+		// },
+		// {
+		// 	name: "vimeo embed",
+		// 	in:   "https://vimeo.com/174312494",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
+		// },
+		// {
+		// 	name: "bitchute embed",
+		// 	in:   "https://www.bitchute.com/embed/z0f4Wgi94eo",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/embed/z0f4Wgi94eo\">[BitChute] ???</a></em>",
+		// },
+		// {
+		// 	name: "bitchute embed",
+		// 	in:   "https://www.bitchute.com/video/z0f4Wgi94eo",
+		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/video/z0f4Wgi94eo\">[BitChute] ???</a></em>",
+		// },
+	}
+
+	mod dice {
+		mod valid {
+			macro_rules! test_dice_valid {
+				($(
+					$name:ident($in:literal => {$rolls:literal $faces:literal})
+				)+) => {
+					$(
+						mod $name {
+							test_parsing! {
+								no_offset(
+									$in => 	Pending(PendingNode::Dice{
+										offset: 0,
+										faces: $faces,
+										rolls: $rolls,
+									})
+								)
+								plus_1(
+									concat!($in, "+1") => 	Pending(
+											PendingNode::Dice{
+											offset: 1,
+											faces: $faces,
+											rolls: $rolls,
+										}
+									)
+								)
+								minus_1(
+									concat!($in, "-1") => 	Pending(
+										PendingNode::Dice{
+											offset: -1,
+											faces: $faces,
+											rolls: $rolls,
+										}
+									)
+								)
+							}
+						}
+					)+
+				};
+			}
+
+			test_dice_valid! {
+				implicit_single_die("#d10" => {1 10})
+				explicit_single_die("#1d10" => {1 10})
+				explicit_multiple_dice("#2d11" => {2 11})
+			}
+		}
+
+		mod invalid {
+			macro_rules! test_dice_invalid {
+				($( $name:ident($in:literal) )+) => {
+					test_parsing! {
+						$( $name($in => Node::text($in)) )+
+					}
+				};
+			}
+
+			test_dice_invalid! {
+				// Dice parser is the final fallback for all unmatched commands
+				invalid_command("#ass")
+				not_dice("#dagger")
+
+				too_many_dies("#11d6")
+				too_many_faces("#d999999999999")
+				too_big_offset("#d6+9999999999")
+				too_small_offset("#d6-9999999999")
+			}
+		}
 	}
 }

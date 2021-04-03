@@ -46,13 +46,26 @@ pub fn parse_dice(word: &str) -> Option<Node> {
 	};
 	let sign_pos = word[d_pos + 1..]
 		.bytes()
-		.position(|b| b == b'+' || b == b'-');
+		.position(|b| b == b'+' || b == b'-')
+		.map(|i| i + d_pos + 1);
+
+	// Something to put a breakpoint in during tests.
+	// Breakpoints do not work as easily with inlined macros.
+	#[cfg(test)]
+	fn nop() -> isize {
+		1
+	}
 
 	macro_rules! parse {
 		($s:expr) => {
 			match $s.parse().ok() {
 				Some(i) => i,
-				None => return None,
+				None => {
+					#[cfg(test)]
+					nop();
+
+					return None;
+				}
 			}
 		};
 	}

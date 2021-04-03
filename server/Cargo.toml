@@ -18,19 +18,20 @@ cfg-if = "1.0.0"
 cfg-match = "0.2.1"
 common = {path = "../common"}
 dotenv = "0.15.0"
-futures = { version = "0.3.13", features = ["std", "alloc"] }
+futures = {version = "0.3.13", features = ["std", "alloc"]}
 htmlescape = "0.3.1"
 include_dir = "0.6.0"
 lazy_static = "1.4.0"
 libc = "0.2.86"
-log = { version = "0.4.14", features = ["release_max_level_warn"] }
+log = {version = "0.4.14", features = ["release_max_level_warn"]}
 memmap = "0.7.0"
-openssl = { version = "0.10.32", features = ["vendored"] }
+openssl = {version = "0.10.32", features = ["vendored"]}
+paste = "1.0.5"
 proctitle = "0.1.1"
 rand = "0.8.3"
 rayon = "1.5.0"
 regex = "1.4.3"
-serde = { version = "1.0.123", features = ["derive"] }
+serde = {version = "1.0.123", features = ["derive"]}
 serde_json = "1.0.63"
 stderrlog = "0.5.1"
 syntect = "4.5.0"
