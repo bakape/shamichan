@@ -109,7 +109,7 @@ fn collect_node(
 }
 
 /// Highlight programming code
-fn highlight_code(mut dst: &mut Node, frag: &str, _: u8) {
+fn highlight_code(mut dst: &mut Node, mut frag: &str, _: u8) {
 	use syntect::{
 		html::{ClassStyle, ClassedHTMLGenerator},
 		parsing::SyntaxSet,
@@ -121,16 +121,23 @@ fn highlight_code(mut dst: &mut Node, frag: &str, _: u8) {
 
 	let mut gen = ClassedHTMLGenerator::new_with_class_style(
 		frag.find(|b: char| !b.is_alphabetic())
-			.map(|pos| SYNTAX_SET.find_syntax_by_token(&frag[..pos]))
+			.map(|pos| {
+				let s = SYNTAX_SET.find_syntax_by_token(&frag[..pos]);
+				if s.is_some() {
+					frag = &frag[pos + 1..];
+				}
+				s
+			})
 			.flatten()
 			.or_else(|| SYNTAX_SET.find_syntax_by_first_line(&frag))
 			.unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text()),
 		&SYNTAX_SET,
 		ClassStyle::SpacedPrefixed { prefix: "syntex-" },
 	);
+
 	let mut scratch = String::new();
 	for mut line in frag.lines() {
-		// Must ensure line ends with newline
+		// Must ensure line ends with newline for syntex compatibility
 		match line.bytes().last() {
 			Some(b'\n') => (),
 			_ => {
@@ -142,7 +149,18 @@ fn highlight_code(mut dst: &mut Node, frag: &str, _: u8) {
 		};
 		gen.parse_html_for_line_which_includes_newline(&line)
 	}
-	dst += Node::Code(gen.finalize());
+	let mut html = gen.finalize();
+
+	// If original fragment did not contain any newlines, strip the introduced
+	// newline from the formatted html.
+	if !frag.bytes().any(|b| b == b'\n') {
+		html = std::mem::take(&mut html)
+			.chars()
+			.filter(|ch| ch != &'\n')
+			.collect();
+	}
+
+	dst += Node::Code(html);
 }
 
 /// Top level parsing function. Parses line by line and detects quotes.

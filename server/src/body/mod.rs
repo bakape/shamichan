@@ -63,6 +63,10 @@ mod test {
 					Node::Spoiler(inner.into())
 				}
 
+				fn code(s: impl Into<String>) -> Node {
+					Node::Code(s.into())
+				}
+
 				macro_rules! gen_case {
 					($fn_name:ident($open:literal)) => {
 						#[test]
@@ -326,41 +330,29 @@ mod test {
 		autobahn_default("#autobahn" => Pending(
 			PendingNode::Autobahn(2)
 		))
+		code_explicit_language(r#"foo ``python print("bar")`` baz"# => children![
+			text("foo "),
+			code("<span class=\"syntex-source syntex-python\"><span class=\"syntex-meta syntex-function-call syntex-python\"><span class=\"syntex-meta syntex-qualified-name syntex-python\"><span class=\"syntex-support syntex-function syntex-builtin syntex-python\">print</span></span><span class=\"syntex-punctuation syntex-section syntex-arguments syntex-begin syntex-python\">(</span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-python\"><span class=\"syntex-meta syntex-string syntex-python\"><span class=\"syntex-string syntex-quoted syntex-double syntex-python\"><span class=\"syntex-punctuation syntex-definition syntex-string syntex-begin syntex-python\">&quot;</span></span></span><span class=\"syntex-meta syntex-string syntex-python\"><span class=\"syntex-string syntex-quoted syntex-double syntex-python\">bar<span class=\"syntex-punctuation syntex-definition syntex-string syntex-end syntex-python\">&quot;</span></span></span></span><span class=\"syntex-punctuation syntex-section syntex-arguments syntex-end syntex-python\">)</span></span></span>"),
+			text(" baz"),
+		])
+		code_guessed_language("``#! /bin/bash\necho \"foo\"``" => code(
+			"<span class=\"syntex-source syntex-shell syntex-bash\"><span class=\"syntex-comment syntex-line syntex-number-sign syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-comment syntex-begin syntex-shell\">#</span></span><span class=\"syntex-comment syntex-line syntex-number-sign syntex-shell\">! /bin/bash</span><span class=\"syntex-comment syntex-line syntex-number-sign syntex-shell\">\n</span><span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-echo syntex-shell\">echo</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-string syntex-quoted syntex-double syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-string syntex-begin syntex-shell\">&quot;</span>foo<span class=\"syntex-punctuation syntex-definition syntex-string syntex-end syntex-shell\">&quot;</span></span></span>\n</span>",
+		))
+		code_cant_guess_language("``foo()``" => code(
+			"<span class=\"syntex-text syntex-plain\">foo()</span>",
+		))
+		code_invalid_explicit_language("``rash foo()``" => code(
+			"<span class=\"syntex-text syntex-plain\">rash foo()</span>",
+		))
+		code_multiline("``bash echo $BAR\neval $BAZ" => code(
+			"<span class=\"syntex-source syntex-shell syntex-bash\"><span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-echo syntex-shell\">echo</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAR</span></span></span>\n<span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-eval syntex-shell\">eval</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAZ</span></span></span>\n</span>"
+		))
+		code_multiline_cross_line("foo ``bash echo $BAR\neval $BAZ`` null" => children![
+			text("foo "),
+			code("<span class=\"syntex-source syntex-shell syntex-bash\"><span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-echo syntex-shell\">echo</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAR</span></span></span>\n<span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-eval syntex-shell\">eval</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAZ</span></span></span>\n</span>"),
+			text(" null"),
+		])
 
-		// TODO: same line code tags
-		// TODO: multiline code tags
-		// {
-		// 	name: "no links in post",
-		// 	in:   ">>20",
-		// 	out:  "<em>>>20</em>",
-		// },
-		// {
-		// 	name:  "1 invalid link",
-		// 	in:    ">>20",
-		// 	out:   "<em>>>20</em>",
-		// 	links: []common.Link{{21, 21, "a"}},
-		// },
-		// {
-		// 	name:  "valid link",
-		// 	in:    ">>21",
-		// 	out:   `<em><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
-		// 	op:    20,
-		// 	links: []common.Link{{21, 20, "a"}},
-		// },
-		// {
-		// 	name:  "valid link with extra quotes",
-		// 	in:    ">>>>21",
-		// 	out:   `<em>>><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
-		// 	op:    20,
-		// 	links: []common.Link{{21, 20, "a"}},
-		// },
-		// {
-		// 	name:  "valid cross-thread link",
-		// 	in:    ">>21",
-		// 	out:   `<em><a class="post-link" data-id="21" href="/c/22#p21">>>21 ➡</a><a class="hash-link" href="/c/22#p21"> #</a></em>`,
-		// 	op:    20,
-		// 	links: []common.Link{{21, 22, "c"}},
-		// },
 		// {
 		// 	name: "invalid reference",
 		// 	in:   ">>>/fufufu/",
