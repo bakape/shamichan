@@ -55,7 +55,8 @@ pub struct Pulse;
 ///
 /// Mutably dereferencing MessageCacher clears the cached message
 //
-// TODO: bind to specific MessageType, when const generics stabilize,
+// TODO: bind to specific MessageType enum, when arbitrary type const generics
+// stabilize
 #[derive(Debug, Default)]
 pub struct MessageCacher<T>
 where
