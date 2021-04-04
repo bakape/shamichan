@@ -403,7 +403,7 @@ export function initUpload() {
         const form = document.
             getElementById("new-thread-form") as HTMLFormElement;
         const mask = form.
-            querySelector("input[name=mask") as HTMLInputElement;
+            querySelector("input[name=mask]") as HTMLInputElement;
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
