@@ -151,7 +151,16 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose() {
-		this.parseInput(this.view.input.value)
+		this.parseInput(
+			this
+				.view
+				.input
+				.value
+				.replace(
+					/#autobahn/g,
+					`@@r^there ain't no rest for the wickedr^@@`,
+				),
+		);
 		this.abandon()
 		this.send(message.closePost, null)
 	}
