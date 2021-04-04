@@ -55,6 +55,8 @@
 		"janitors": "Concierge",
 		"justNow": "à l'instant",
 		"locked": "locked",
+		"mask": "Mask filename",
+		"maskTT": "Replace file's name with its hash value",
 		"moderators": "Modérateur",
 		"owners": "Propriétaire",
 		"seeAll": "Tout voir",

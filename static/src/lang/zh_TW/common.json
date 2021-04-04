@@ -55,6 +55,8 @@
 		"janitors": "板務助理",
 		"justNow": "現在",
 		"locked": "鎖定",
+		"mask": "Mask filename",
+		"maskTT": "Replace file's name with its hash value",
 		"moderators": "板主",
 		"owners": "看板擁有者",
 		"seeAll": "查看全部",

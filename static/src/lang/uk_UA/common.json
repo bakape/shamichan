@@ -55,6 +55,8 @@
 		"janitors": "Meido",
 		"justNow": "щойно",
 		"locked": "locked",
+		"mask": "Mask filename",
+		"maskTT": "Replace file's name with its hash value",
 		"moderators": "Moderator",
 		"owners": "Board Owner",
 		"seeAll": "Показати все",
