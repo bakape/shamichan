@@ -182,17 +182,17 @@ fn parse_links_inner<R>(
 	}
 
 	let mut extra_gt = 0;
-	for c in word.chars().skip(2) {
+	for c in word.bytes().skip(2) {
 		match c {
-			'>' => {
+			b'>' => {
 				extra_gt += 1;
 			}
-			'0'..='9' => {
+			b'0'..=b'9' => {
 				return parse_post_link(word, extra_gt)
 					.map(|(id, loc)| on_post_link_match(id, loc, extra_gt))
 					.flatten()
 			}
-			'/' => {
+			b'/' => {
 				return parse_reference(word, &mut extra_gt)
 					.map(|id| on_reference_match(id, extra_gt))
 					.flatten()
@@ -203,20 +203,11 @@ fn parse_links_inner<R>(
 	None
 }
 
-/// Parse post links and configured references
-pub fn parse_link(word: &str) -> Option<Node> {
-	let prepend_extra_gt = |n: Node, extra_gt: usize| -> Node {
-		if extra_gt > 0 {
-			Node::Children(vec![
-				Node::Text(">".repeat(extra_gt)).into(),
-				n.into(),
-			])
-		} else {
-			n
-		}
-	};
-
-	parse_links_inner(
+/// Parse post links and configured references.
+///
+/// Returns, if a valid link has been parsed and written to dst.
+pub fn parse_link(mut dst: &mut Node, word: &str) -> bool {
+	match parse_links_inner(
 		word,
 		|id, loc, extra_gt| {
 			use PostLocation::*;
@@ -228,20 +219,29 @@ pub fn parse_link(word: &str) -> Option<Node> {
 				}
 				NotFetched => Some(Node::Pending(PendingNode::PostLink(id))),
 			}
-			.map(|n| prepend_extra_gt(n, extra_gt))
+			.map(|n| (extra_gt, n))
 		},
 		|id, extra_gt| {
 			crate::config::get().public.links.get(id).map(|url| {
-				prepend_extra_gt(
+				(
+					extra_gt,
 					Node::Reference {
 						label: id.into(),
 						url: url.into(),
 					},
-					extra_gt,
 				)
 			})
 		},
-	)
+	) {
+		Some((extra_gt, n)) => {
+			if extra_gt > 0 {
+				dst += ">".repeat(extra_gt);
+			}
+			dst += n;
+			true
+		}
+		None => false,
+	}
 }
 
 /// Detect any post links and configured references and return quotation level,

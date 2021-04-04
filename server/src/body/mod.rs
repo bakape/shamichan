@@ -352,27 +352,52 @@ mod test {
 			code("<span class=\"syntex-source syntex-shell syntex-bash\"><span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-echo syntex-shell\">echo</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAR</span></span></span>\n<span class=\"syntex-meta syntex-function-call syntex-shell\"><span class=\"syntex-support syntex-function syntex-eval syntex-shell\">eval</span></span><span class=\"syntex-meta syntex-function-call syntex-arguments syntex-shell\"> <span class=\"syntex-meta syntex-group syntex-expansion syntex-parameter syntex-shell\"><span class=\"syntex-punctuation syntex-definition syntex-variable syntex-shell\">$</span><span class=\"syntex-variable syntex-other syntex-readwrite syntex-shell\">BAZ</span></span></span>\n</span>"),
 			text(" null"),
 		])
-
-		// {
-		// 	name: "invalid reference",
-		// 	in:   ">>>/fufufu/",
-		// 	out:  `<em>>>>/fufufu/</em>`,
-		// },
-		// {
-		// 	name: "link reference",
-		// 	in:   ">>>/4chan/",
-		// 	out:  `<em><a rel="noreferrer" href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em>`,
-		// },
-		// {
-		// 	name: "board reference",
-		// 	in:   ">>>/a/",
-		// 	out:  `<em><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
-		// },
-		// {
-		// 	name: "reference with extra quotes",
-		// 	in:   ">>>>>/a/",
-		// 	out:  `<em>>><a rel="noreferrer" href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
-		// },
+		unknown_reference(">>>/fufufu/" => quote(text(">>>/fufufu/")))
+		reference(">>>/4ch/" => Reference{
+			label: "4ch".into(),
+			url: "https://4channel.org".into(),
+		})
+		reference_with_extra_gt(">>>>/4ch/" => quote(children![
+			text(">"),
+			Reference{
+				label: "4ch".into(),
+				url: "https://4channel.org".into(),
+			},
+		]))
+		reference_with_extra_gt_in_line_middle("f >>>>/4ch/" => children![
+			text("f >"),
+			Reference{
+				label: "4ch".into(),
+				url: "https://4channel.org".into(),
+			},
+		])
+		invalid_reference_syntax(">>>/aaa" => quote(text(">>>/aaa")))
+		invalid_post_link_syntax(">>3696+" => quote(text(">>3696+")))
+		known_existing_post_link(">>1" => PostLink{
+			id: 1,
+			thread: 1,
+			page: 0,
+		})
+		known_nonexisting_post_link(">>3" => quote(text(">>3")))
+		unknown_post_link(">>2" => Pending(PendingNode::PostLink(2)))
+		post_link_with_extra_gt(">>>1" => quote(children![
+			text(">"),
+			PostLink{
+				id: 1,
+				thread: 1,
+				page: 0,
+			},
+		]))
+		post_link_with_extra_ht_in_line_middle("f >>>>1" => children![
+			text("f >>"),
+			PostLink{
+				id: 1,
+				thread: 1,
+				page: 0,
+			},
+		])
+		empty_quote(">" => quote(text(">")))
+		empty_double_quote(">>" => quote(text(">>")))
 		// {
 		// 	name: "HTTP URL",
 		// 	in:   "http://4chan.org",
@@ -387,11 +412,6 @@ mod test {
 		// 	name: "magnet URL",
 		// 	in:   "magnet:?xt=urn:btih:c12fe1",
 		// 	out:  `<a rel="noreferrer" href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
-		// },
-		// {
-		// 	name: "escape generic text",
-		// 	in:   "<>&",
-		// 	out:  "&lt;&gt;&amp;",
 		// },
 		// {
 		// 	name: "youtu.be embed",

@@ -31,98 +31,109 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 			dst += lead;
 		}
 
-		// Not returning a Node so out.push() can be inlined
-		let matched = match word.chars().next() {
-			None => None,
-
-			// Hash commands
-			Some('#') => {
-				if flags & super::QUOTED != 0 {
-					None
-				} else {
-					use super::{
-						commands::*, AUTOBAHN_PREFIX, COUNTDOWN_PREFIX,
-					};
-					use common::payloads::post_body::PendingNode::*;
-
-					/// Generate a command node pending finalization
-					macro_rules! gen_pending {
-						($comm:ident) => {
-							Some(Node::Pending($comm))
-						};
-					}
-
-					let comm = &word[1..];
-					match comm {
-						"flip" => gen_pending!(Flip),
-						"8ball" => gen_pending!(EightBall),
-						"pyu" => gen_pending!(Pyu),
-						"pcount" => gen_pending!(PCount),
-						_ => {
-							// Revert trailing `)` removal on match
-							let mut src = comm;
-							if trail == b')' {
-								// Keep `#` stripped
-								src =
-									&word_orig[if lead != 0 { 2 } else { 1 }..];
-							}
-							let res = if comm.starts_with(COUNTDOWN_PREFIX) {
-								parse_countdown(src)
-							} else if comm.starts_with(AUTOBAHN_PREFIX) {
-								parse_autobahn(src)
-							} else {
-								parse_dice(src)
-							};
-							if trail == b')' && res.is_some() {
-								trail = 0;
-							}
-							res
-						}
-					}
-				}
+		if !match word.bytes().next() {
+			None => false,
+			Some(b'#') if flags & super::QUOTED == 0 => {
+				parse_command(dst, word, &word_orig, lead, &mut trail)
 			}
+			Some(b'>') => super::links::parse_link(dst, word),
+			_ => false,
+		} {
+			parse_word(dst, word, flags);
+		}
 
-			// Post links and configured references
-			Some('>') => super::links::parse_link(word),
-
-			_ => {
-				word.chars()
-					.position(|c| c != '>')
-					.map(|start| {
-						// Ignore any leading '>'
-						let word = &word[start..];
-
-						let n = if word.starts_with("http") {
-							super::urls::parse_http_url(word, flags)
-						} else if ["magnet:?", "ftp", "bitcoin"]
-							.iter()
-							.any(|pre| word.starts_with(pre))
-						{
-							url::Url::parse(word)
-								.ok()
-								.map(|_| Node::URL(word.into()))
-						} else {
-							None
-						};
-						if n.is_some() {
-							for _ in 0..start {
-								dst += '>';
-							}
-						}
-						n
-					})
-					.flatten()
-			}
-		};
-
-		match matched {
-			Some(n) => dst += n,
-			_ => dst += word,
-		};
 		if trail != 0 {
 			dst += trail;
 		}
 	}
+}
+
+/// Parse hash commands. Moved to separate function to not bloat the hot
+/// parse_line_fragment loop.
+///
+/// Returns, if a valid command has been parsed and written to dst.
+#[cold]
+fn parse_command(
+	mut dst: &mut Node,
+	word: &str,
+	word_with_punctuation: &str,
+	leading_punctuation: u8,
+	trailing_punctuation: &mut u8,
+) -> bool {
+	use super::{commands::*, AUTOBAHN_PREFIX, COUNTDOWN_PREFIX};
+	use common::payloads::post_body::PendingNode::*;
+
+	/// Generate a command node pending finalization
+	macro_rules! push_pending {
+		($comm:ident) => {{
+			dst += Node::Pending($comm);
+			true
+		}};
+	}
+
+	let comm = &word[1..];
+	match comm {
+		"flip" => push_pending!(Flip),
+		"8ball" => push_pending!(EightBall),
+		"pyu" => push_pending!(Pyu),
+		"pcount" => push_pending!(PCount),
+		_ => {
+			// Revert trailing `)` removal on match
+			let mut src = comm;
+			if *trailing_punctuation == b')' {
+				// Keep `#` stripped
+				src = &word_with_punctuation
+					[if leading_punctuation != 0 { 2 } else { 1 }..];
+			}
+
+			if comm.starts_with(COUNTDOWN_PREFIX) {
+				parse_countdown(src)
+			} else if comm.starts_with(AUTOBAHN_PREFIX) {
+				parse_autobahn(src)
+			} else {
+				parse_dice(src)
+			}
+			.map(|n| {
+				if *trailing_punctuation == b')' {
+					*trailing_punctuation = 0;
+				}
+				dst += n;
+				true
+			})
+			.unwrap_or(false)
+		}
+	}
+}
+
+/// Fallback word parser
+fn parse_word(mut dst: &mut Node, word: &str, flags: u8) {
+	match word
+		.chars()
+		.position(|c| c != '>')
+		.map(|leading_gt| {
+			// Strip any leading '>'
+			let word = &word[leading_gt..];
+
+			let n = if word.starts_with("http") {
+				super::urls::parse_http_url(word, flags)
+			} else if ["magnet:?", "ftp", "bitcoin"]
+				.iter()
+				.any(|pre| word.starts_with(pre))
+			{
+				url::Url::parse(word).ok().map(|_| Node::URL(word.into()))
+			} else {
+				None
+			};
+			if n.is_some() {
+				dst += ">".repeat(leading_gt);
+			}
+			n
+		})
+		.flatten()
+	{
+		Some(n) => dst += n,
+		_ => dst += word,
+	};
 }
 
 /// Split off one byte of leading and trailing punctuation, if any, and returns
