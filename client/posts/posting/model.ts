@@ -158,7 +158,7 @@ export default class FormModel extends Post {
 				.value
 				.replace(
 					/#autobahn/g,
-					`@@r^there ain't no rest for the wickedr^@@`,
+					`@@^rthere ain't no rest for the wicked^r@@`,
 				),
 		);
 		this.abandon()
