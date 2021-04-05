@@ -247,6 +247,49 @@ impl Node {
 	}
 }
 
+/// Extends an existing String as efficiently as possible.
+/// Also supports being converted into a new String.
+pub trait ExtendString: Sized {
+	/// Extends an existing String as efficiently as possible
+	fn extend_string(&self, dst: &mut String);
+
+	/// Consumes value to construct a String
+	fn into_string(self) -> String {
+		let mut s = String::new();
+		self.extend_string(&mut s);
+		s
+	}
+}
+
+impl ExtendString for String {
+	fn extend_string(&self, dst: &mut String) {
+		*dst += self;
+	}
+
+	// Avoids copy
+	fn into_string(self) -> String {
+		self
+	}
+}
+
+impl ExtendString for &str {
+	fn extend_string(&self, dst: &mut String) {
+		*dst += self;
+	}
+}
+
+impl ExtendString for char {
+	fn extend_string(&self, dst: &mut String) {
+		dst.push(*self);
+	}
+}
+
+impl ExtendString for u8 {
+	fn extend_string(&self, dst: &mut String) {
+		dst.push(*self as char);
+	}
+}
+
 impl AddAssign<Node> for Node {
 	/// If pushing a Children to a Children, the destination list is extended.
 	/// If pushing a Text to a Text, the destination Text is extended.
@@ -282,83 +325,25 @@ impl AddAssign<Node> for Node {
 	}
 }
 
-#[inline]
-fn add_str<T>(dst: &mut Node, rhs: T)
+impl<T> AddAssign<T> for Node
 where
-	T: AsRef<str> + Into<String>,
+	T: ExtendString,
 {
-	use Node::*;
-
-	match dst {
-		Text(dst) => *dst += rhs.as_ref(),
-		Children(v) => match v.last_mut() {
-			Some(Text(dst)) => *dst += rhs.as_ref(),
-			_ => v.push(Text(rhs.into())),
-		},
-		_ => {
-			*dst += Node::Text(rhs.into());
-		}
-	};
-}
-
-impl AddAssign<&str> for Node {
 	/// Avoids allocations in comparison to += Node.
-	fn add_assign(&mut self, rhs: &str) {
-		add_str(self, rhs);
-	}
-}
-
-impl AddAssign<String> for Node {
-	/// Avoids allocations in comparison to += Node.
-	fn add_assign(&mut self, rhs: String) {
-		add_str(self, rhs);
-	}
-}
-
-impl AddAssign<u8> for Node {
-	/// Avoids allocations in comparison to += Node.
-	/// Must only be used with valid non-null ASCII bytes.
-	fn add_assign(&mut self, rhs: u8) {
-		*self += rhs as char;
-	}
-}
-
-impl AddAssign<char> for Node {
-	/// Avoids allocations in comparison to += Node.
-	/// Must only be used with valid non-null ASCII characters.
-	fn add_assign(&mut self, rhs: char) {
+	fn add_assign(&mut self, rhs: T) {
 		use Node::*;
 
 		match self {
-			Text(dst) => dst.push(rhs),
+			Text(dst) => rhs.extend_string(dst),
 			Children(v) => match v.last_mut() {
-				Some(Text(dst)) => dst.push(rhs),
-				_ => v.push(Text(rhs.into())),
+				Some(Text(dst)) => rhs.extend_string(dst),
+				_ => v.push(Text(rhs.into_string())),
 			},
 			_ => {
-				*self += Node::Text(rhs.into());
+				*self += Node::Text(rhs.into_string());
 			}
 		};
 	}
-}
-
-macro_rules! impl_ref_add_assign {
-	($($typ:ty)+) => {
-		$(
-			impl AddAssign<$typ> for &mut Node {
-				fn add_assign(&mut self, rhs: $typ) {
-					**self += rhs;
-				}
-			}
-		)+
-	};
-}
-impl_ref_add_assign! {
-	Node
-	&str
-	String
-	u8
-	char
 }
 
 /// Node dependant on some database access or processing and pending

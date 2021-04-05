@@ -71,8 +71,8 @@ macro_rules! impl_formatting {
 			impl_formatting! {
 				$vis fn $name(
 					$delimiter => $tag(
-						|mut dst: &mut Node, frag: &str, flags: u8| {
-							dst += Node::$tag(collect_node(
+						|dst: &mut Node, frag: &str, flags: u8| {
+							*dst += Node::$tag(collect_node(
 								frag,
 								flags,
 								$inner,
@@ -109,7 +109,7 @@ fn collect_node(
 }
 
 /// Highlight programming code
-fn highlight_code(mut dst: &mut Node, mut frag: &str, _: u8) {
+fn highlight_code(dst: &mut Node, mut frag: &str, _: u8) {
 	use syntect::{
 		html::{ClassStyle, ClassedHTMLGenerator},
 		parsing::SyntaxSet,
@@ -160,7 +160,7 @@ fn highlight_code(mut dst: &mut Node, mut frag: &str, _: u8) {
 			.collect();
 	}
 
-	dst += Node::Code(html);
+	*dst += Node::Code(html);
 }
 
 /// Top level parsing function. Parses line by line and detects quotes.
@@ -168,26 +168,23 @@ fn highlight_code(mut dst: &mut Node, mut frag: &str, _: u8) {
 pub fn parse_quoted(dst: &mut Node, frag: &str, flags: u8) {
 	// Close an exiting quotation level and commit any uncommitted text down the
 	// parser pipeline
-	let close_level = |mut dst: &mut Node,
-	                   level: usize,
-	                   start: usize,
-	                   i: usize,
-	                   frag: &str| {
-		if start != i {
-			if level == 0 {
-				// Open quotation block and commit previous unquoted text
-				parse_code(dst, &frag[start..i], flags);
-			} else {
-				dst += Node::Quoted(collect_node(
-					// Close quotation block and possibly open quotation block
-					// with a different level
-					&frag[start..i],
-					flags | QUOTED,
-					parse_code,
-				));
+	let close_level =
+		|dst: &mut Node, level: usize, start: usize, i: usize, frag: &str| {
+			if start != i {
+				if level == 0 {
+					// Open quotation block and commit previous unquoted text
+					parse_code(dst, &frag[start..i], flags);
+				} else {
+					*dst += Node::Quoted(collect_node(
+						// Close quotation block and possibly open quotation block
+						// with a different level
+						&frag[start..i],
+						flags | QUOTED,
+						parse_code,
+					));
+				}
 			}
-		}
-	};
+		};
 
 	// Find segments of unquoted text and quoted text of the same quotation
 	// level

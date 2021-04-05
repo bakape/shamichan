@@ -206,7 +206,7 @@ fn parse_links_inner<R>(
 /// Parse post links and configured references.
 ///
 /// Returns, if a valid link has been parsed and written to dst.
-pub fn parse_link(mut dst: &mut Node, word: &str) -> bool {
+pub fn parse_link(dst: &mut Node, word: &str) -> bool {
 	match parse_links_inner(
 		word,
 		|id, loc, extra_gt| {
@@ -235,9 +235,9 @@ pub fn parse_link(mut dst: &mut Node, word: &str) -> bool {
 	) {
 		Some((extra_gt, n)) => {
 			if extra_gt > 0 {
-				dst += ">".repeat(extra_gt);
+				*dst += ">".repeat(extra_gt);
 			}
-			dst += n;
+			*dst += n;
 			true
 		}
 		None => false,

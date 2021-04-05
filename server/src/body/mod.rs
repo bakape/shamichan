@@ -408,6 +408,7 @@ mod test {
 		// 	in:   "https://4chan.org",
 		// 	out:  `<a rel="noreferrer" href="https://4chan.org" target="_blank">https://4chan.org</a>`,
 		// },
+		// TODO: FTP & FTPS URLs
 		// {
 		// 	name: "magnet URL",
 		// 	in:   "magnet:?xt=urn:btih:c12fe1",

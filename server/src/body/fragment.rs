@@ -1,34 +1,34 @@
 use common::payloads::post_body::Node;
 
 /// Parse a text fragment not containing any formatting tags
-pub fn parse_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
+pub fn parse_fragment(dst: &mut Node, frag: &str, flags: u8) {
 	if frag.is_empty() {
 		return;
 	}
 
 	for (i, frag) in frag.split("\n").enumerate() {
 		if i != 0 {
-			dst += Node::NewLine;
+			*dst += Node::NewLine;
 		}
 		parse_line_fragment(dst, frag, flags);
 	}
 }
 
 /// Parse fragment of text not containing newlines
-fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
+fn parse_line_fragment(dst: &mut Node, frag: &str, flags: u8) {
 	if frag.is_empty() {
 		return;
 	}
 
 	for (i, word_orig) in frag.split(' ').enumerate() {
 		if i != 0 {
-			dst += ' ';
+			*dst += ' ';
 		}
 
 		// Split off leading and trailing punctuation, if any
 		let (lead, word, mut trail) = split_punctuation(&word_orig);
 		if lead != 0 {
-			dst += lead;
+			*dst += lead;
 		}
 
 		if !match word.bytes().next() {
@@ -43,7 +43,7 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 		}
 
 		if trail != 0 {
-			dst += trail;
+			*dst += trail;
 		}
 	}
 }
@@ -54,7 +54,7 @@ fn parse_line_fragment(mut dst: &mut Node, frag: &str, flags: u8) {
 /// Returns, if a valid command has been parsed and written to dst.
 #[cold]
 fn parse_command(
-	mut dst: &mut Node,
+	dst: &mut Node,
 	word: &str,
 	word_with_punctuation: &str,
 	leading_punctuation: u8,
@@ -66,7 +66,7 @@ fn parse_command(
 	/// Generate a command node pending finalization
 	macro_rules! push_pending {
 		($comm:ident) => {{
-			dst += Node::Pending($comm);
+			*dst += Node::Pending($comm);
 			true
 		}};
 	}
@@ -97,7 +97,7 @@ fn parse_command(
 				if *trailing_punctuation == b')' {
 					*trailing_punctuation = 0;
 				}
-				dst += n;
+				*dst += n;
 				true
 			})
 			.unwrap_or(false)
@@ -106,7 +106,7 @@ fn parse_command(
 }
 
 /// Fallback word parser
-fn parse_word(mut dst: &mut Node, word: &str, flags: u8) {
+fn parse_word(dst: &mut Node, word: &str, flags: u8) {
 	match word
 		.chars()
 		.position(|c| c != '>')
@@ -124,15 +124,15 @@ fn parse_word(mut dst: &mut Node, word: &str, flags: u8) {
 			} else {
 				None
 			};
-			if n.is_some() {
-				dst += ">".repeat(leading_gt);
+			if leading_gt != 0 && n.is_some() {
+				*dst += ">".repeat(leading_gt);
 			}
 			n
 		})
 		.flatten()
 	{
-		Some(n) => dst += n,
-		_ => dst += word,
+		Some(n) => *dst += n,
+		_ => *dst += word,
 	};
 }
 
