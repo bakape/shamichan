@@ -398,22 +398,7 @@ mod test {
 		])
 		empty_quote(">" => quote(text(">")))
 		empty_double_quote(">>" => quote(text(">>")))
-		// {
-		// 	name: "HTTP URL",
-		// 	in:   "http://4chan.org",
-		// 	out:  `<a rel="noreferrer" href="http://4chan.org" target="_blank">http://4chan.org</a>`,
-		// },
-		// {
-		// 	name: "HTTPS URL",
-		// 	in:   "https://4chan.org",
-		// 	out:  `<a rel="noreferrer" href="https://4chan.org" target="_blank">https://4chan.org</a>`,
-		// },
-		// TODO: FTP & FTPS URLs
-		// {
-		// 	name: "magnet URL",
-		// 	in:   "magnet:?xt=urn:btih:c12fe1",
-		// 	out:  `<a rel="noreferrer" href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
-		// },
+
 		// {
 		// 	name: "youtu.be embed",
 		// 	in:   "https://youtu.be/z0f4Wgi94eo",
@@ -451,9 +436,39 @@ mod test {
 		// },
 	}
 
+	mod url {
+		macro_rules! test_valid {
+			($( $name:ident($url:literal) )+) => {
+				test_parsing! {
+					$(
+						$name($url => URL($url.into()))
+					)+
+				}
+			};
+		}
+
+		test_valid! {
+			http("http://foo.com")
+			https("https://foo.com")
+			ftp("ftp://foo.com")
+			ftps("ftps://foo.com")
+			magnet("magnet:?xt=urn:btih:61d887ca0bf1474d56a20950716fa443ce51ebdc&dn=%5BLewdas%5D%20Boku%20no%20Pico%20-%2001%20%5B346p%5D%5BHEVC%20444%20x265%2010bit%5D%5BEng-Subs%5D&tr=http%3A%2F%2Fsukebei.tracker.wf%3A8888%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce")
+			bitcoin("bitcoin:1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX?amount=5.00?message=payment")
+		}
+
+		test_parsing! {
+			leading_gt(">http://foo.com" => quote(children![
+				text(">"),
+				URL("http://foo.com".into()),
+			]))
+			invalid_url("http://><>.com" => text("http://><>.com"))
+			unsupported_scheme("file:///aaaaaaaa" => text("file:///aaaaaaaa"))
+		}
+	}
+
 	mod dice {
 		mod valid {
-			macro_rules! test_dice_valid {
+			macro_rules! test_valid {
 				($(
 					$name:ident($in:literal => {$rolls:literal $faces:literal})
 				)+) => {
@@ -491,7 +506,7 @@ mod test {
 				};
 			}
 
-			test_dice_valid! {
+			test_valid! {
 				implicit_single_die("#d10" => {1 10})
 				explicit_single_die("#1d10" => {1 10})
 				explicit_multiple_dice("#2d11" => {2 11})
@@ -499,15 +514,15 @@ mod test {
 		}
 
 		mod invalid {
-			macro_rules! test_dice_invalid {
+			macro_rules! test_invalid {
 				($( $name:ident($in:literal) )+) => {
 					test_parsing! {
-						$( $name($in => Node::text($in)) )+
+						$( $name($in => text($in)) )+
 					}
 				};
 			}
 
-			test_dice_invalid! {
+			test_invalid! {
 				// Dice parser is the final fallback for all unmatched commands
 				invalid_command("#ass")
 				not_dice("#dagger")

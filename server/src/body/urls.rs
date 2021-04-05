@@ -17,14 +17,14 @@ macro_rules! comp_pat {
 lazy_static::lazy_static! {
 	/// Patterns for matching supported providers, ordered by usage frequency.
 	static ref PATTERNS: [(EmbedProvider, Regex); 8] = comp_pat! {
-		YouTube => r#"https?:\/\/(?:[^\.]+\.)?(?:youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=)[a-zA-Z0-9_-]+"#
+		YouTube => r#"https?://(?:[^\.]+\.)?(?:youtu\.be/|youtube\.com/embed/|youtube\.com/watch\?v=)[a-zA-Z0-9_-]+"#
 		Twitter => r#"https?://(?:www|mobile\\.)?twitter\\.com/(?:#!/)?([^/]+)/status(?:es)?/(\\d+)"#
-		Imgur => r#"https?://imgur\\.com/(?:[^\\/]+/)?[0-9a-zA-Z]+$"#
+		Imgur => r#"https?://imgur\\.com/(?:[^/]+/)?[0-9a-zA-Z]+$"#
 		SoundCloud => r#"https?://soundcloud.com/.*/.*"#
 		Vimeo => r#"https?://(?:www\\.)?vimeo\\.com/.+"#
-		Coub => r#"https?:\/\/(?:www\.)?coub\.com\/view\/.+"#
-		BitChute => r#"https?:\/\/(?:[^\.]+\.)?(?:bitchute\.com\/embed\/|bitchute\.com\/video\/)([a-zA-Z0-9_-]+)"#
-		Invidious => r#"https?:\/\/(?:www\.)?invidio\.us\/watch(:?.*&|\?)v=(.+)"#
+		Coub => r#"https?://(?:www\.)?coub\.com/view/.+"#
+		BitChute => r#"https?://(?:[^\.]+\.)?(?:bitchute\.com/embed/|bitchute\.com/video/)([a-zA-Z0-9_-]+)"#
+		Invidious => r#"https?://(?:www\.)?invidio\.us/watch(:?.*&|\?)v=(.+)"#
 	};
 }
 
