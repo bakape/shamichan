@@ -189,7 +189,8 @@ export default class UploadForm extends View<Post> {
         // the file thumbnailed and we don't need to upload.
         const sha1 = await getSHA(file);
         if (sha1 !== "") {
-            if (this.inputElement("mask").checked) {
+            // Don't mask pasted files
+            if (this.inputElement("mask").checked && file["pasted"] != true) {
                 uploadName = sha1;
             }
             const res = await fetch("/api/upload-hash", {
@@ -381,6 +382,10 @@ async function getSHA(file: File): Promise<string> {
 // Mask input file's filename
 async function maskFile(input: HTMLInputElement) {
     if (input.files.length === 0) {
+        return;
+    }
+    // Don't mask pasted files
+    if (input.files[0]["pasted"] == true) {
         return;
     }
     // File.name is immutable, replace contents of input element

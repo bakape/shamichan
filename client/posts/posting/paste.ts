@@ -76,6 +76,7 @@ function onPaste(e: ClipboardEvent) {
 			return
 		}
 
+		files[0]["pasted"] = true;
 		if (threadForm) {
 			(threadForm.querySelector("input[type=file]") as any).files = files
 			return
