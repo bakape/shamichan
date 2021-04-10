@@ -7,32 +7,32 @@ version = "0.1.0"
 [dependencies]
 actix = "0.10.0"
 actix-files = "0.5.0"
-actix-rt = "2.1.0"
+actix-rt = "2.2.0"
 actix-service = "1.0.6"
 actix-web = "3.3.2"
 actix-web-actors = "3.0.0"
 askama_actix = "0.11.1"
-async-trait = "0.1.42"
+async-trait = "0.1.48"
 backtrace = "0.3.56"
 cfg-if = "1.0.0"
 cfg-match = "0.2.1"
 common = {path = "../common"}
 dotenv = "0.15.0"
-futures = {version = "0.3.13", features = ["std", "alloc"]}
+futures = {version = "0.3.14", features = ["std", "alloc"]}
 htmlescape = "0.3.1"
 include_dir = "0.6.0"
 lazy_static = "1.4.0"
-libc = "0.2.86"
+libc = "0.2.93"
 log = {version = "0.4.14", features = ["release_max_level_warn"]}
 memmap = "0.7.0"
-openssl = {version = "0.10.32", features = ["vendored"]}
+openssl = {version = "0.10.33", features = ["vendored"]}
 paste = "1.0.5"
 proctitle = "0.1.1"
 rand = "0.8.3"
 rayon = "1.5.0"
-regex = "1.4.3"
-serde = {version = "1.0.123", features = ["derive"]}
-serde_json = "1.0.63"
+regex = "1.4.5"
+serde = {version = "1.0.125", features = ["derive"]}
+serde_json = "1.0.64"
 stderrlog = "0.5.1"
 syntect = "4.5.0"
 tripcode = "0.2.1"
@@ -62,8 +62,8 @@ version = "0.10.5"
 
 [dependencies.futures-channel]
 default-features = false
-version = "0.3.13"
+version = "0.3.14"
 
 [dependencies.tokio]
 features = ["rt-multi-thread", "time", "test-util", "sync"]
-version = "1.2.0"
+version = "1.4.0"
