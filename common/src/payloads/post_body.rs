@@ -51,7 +51,17 @@ pub enum Node {
 	Reference { label: String, url: String },
 
 	/// Link to embedadble resource
-	Embed(Embed),
+	Embed {
+		/// Provider of embedadble resource
+		provider: EmbedProvider,
+
+		/// Original URL matched by the server.
+		///
+		/// Persisting this instead of some parsed result is more flexible, as
+		/// it allows switching embedding schemes easily in the future. The
+		/// client can simply fallback to plain URLs in case of failure.
+		url: String,
+	},
 
 	/// Programming code tags
 	Code(String),
@@ -429,13 +439,7 @@ pub enum EmbedProvider {
 	Imgur,
 	BitChute,
 	Invidious,
-}
-
-/// Describes and identifies a specific embedadble resource
-#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Embed {
-	pub provider: EmbedProvider,
-	pub data: String,
+	DropBox,
 }
 
 /// Patch to apply to an existing node

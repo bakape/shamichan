@@ -43,7 +43,7 @@ where
 		Reference { label, url } => html! {
 			<a href=url.clone() target="_blank">{format!(">>>/{}/", label)}</a>
 		},
-		Embed(e) => super::embeds::render(e.clone()),
+		Embed { provider, url } => super::embeds::render(*provider, &url),
 		Code(code) => {
 			let el = crate::util::document().create_element("div").unwrap();
 			el.set_inner_html(code);

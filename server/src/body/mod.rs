@@ -44,12 +44,23 @@ pub fn parse(body: &str, open: bool) -> Node {
 #[cfg(test)]
 mod test {
 	macro_rules! test_parsing {
-		($( $name:ident($in:expr => $out:expr) )+) => {
+		($(
+			$name:ident(
+				$in:expr => (
+					$out_open:expr,
+					$out_closed:expr$(,)?
+				)
+			)
+		)+) => {
 			$( mod $name {
 				#![allow(unused_imports)]
 				#![allow(unused)]
 				use crate::body::*;
-				use common::payloads::post_body::{Node::{self, *}, PendingNode};
+				use common::payloads::post_body::{
+					Node::{self, *},
+					PendingNode,
+					EmbedProvider::*,
+				};
 
 				fn text(s: impl Into<String>) -> Node {
 					Node::Text(s.into())
@@ -68,7 +79,7 @@ mod test {
 				}
 
 				macro_rules! gen_case {
-					($fn_name:ident($open:literal)) => {
+					($fn_name:ident($open:literal, $out:expr)) => {
 						#[test]
 						fn $fn_name() {
 							let mut conf = crate::config::Config::default();
@@ -104,9 +115,16 @@ mod test {
 					};
 				}
 
-				gen_case! { open(true) }
-				gen_case! { closed(false) }
+				gen_case! { open(true, $out_open) }
+				gen_case! { closed(false, $out_closed) }
 			})+
+		};
+		($( $name:ident($in:expr => $out:expr) )+) => {
+			test_parsing! {
+				$(
+					$name($in => ($out, $out))
+				)+
+			}
 		};
 	}
 
@@ -398,45 +416,9 @@ mod test {
 		])
 		empty_quote(">" => quote(text(">")))
 		empty_double_quote(">>" => quote(text(">>")))
-
-		// {
-		// 	name: "youtu.be embed",
-		// 	in:   "https://youtu.be/z0f4Wgi94eo",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[YouTube] ???</a></em>",
-		// },
-		// {
-		// 	name: "youtube embed",
-		// 	in:   "https://www.youtube.com/embed/z0f4Wgi94eo",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/embed/z0f4Wgi94eo\">[YouTube] ???</a></em>",
-		// },
-		// {
-		// 	name: "youtube embed",
-		// 	in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[YouTube] ???</a></em>",
-		// },
-		// {
-		// 	name: "soundcloud embed",
-		// 	in:   "https://soundcloud.com/cd_oblongar",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em>",
-		// },
-		// {
-		// 	name: "vimeo embed",
-		// 	in:   "https://vimeo.com/174312494",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
-		// },
-		// {
-		// 	name: "bitchute embed",
-		// 	in:   "https://www.bitchute.com/embed/z0f4Wgi94eo",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/embed/z0f4Wgi94eo\">[BitChute] ???</a></em>",
-		// },
-		// {
-		// 	name: "bitchute embed",
-		// 	in:   "https://www.bitchute.com/video/z0f4Wgi94eo",
-		// 	out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/video/z0f4Wgi94eo\">[BitChute] ???</a></em>",
-		// },
 	}
 
-	mod url {
+	mod urls {
 		macro_rules! test_valid {
 			($( $name:ident($url:literal) )+) => {
 				test_parsing! {
@@ -463,6 +445,44 @@ mod test {
 			]))
 			invalid_url("http://><>.com" => text("http://><>.com"))
 			unsupported_scheme("file:///aaaaaaaa" => text("file:///aaaaaaaa"))
+		}
+	}
+
+	mod embeds {
+		#![allow(non_snake_case)]
+
+		macro_rules! test_embeds {
+			($( $name:ident($url:literal => $prov:ident) )+) => {
+				test_parsing! {
+					$(
+						$name($url => (
+							URL($url.into()),
+							Embed{
+								provider: $prov,
+								url: $url.into(),
+							},
+						))
+					)+
+				}
+			};
+		}
+
+		test_embeds! {
+			youtube_long("https://youtu.be/z0f4Wgi94eo" => YouTube)
+			youtube_shortened("https://youtu.be/z0f4Wgi94eo" => YouTube)
+			youtube_watch_query(
+				"https://www.youtube.com/watch?v=z0f4Wgi94eo"
+				=> YouTube
+			)
+			twitter(
+				"https://twitter.com/siiteiebahiro/status/1379854507304124418?s=20"
+				=> Twitter
+			)
+			imgur("https://imgur.com/gallery/YOy4UCA" => Imgur)
+			soundcloud("https://soundcloud.com/cd_oblongar" => SoundCloud)
+			coub("https://coub.com/view/2qc65u" => Coub)
+			vimeo("https://vimeo.com/174312494" => Vimeo)
+			bit_chute("https://www.bitchute.com/embed/z0f4Wgi94eo" => BitChute)
 		}
 	}
 

@@ -2,7 +2,7 @@
 #![allow(unused)]
 
 use crate::util::Result;
-use common::payloads::post_body::{Embed, EmbedProvider};
+use common::payloads::post_body::EmbedProvider;
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::{html, Component, ComponentLink, Html, Properties};
@@ -24,7 +24,7 @@ struct Descriptor {
 static mut CACHE: *mut HashMap<Descriptor, Data> = std::ptr::null_mut();
 
 /// Render link to embedadble resource
-pub fn render(e: Embed) -> Html {
+pub fn render(p: EmbedProvider, url: &str) -> Html {
 	html! {
 		<span>{"TODO: embed rendering"}</span>
 	}
