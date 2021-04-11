@@ -314,6 +314,9 @@ mod test {
 			]),
 			text("h"),
 		])
+		explicit_closed_formatting_of_entire_line("**foo**" => spoiler(
+			text("foo"),
+		))
 		trailing_empty_line("foo\n" => children![text("foo"), NewLine])
 		edge_punctuation_leading(".#flip" => children![
 			text("."),
