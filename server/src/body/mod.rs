@@ -314,7 +314,10 @@ mod test {
 			]),
 			text("h"),
 		])
-		explicit_closed_formatting_of_entire_line("**foo**" => spoiler(
+		explicitly_closed_formatting_of_entire_line("**foo**" => spoiler(
+			text("foo"),
+		))
+		implicitly_closed_formatting_of_entire_line("**foo" => spoiler(
 			text("foo"),
 		))
 		trailing_empty_line("foo\n" => children![text("foo"), NewLine])
