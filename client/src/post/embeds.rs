@@ -31,16 +31,13 @@ pub fn render(p: EmbedProvider, url: &str) -> Html {
 }
 
 /// Fetches and formats an embed's title and inner HTML content
-trait Fetch: Default {
+trait Plugin: Default {
 	/// Fetches embed data and send it to View over link
-	fn fetch(&mut self, e: Embed, link: ComponentLink<View<Self>>) -> Result;
+	fn fetch(&mut self, url: &str, link: ComponentLink<View>) -> Result;
 }
 
-struct View<F>
-where
-	F: Fetch + 'static,
-{
-	fetcher: F,
+struct View {
+	// plugin: Box<dyn Plugin>,
 	props: Props,
 	link: ComponentLink<Self>,
 }
@@ -53,21 +50,32 @@ enum Message {
 
 #[derive(Clone, Properties, Eq, PartialEq)]
 struct Props {
-	pub embed: Embed,
+	pub provider: EmbedProvider,
+	pub url: String,
 }
 
-impl<F> Component for View<F>
-where
-	F: Fetch + 'static,
-{
-	comp_prop_change! {Props}
+impl Component for View {
+	type Properties = Props;
 	type Message = Message;
+
+	// TODO: switch plugin on prop change
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
 			props,
 			link,
-			fetcher: Default::default(),
+			// TODO: match plugin via provider
+			// plugin: Default::default(),
+		}
+	}
+
+	fn change(&mut self, props: Self::Properties) -> bool {
+		if self.props != props {
+			self.props = props;
+			// TODO: rematch plugin
+			true
+		} else {
+			false
 		}
 	}
 

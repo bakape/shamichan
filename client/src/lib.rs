@@ -25,8 +25,6 @@ use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
 struct App {
-	link: ComponentLink<Self>,
-
 	dragging: bool,
 
 	// Keep here to load global state first and never drop the agents
@@ -53,7 +51,6 @@ impl Component for App {
 				_ => Message::NOP,
 			})),
 			dragging: false,
-			link,
 		};
 		s.app_state.send(state::Request::FetchFeed(
 			s.app_state.get().location.clone(),
