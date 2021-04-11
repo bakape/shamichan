@@ -193,7 +193,6 @@ where
 }
 
 /// Clonable message wrapped for handling many times
-#[async_trait]
 trait ClonableWrappedMessage<A>: WrappedMessage<A>
 where
 	A: Actor<Context = MTContext<A>> + Send,
