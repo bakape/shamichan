@@ -151,7 +151,19 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose() {
-		this.parseInput(this.view.input.value)
+		const src = this.view.input.value;
+		let out = "";
+		let prev = "";
+		for (let i = 0; i < src.length; i++) {
+			const b = src[i];
+			if ("!?:;%$€#«»".includes(b) && !["", "\n", " "].includes(prev)) {
+				out += " ";
+			}
+			out += b;
+			prev = b;
+		}
+
+		this.parseInput(out)
 		this.abandon()
 		this.send(message.closePost, null)
 	}
