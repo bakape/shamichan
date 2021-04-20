@@ -157,7 +157,7 @@ export default class FormModel extends Post {
 		for (let i = 0; i < src.length; i++) {
 			const b = src[i];
 			if (
-				"!?:;%$€#«»".includes(b)
+				"!?;%$€#«»".includes(b)
 				&& !["", "\n", " ", "_"].includes(prev)
 			) {
 				out += " ";
