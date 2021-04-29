@@ -138,18 +138,18 @@ mod test {
 	test_parsing! {
 		simple("foo\nbar" => children![
 			text("foo"),
-			NewLine,
+			Newline,
 			text("bar"),
 		])
 		quote(">foo\nbar" => children![
 			quote(children![
 				text(">foo"),
-				NewLine,
+				Newline,
 			]),
 			text("bar"),
 		])
 		quote_with_multiple_gt(">>foo\nbar" => children![
-			quote(children![text(">>foo"), NewLine]),
+			quote(children![text(">>foo"), Newline]),
 			text("bar"),
 		])
 		spoiler("foo**bar** baz" => children![
@@ -160,7 +160,7 @@ mod test {
 		multiline_spoiler("**foo\nbar**baz" => children![
 			spoiler(children![
 				text("foo"),
-				NewLine,
+				Newline,
 				text("bar"),
 			]),
 			text("baz"),
@@ -168,7 +168,7 @@ mod test {
 		unclosed_spoiler_tags("**foo" => spoiler(text("foo")))
 		unclosed_multiline_spoiler_tags("**foo\nbar" => spoiler(children![
 			text("foo"),
-			NewLine,
+			Newline,
 			text("bar"),
 		]))
 		spoiler_in_quote(">baz **foo** bar" => quote(children![
@@ -220,7 +220,7 @@ mod test {
 				text("foo "),
 				spoiler(children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text("baz"),
 				]),
 				text(" woo"),
@@ -231,7 +231,7 @@ mod test {
 				text("foo "),
 				spoiler(children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text("baz woo"),
 				]),
 			]
@@ -241,7 +241,7 @@ mod test {
 				text(">foo "),
 				spoiler(children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text(">baz"),
 				]),
 				text(" woo"),
@@ -252,7 +252,7 @@ mod test {
 				text(">foo "),
 				spoiler(children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text(">baz woo"),
 				]),
 			])
@@ -261,15 +261,15 @@ mod test {
 			"**lol\n>foo **bar\n>baz woo\n>>EHHHHHHH" => children![
 				spoiler(children![
 					text("lol"),
-					NewLine,
+					Newline,
 				]),
 				quote(children![
 					text(">foo "),
 					spoiler(children![
 						text("bar"),
-						NewLine,
+						Newline,
 						text(">baz woo"),
-						NewLine,
+						Newline,
 					]),
 				]),
 				quote(text(">>EHHHHHHH")),
@@ -280,7 +280,7 @@ mod test {
 			Bold(
 				children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text("baz"),
 				]
 				.into(),
@@ -292,7 +292,7 @@ mod test {
 			Italic(
 				children![
 					text("bar"),
-					NewLine,
+					Newline,
 					text("baz"),
 				]
 				.into(),
@@ -320,7 +320,7 @@ mod test {
 		implicitly_closed_formatting_of_entire_line("**foo" => spoiler(
 			text("foo"),
 		))
-		trailing_empty_line("foo\n" => children![text("foo"), NewLine])
+		trailing_empty_line("foo\n" => children![text("foo"), Newline])
 		edge_punctuation_leading(".#flip" => children![
 			text("."),
 			Pending(PendingNode::Flip),

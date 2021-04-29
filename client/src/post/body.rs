@@ -31,7 +31,7 @@ where
 	match n {
 		Empty => html! {},
 		Text(s) => html! {s},
-		NewLine => html! { <br/> },
+		Newline => html! { <br/> },
 		Children(v) => v.iter().map(|n| render(c, n)).collect(),
 		PostLink { id, thread, page } => {
 			render_post_link(c, *id, *thread, *page)

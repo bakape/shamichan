@@ -12,6 +12,7 @@ hex-buffer-serde = "0.2.2"
 num = "0.4.0"
 num-derive = "0.3.3"
 num-traits = "0.2.14"
+paste = "1.0.5"
 serde = { version = "1.0.125", features = ["derive", "rc"] }
 serde-big-array = "0.3.2"
 uuid = { version = "0.8.2", features = ["serde"] }

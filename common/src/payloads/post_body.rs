@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{hash::Hash, hint::unreachable_unchecked, ops::AddAssign};
+use std::{hash::Hash, ops::AddAssign};
 
 // We opt to store strings as String even at the overhead of needing to convert
 // back nad forth to Vec<char> for multibyte unicode support because it reduces
@@ -16,7 +16,7 @@ pub enum Node {
 	Empty,
 
 	/// Start a new line
-	NewLine,
+	Newline,
 
 	/// Contains a list of child nodes.
 	///
@@ -114,7 +114,7 @@ impl Node {
 		use Node::*;
 
 		match (self, new) {
-			(Empty, Empty) | (NewLine, NewLine) => None,
+			(Empty, Empty) | (Newline, Newline) => None,
 			(Children(old), Children(new)) => {
 				let mut patch = vec![];
 				let mut truncate = None;
@@ -154,8 +154,6 @@ impl Node {
 					})
 				}
 			}
-			(Children(old), new @ _) if old.len() == 1 => old[0].diff(new),
-			(old @ _, Children(new)) if new.len() == 1 => old.diff(&new[0]),
 			(Text(old), Text(new))
 			| (URL(old), URL(new))
 			| (Code(old), Code(new)) => {
@@ -214,25 +212,6 @@ impl Node {
 				dst.extend(append);
 			}
 
-			// Real ugly shit because you can't bind both dst and the contents
-			// of Node::Children at the same time
-			(dst @ Node::Children(_), p @ _)
-				if match &dst {
-					Node::Children(v) => v.len() == 1,
-					_ => unsafe { unreachable_unchecked() },
-				} =>
-			{
-				*dst = match dst {
-					Node::Children(v) => std::mem::take(&mut v[0]),
-					_ => unsafe { unreachable_unchecked() },
-				};
-				dst.patch(p)?;
-			}
-
-			(dst @ _, p @ Patch::Children { .. }) => {
-				*dst = Node::Children(vec![std::mem::take(dst)]);
-				dst.patch(p)?;
-			}
 			(Node::Text(dst), Patch::Text(p))
 			| (Node::URL(dst), Patch::Text(p))
 			| (Node::Code(dst), Patch::Text(p)) => {
@@ -443,7 +422,7 @@ pub enum EmbedProvider {
 }
 
 /// Patch to apply to an existing node
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Patch {
 	/// Replace node with new one
@@ -541,110 +520,416 @@ impl TextPatch {
 
 #[cfg(test)]
 mod test {
-	use super::TextPatch;
 
-	// Test diffing and patching nodes
-	#[test]
-	fn node_diff() {
-		// TODO
-	}
+	mod nodes {
+		use super::super::*;
+		use paste::paste;
+		use Node::*;
 
-	// Test diffing and patching text
-	macro_rules! test_text_diff {
-		($(
-			$name:ident(
-				$in:literal
-				($pos:literal $remove:literal $insert:literal)
-				$out:literal
-			)
-		)+) => {
-			$(
-				#[test]
-				fn $name() {
-					let std_patch = TextPatch{
-						position: $pos,
-						remove: $remove,
-						insert: $insert.chars().collect(),
-					};
+		/// Create a list of child nodes
+		macro_rules! children {
+		($($ch:expr),*$(,)?) => {
+				Node::Children(vec![ $($ch,)* ])
+			};
+		}
 
-					macro_rules! to_chars {
-						($src:literal) => {{
-							&$src.chars().collect::<Vec<char>>()
-						}};
+		fn text(s: impl Into<String>) -> Node {
+			Node::Text(s.into())
+		}
+
+		macro_rules! test_diff {
+			($(
+				$name:ident($in_out:expr)
+			)+) => {
+				$(
+					#[test]
+					fn $name() {
+						let patch = $in_out.diff(&$in_out);
+						if patch.is_some() {
+							panic!("expected no patch, got: {:#?}", patch);
+						}
 					}
-					assert_eq!(
-						TextPatch::new(to_chars!($in), to_chars!($out)),
-						std_patch,
-					);
+				)+
+			};
+			($(
+				$name:ident(
+					$in:expr
+					=> $patch:expr
+					=> $out:expr
+				)
+			)+) => {
+				$(
+					#[test]
+					fn $name() -> Result<(), String> {
+						let mut input = $in;
+						let output = $out;
+						let patch = input.diff(&output);
 
-					let mut res = String::new();
-					std_patch.apply(&mut res, $in.chars());
-					assert_eq!(res.as_str(), $out);
+						macro_rules! assert_eq {
+							($got:expr, $expected:expr) => {
+								assert!(
+									$got == $expected,
+									"\ngot:      {:#?}\nexpected: {:#?}\n",
+									$got,
+									$expected,
+								);
+							};
+						}
+
+						assert_eq!(patch, Some($patch));
+
+						input.patch(patch.unwrap())?;
+						assert_eq!(input, output);
+
+						Ok(())
+					}
+				)+
+			};
+		}
+
+		macro_rules! test_text {
+			($( $variant:ident )+) => {
+				$(
+					paste! {
+						test_diff! {
+							[<diff_inside_ $variant:lower>](
+								$variant("a".into())
+								=> Patch::Text(TextPatch{
+									position: 1,
+									remove: 0,
+									insert: vec!['a'],
+								})
+								=> $variant("aa".into())
+							)
+						}
+						test_diff! {
+							[<identical_inside_ $variant:lower>](
+								$variant("foo".into())
+							)
+						}
+					}
+				)+
+			};
+		}
+
+		test_text! {
+			Text
+			URL
+			Code
+		}
+
+		test_diff! {
+			replace_node(
+				text("foo")
+				=> Patch::Replace(children![
+					text("foo"),
+					text("bar"),
+				])
+				=> children![
+					text("foo"),
+					text("bar"),
+				]
+			)
+			append(
+				children![
+					text("foo"),
+					Newline,
+				]
+				=> Patch::Children{
+					patch: vec![],
+					truncate: None,
+					append: vec![text("bar")],
 				}
-			)+
-		};
+				=> children![
+					text("foo"),
+					Newline,
+					text("bar"),
+				]
+			)
+			patch_child(
+				children![
+					text("foo"),
+					Newline,
+				]
+				=> Patch::Children{
+					patch: vec![
+						(
+							0,
+							Patch::Text(
+								TextPatch {
+									position: 3,
+									remove: 0,
+									insert: vec!['l'],
+								},
+							),
+						),
+					],
+					truncate: None,
+					append: vec![],
+				}
+				=> children![
+					text("fool"),
+					Newline,
+				]
+			)
+			append_and_patch(
+				children![
+					text("foo"),
+					Newline,
+				]
+				=> Patch::Children{
+					patch: vec![
+						(
+							0,
+							Patch::Text(
+
+								TextPatch {
+									position: 3,
+									remove: 0,
+									insert: vec!['l'],
+								},
+							),
+						),
+					],
+					truncate: None,
+					append: vec![text("kono")],
+				}
+				=> children![
+					text("fool"),
+					Newline,
+					text("kono"),
+				]
+			)
+			truncate_and_patch(
+				children![
+					text("foo"),
+					Newline,
+					text("kono"),
+				]
+				=> Patch::Children{
+					patch: vec![
+						(
+							0,
+							Patch::Text(
+								TextPatch {
+									position: 3,
+									remove: 0,
+									insert: vec!['l'],
+								},
+							),
+						),
+					],
+					truncate: Some(2),
+					append: vec![],
+				}
+				=> children![
+					text("fool"),
+					Newline,
+				]
+			)
+			multiple_levels_of_children(
+				children![
+					text("kono"),
+					children![
+						text("foo"),
+					],
+				]
+				=> Patch::Children{
+					patch: vec![
+						(
+							0,
+							Patch::Text(
+								TextPatch {
+									position: 4,
+									remove: 0,
+									insert: "suba".chars().collect(),
+								},
+							),
+						),
+						(
+							1,
+							Patch::Children{
+								patch: vec![
+									(
+										0,
+										Patch::Text(
+											TextPatch{
+												position: 3,
+												remove: 0,
+												insert: vec!['l'],
+											},
+										),
+									),
+								],
+								truncate: None,
+								append: vec![],
+							},
+						),
+					],
+					truncate: None,
+					append: vec![Newline],
+				}
+				=> children![
+					text("konosuba"),
+					children![
+						text("fool"),
+					],
+					Newline,
+				]
+			)
+		}
+
+		test_diff! {
+			empty(Empty)
+			newline(Newline)
+			identical_text(text("foo"))
+			identical_pending(Pending(PendingNode::Flip))
+			empty_child_list(children![])
+			identical_children(children![text("foo")])
+			identical_nested_children(children![
+				children![
+					text("foo"),
+				],
+				text("bar"),
+			])
+		}
+
+		macro_rules! test_inside_formatting {
+			($( $tag:ident )+) => {
+				$(
+					paste! {
+						test_diff! {
+							[<diff_inside_ $tag:lower>](
+								$tag(text("a").into())
+								=> Patch::Wrapped(
+									Patch::Text(TextPatch{
+										position: 1,
+										remove: 0,
+										insert: vec!['a'],
+									})
+									.into()
+								)
+								=> $tag(text("aa").into())
+							)
+						}
+						test_diff! {
+							[<identical_inside_ $tag:lower>](
+								$tag(text("foo").into())
+							)
+						}
+					}
+				)+
+			};
+		}
+
+		test_inside_formatting! {
+			Spoiler
+			Bold
+			Italic
+			Quoted
+		}
 	}
 
-	test_text_diff! {
-		append(
-			"a"
-			(1 0 "a")
-			"aa"
-		)
-		prepend(
-			"bc"
-			(0 0 "a")
-			"abc"
-		)
-		append_to_empty_body(
-			""
-			(0 0 "abc")
-			"abc"
-		)
-		backspace(
-			"abc"
-			(2 1 "")
-			"ab"
-		)
-		remove_one_from_front(
-			"abc"
-			(0 1 "")
-			"bc"
-		)
-		remove_one_multibyte_char(
-			"αΒΓΔ"
-			(2 1 "")
-			"αΒΔ"
-		)
-		inject_into_the_middle(
-			"abc"
-			(2 0 "abc")
-			"ababcc"
-		)
-		inject_multibyte_into_the_middle(
-			"αΒΓ"
-			(2 0 "Δ")
-			"αΒΔΓ"
-		)
-		replace_in_the_middle(
-			"abc"
-			(1 1 "d")
-			"adc"
-		)
-		replace_multibyte_in_the_middle(
-			"αΒΓ"
-			(1 1 "Δ")
-			"αΔΓ"
-		)
-		replace_suffix(
-			"abc"
-			(1 2 "de")
-			"ade"
-		)
-		replace_prefix(
-			"abc"
-			(0 2 "de")
-			"dec"
-		)
+	mod text {
+		use super::super::*;
+
+		// Test diffing and patching text
+		macro_rules! test_text_diff_patch {
+			($(
+				$name:ident(
+					$in:literal
+					($pos:literal $remove:literal $insert:literal)
+					$out:literal
+				)
+			)+) => {
+				$(
+					#[test]
+					fn $name() {
+						let std_patch = TextPatch{
+							position: $pos,
+							remove: $remove,
+							insert: $insert.chars().collect(),
+						};
+
+						macro_rules! to_chars {
+							($src:literal) => {{
+								&$src.chars().collect::<Vec<char>>()
+							}};
+						}
+						assert_eq!(
+							TextPatch::new(to_chars!($in), to_chars!($out)),
+							std_patch,
+						);
+
+						let mut res = String::new();
+						std_patch.apply(&mut res, $in.chars());
+						assert_eq!(res.as_str(), $out);
+					}
+				)+
+			};
+		}
+
+		test_text_diff_patch! {
+			append(
+				"a"
+				(1 0 "a")
+				"aa"
+			)
+			prepend(
+				"bc"
+				(0 0 "a")
+				"abc"
+			)
+			append_to_empty_body(
+				""
+				(0 0 "abc")
+				"abc"
+			)
+			backspace(
+				"abc"
+				(2 1 "")
+				"ab"
+			)
+			remove_one_from_front(
+				"abc"
+				(0 1 "")
+				"bc"
+			)
+			remove_one_multibyte_char(
+				"αΒΓΔ"
+				(2 1 "")
+				"αΒΔ"
+			)
+			inject_into_the_middle(
+				"abc"
+				(2 0 "abc")
+				"ababcc"
+			)
+			inject_multibyte_into_the_middle(
+				"αΒΓ"
+				(2 0 "Δ")
+				"αΒΔΓ"
+			)
+			replace_in_the_middle(
+				"abc"
+				(1 1 "d")
+				"adc"
+			)
+			replace_multibyte_in_the_middle(
+				"αΒΓ"
+				(1 1 "Δ")
+				"αΔΓ"
+			)
+			replace_suffix(
+				"abc"
+				(1 2 "de")
+				"ade"
+			)
+			replace_prefix(
+				"abc"
+				(0 2 "de")
+				"dec"
+			)
+		}
 	}
 }

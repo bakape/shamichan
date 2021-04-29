@@ -8,7 +8,7 @@ pub fn parse_fragment(dst: &mut Node, frag: &str, flags: u8) {
 
 	for (i, frag) in frag.split("\n").enumerate() {
 		if i != 0 {
-			*dst += Node::NewLine;
+			*dst += Node::Newline;
 		}
 		parse_line_fragment(dst, frag, flags);
 	}
