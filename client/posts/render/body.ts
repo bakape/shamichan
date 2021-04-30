@@ -378,7 +378,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn|ban|unban|bin)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -526,6 +526,9 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             inner = escape(commands[state.iDice++].val.toString())
             break
         case "autobahn":
+        case "ban":
+        case "unban":
+        case "bin":
             return `<strong class=\"dead\">#${bit}</strong>`
         case "pyu":
         case "pcount":

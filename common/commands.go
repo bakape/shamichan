@@ -32,6 +32,15 @@ const (
 
 	// Autobahn - self ban. brum brum
 	Autobahn
+
+	// Ban all posts replied to
+	Ban
+
+	// Unban all posts replied to, if they were #banned
+	Unban
+
+	// Delete all posts replied to
+	Bin
 )
 
 // Command contains the type and value array of hash commands, such as dice
@@ -71,7 +80,7 @@ func (c Command) MarshalJSON() ([]byte, error) {
 	switch c.Type {
 	case Flip:
 		b = strconv.AppendBool(b, c.Flip)
-	case Pyu, Pcount, Autobahn:
+	case Pyu, Pcount, Autobahn, Ban, Unban, Bin:
 		appendUint(c.Pyu)
 	case SyncWatch:
 		appendByte('[')
@@ -134,6 +143,12 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 		err = json.Unmarshal(data, &c.Dice)
 	case Autobahn:
 		c.Type = Autobahn
+	case Ban:
+		c.Type = Ban
+	case Unban:
+		c.Type = Unban
+	case Bin:
+		c.Type = Bin
 	default:
 		return fmt.Errorf("unknown command type: %d", typ)
 	}

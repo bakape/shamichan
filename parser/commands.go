@@ -154,6 +154,18 @@ func parseCommand(
 			err = db.Ban(board, "brum brum", "system", time.Hour, id)
 		}
 
+	// Ban
+	case bytes.Equal(match, []byte("ban")):
+		com.Type = common.Ban
+
+	// Unban
+	case bytes.Equal(match, []byte("unban")):
+		com.Type = common.Unban
+
+	// Bin
+	case bytes.Equal(match, []byte("bin")):
+		com.Type = common.Bin
+
 	default:
 		matchStr := string(match)
 

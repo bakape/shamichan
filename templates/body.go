@@ -594,7 +594,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		default:
 			c.writeInvalidCommand(bit)
 		}
-	case "autobahn":
+	case "autobahn", "ban", "unban", "bin":
 		c.string("<strong class=\"dead\">#")
 		c.string(bit)
 		c.string(`</strong>`)

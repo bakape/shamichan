@@ -10,6 +10,14 @@ import (
 func ClosePost(id, op uint64, body string, links []common.Link,
 	com []common.Command,
 ) (err error) {
+	// Don't write temporary feature data to permanent db.
+	// Store as autobahn command for the styling
+	for i := range com {
+		switch com[i].Type {
+		case common.Ban, common.Unban, common.Bin:
+			com[i].Type = common.Autobahn
+		}
+	}
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		_, err = sq.Update("posts").
 			SetMap(map[string]interface{}{
