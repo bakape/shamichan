@@ -2,7 +2,7 @@ use super::{client::Client, str_err};
 use crate::{
 	body::{cache_locations, KnownPostLocation},
 	config, db,
-	feeds::{self, AnyFeed, ThreadFeed},
+	feeds::{self, AnyFeed, PostLocation, ThreadFeed},
 	message::Message,
 	mt_context::{AsyncHandler, MTAddr, MTContext},
 	registry,
@@ -143,7 +143,7 @@ impl AsyncHandler<HandleMessage> for MessageHandler {
 		HandleMessage(buf): HandleMessage,
 		_: &mut <Self as Actor>::Context,
 	) -> Result<(), Self::Error> {
-		let msg = match self.handle_message(buf).await {
+		let msg = match self.handle_messages(buf).await {
 			Ok(_) => Ok(match self.message.take() {
 				Some(m) => Some(m.finish()?.into()),
 				None => {
@@ -173,6 +173,7 @@ impl MessageHandler {
 	}
 
 	/// Decode a message and return the decoded type
+	#[inline]
 	fn decode<T>(t: MessageType, dec: &mut Decoder) -> DynResult<T>
 	where
 		T: for<'de> serde::Deserialize<'de> + std::fmt::Debug,
@@ -182,8 +183,8 @@ impl MessageHandler {
 		Ok(payload)
 	}
 
-	/// Handle received message
-	async fn handle_message(&mut self, buf: Bytes) -> DynResult {
+	/// Handle received messages
+	async fn handle_messages(&mut self, buf: Bytes) -> DynResult {
 		let mut dec = Decoder::new(&buf)?;
 		let mut first = true;
 		loop {
@@ -225,7 +226,7 @@ impl MessageHandler {
 							self.handle_reshake(&mut dec, &pk)?;
 						}
 						AcceptedHandshake | Synchronized { .. } => {
-							self.handle_messages_after_handshake(t, &mut dec)
+							self.handle_message_after_handshake(t, &mut dec)
 								.await?;
 						}
 					}
@@ -235,7 +236,7 @@ impl MessageHandler {
 	}
 
 	/// Handle a received message after a successful handshake
-	async fn handle_messages_after_handshake(
+	async fn handle_message_after_handshake(
 		&mut self,
 		t: MessageType,
 		dec: &mut Decoder,
@@ -281,6 +282,10 @@ impl MessageHandler {
 					.index_feed
 					.do_send(feeds::UsedTags(self.client.clone()));
 				Ok(())
+			}
+			ClosePost => {
+				skip_payload!();
+				self.close_post().await
 			}
 			_ => str_err!("unhandled message type: {:?}", t),
 		}
@@ -725,5 +730,108 @@ impl MessageHandler {
 				}
 			}
 		})
+	}
+
+	/// Close the currently open post
+	async fn close_post(&mut self) -> DynResult {
+		use common::payloads::post_body::{Command, Node, PendingNode};
+
+		let p = self.open_post.take().ok_or_else(|| "no post open")?;
+		let mut body =
+			crate::body::parse(&p.body.iter().collect::<String>(), false);
+
+		#[async_recursion::async_recursion]
+		async fn finalize_pending(n: &mut Node) -> DynResult {
+			use rand::prelude::*;
+
+			match n {
+				Node::Children(ch) => {
+					for ch in ch.iter_mut() {
+						finalize_pending(ch).await?
+					}
+				}
+				Node::Pending(p) => {
+					*n = match p {
+						PendingNode::Autobahn(h) => {
+							Node::Command(Command::Autobahn(*h))
+						}
+						PendingNode::Countdown(s) => {
+							Node::Command(Command::Countdown {
+								start: util::now(),
+								secs: *s,
+							})
+						}
+						PendingNode::Dice {
+							offset,
+							faces,
+							rolls,
+						} => Node::Command(Command::Dice {
+							offset: *offset,
+							faces: *faces,
+							results: {
+								let mut res =
+									Vec::with_capacity(*rolls as usize);
+
+								let mut rng = thread_rng();
+								for _ in 0..*rolls {
+									res.push(rng.gen::<u16>() % *faces);
+								}
+
+								res
+							},
+						}),
+						PendingNode::EightBall => {
+							// TODO: read eightball choices from thread configs
+							static CHOICES: [&str; 5] = [
+								"Yes",
+								"No",
+								"Maybe",
+								"Anta baka?",
+								"Hell yeah, motherfucker!",
+							];
+
+							Node::Command(Command::EightBall(
+								CHOICES[random::<usize>() % CHOICES.len()]
+									.into(),
+							))
+						}
+						PendingNode::Flip => {
+							Node::Command(Command::Flip(random()))
+						}
+						PendingNode::PostLink(id) => {
+							match crate::body::post_location(*id).await? {
+								Some((thread, page)) => Node::PostLink {
+									id: *id,
+									thread,
+									page,
+								},
+								None => Node::Text(format!(">>{}", id)),
+							}
+						}
+						PendingNode::Pyu => Node::Command(Command::Pyu(
+							crate::db::increment_pcount().await?,
+						)),
+						PendingNode::PCount => Node::Command(Command::PCount(
+							crate::db::get_pcount().await?,
+						)),
+					}
+				}
+				_ => (),
+			};
+			Ok(())
+		}
+
+		finalize_pending(&mut body).await?;
+
+		crate::db::close_post(p.loc.id, &body).await?;
+		p.feed.do_send(crate::feeds::ClosePost {
+			loc: PostLocation {
+				page: p.loc.page,
+				id: p.loc.id,
+			},
+			body,
+		});
+
+		Ok(())
 	}
 }

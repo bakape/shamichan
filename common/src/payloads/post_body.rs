@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{hash::Hash, ops::AddAssign};
+use std::{hash::Hash, ops::AddAssign, sync::Arc, u64};
 
 // We opt to store strings as String even at the overhead of needing to convert
 // back nad forth to Vec<char> for multibyte unicode support because it reduces
@@ -347,7 +347,7 @@ pub enum PendingNode {
 	PCount,
 
 	/// Seconds to count down
-	Countdown(u64),
+	Countdown(u32),
 
 	/// Hours to ban self for
 	Autobahn(u16),
@@ -453,6 +453,13 @@ pub enum Patch {
 pub struct PostBodyPatch {
 	pub id: u64,
 	pub patch: Patch,
+}
+
+/// Carries the body of a post
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PostBody {
+	pub id: u64,
+	pub body: Arc<Node>,
 }
 
 /// Partially modify an existing string

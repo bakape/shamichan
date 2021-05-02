@@ -23,7 +23,11 @@ use threads::Threads;
 #[derive(Debug)]
 pub enum Change {
 	InsertPost(Post),
-	SetBody { id: u64, body: Arc<Node> },
+	SetBody {
+		id: u64,
+		body: Arc<Node>,
+		close_post: bool,
+	},
 }
 
 /// Set of buffered changes for a particular thread
@@ -123,9 +127,16 @@ impl AsyncHandler<Pulse> for IndexFeed {
 						t.thread.post_count += 1;
 						t.posts.insert(p.id, p);
 					}
-					SetBody { id, body } => {
+					SetBody {
+						id,
+						body,
+						close_post,
+					} => {
 						if let Some(p) = t.posts.get_mut(&id) {
 							p.body = body;
+							if close_post {
+								p.open = false;
+							}
 						}
 					}
 				};

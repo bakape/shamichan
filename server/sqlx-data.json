@@ -13,6 +13,24 @@
       "nullable": []
     }
   },
+  "084b4ecc1bc6b897aa0e9476fde92d6ea3c1098668974495bb5b912599af710d": {
+    "query": "insert into main as m (key, val)\n\t\tvalues ('pyu_count', '1')\n\t\ton conflict (key) do update\n\t\t\tset val = (m.val::bigint + 1)::text::jsonb\n\t\treturning val::bigint",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "val",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "1c732bcd1c6fa3d98d3f68da2f4b376284883fb73a2e2a7fa0ccde93e21a853d": {
     "query": "select get_thread(id, -5) thread from threads",
     "describe": {
@@ -49,6 +67,19 @@
       "nullable": []
     }
   },
+  "2aca91c740c354068e2404cddadc1260105126db1ef816dc897a7f762574fce9": {
+    "query": "update posts\n\t\tset\n\t\t\topen = false,\n\t\t\tbody = $2\n\t\twhere id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "634a6e2d3b30988b61f24ce18e8ec66d35b6bc0b74659b444ebef365fd6377ce": {
     "query": "select thread, page\n\t\tfrom posts\n\t\twhere id = $1",
     "describe": {
@@ -72,6 +103,24 @@
       "nullable": [
         false,
         false
+      ]
+    }
+  },
+  "6d1fd5341f5ca6f00db70bb472f44f51e4d064136f2c64d02e295f57c3ac205e": {
+    "query": "select coalesce(\n\t\t\t(\n\t\t\t\tselect val::int from main\n\t\t\t\twhere key = 'pyu_count'\n\t\t\t),\n\t\t\t0\n\t\t) val",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "val",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        null
       ]
     }
   },

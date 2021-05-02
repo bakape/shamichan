@@ -38,6 +38,7 @@ syntect = "4.5.0"
 tripcode = "0.2.1"
 url = "2.2.1"
 uuid = "0.8.2"
+async-recursion = "0.3.2"
 
 [dependencies.clap]
 features = ["suggestions", "color", "wrap_help"]

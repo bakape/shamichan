@@ -1,8 +1,10 @@
 mod auth;
+mod commands;
 mod posts;
 mod threads;
 
 pub use auth::*;
+pub use commands::*;
 pub use posts::*;
 pub use threads::*;
 

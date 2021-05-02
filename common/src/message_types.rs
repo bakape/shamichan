@@ -80,4 +80,7 @@ pub enum MessageType {
 
 	/// Request or responds with all the currently used tags on the server
 	UsedTags,
+
+	/// Close the currently open post
+	ClosePost,
 }

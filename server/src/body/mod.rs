@@ -5,7 +5,7 @@ mod links;
 pub mod persist_open;
 mod urls;
 
-pub use links::{cache_locations, KnownPostLocation};
+pub use links::{cache_locations, post_location, KnownPostLocation};
 
 use common::payloads::post_body::Node;
 

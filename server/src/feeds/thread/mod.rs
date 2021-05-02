@@ -252,12 +252,12 @@ impl AsyncHandler<InsertPost> for ThreadFeed {
 		let post =
 			Post::new(req.id, req.thread, req.page, now, req.opts.clone());
 
-		#[rustfmt::skip]
 		macro_rules! insert_post {
 			($page:expr) => {
 				$page.insert(req.id, post.clone().into());
 				self.writer.register_post_id(req.id);
-				self.writer.write_message(MessageType::InsertPost, &payload)?;
+				self.writer
+					.write_message(MessageType::InsertPost, &payload)?;
 				self.writer.write_global_change(
 					MessageType::InsertPost,
 					&payload,
@@ -333,6 +333,76 @@ impl AsyncHandler<SetBody> for ThreadFeed {
 			.entry(loc.page)
 			.or_default()
 			.insert(loc.id, body);
+		Ok(())
+	}
+}
+
+/// Propagate post closure
+pub struct ClosePost {
+	pub loc: PostLocation,
+	pub body: Node,
+}
+
+#[async_trait]
+impl AsyncHandler<ClosePost> for ThreadFeed {
+	type Error = util::Err;
+
+	async fn handle(
+		&mut self,
+		req: ClosePost,
+		ctx: &mut <Self as Actor>::Context,
+	) -> Result<(), Self::Error> {
+		use page::PageRecord::*;
+
+		self.schedule_pulse(ctx);
+
+		let body = Arc::new(req.body);
+
+		match match self.pages.entry(req.loc.page).or_default() {
+			p @ Mutable(_) | p @ Immutable(_) => p,
+			p @ Unfetched => {
+				*p =
+					Self::fetch_page(self.thread_meta.id, req.loc.page).await?;
+				p
+			}
+		} {
+			Unfetched => unreachable!(),
+			Immutable(_) => {
+				return Err(format!(
+					"trying to close post {} in immutable page {} in thread {}",
+					req.loc.id, req.loc.page, self.thread_meta.id,
+				)
+				.into());
+			}
+			Mutable(p) => {
+				let id = req.loc.id;
+				let p = p
+					.get_mut(&req.loc.id)
+					.ok_or_else(|| format!("post not found: {}", id))?;
+				p.open = false;
+				p.body = body.clone();
+			}
+		};
+
+		// Cancel any scheduled open body updates
+		if let Some(p) = self.pending_open_bodies.get_mut(&req.loc.page) {
+			p.remove(&req.loc.id);
+		}
+
+		self.writer.write_post_message(
+			req.loc.id,
+			MessageType::ClosePost,
+			&common::payloads::post_body::PostBody {
+				id: req.loc.id,
+				body: body.clone(),
+			},
+			Change::SetBody {
+				id: req.loc.id,
+				body: body.clone(),
+				close_post: true,
+			},
+		)?;
+
 		Ok(())
 	}
 }
@@ -540,6 +610,7 @@ impl ThreadFeed {
 							Change::SetBody {
 								id,
 								body: body.clone(),
+								close_post: false,
 							},
 						)?;
 						Ok((id, body))

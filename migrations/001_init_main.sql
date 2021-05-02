@@ -8,7 +8,7 @@ returns trigger
 language plpgsql
 as $$
 begin
-	if new.key == 'config' then
+	if new.key = 'config' then
 		perform pg_notify('config.updated', '');
 	end if;
 	return new;

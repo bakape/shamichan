@@ -1,4 +1,4 @@
-use crate::{db, util};
+use crate::db;
 use common::payloads::{
 	post_body::{Node, PendingNode},
 	Post,
@@ -7,7 +7,7 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock as AsyncRWLock;
 
 #[derive(Clone)]
-pub enum PostLocation {
+enum PostLocation {
 	NotFetched,
 	DoesNotExist,
 	Exists { thread: u64, page: u32 },
@@ -52,30 +52,34 @@ where
 	cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
 }
 
-/// Fetch post location from the DB or cache
-pub async fn post_location(id: u64) -> util::DynResult<PostLocation> {
+/// Fetch post location as (thread, page) from the DB or cache
+pub async fn post_location(id: u64) -> Result<Option<(u64, u32)>, sqlx::Error> {
 	use PostLocation::*;
 
 	let rec = write_cache(|c| c.entry(id).or_default().clone());
 	match &*rec.read().await {
-		l @ Exists { .. } | l @ DoesNotExist => return Ok(l.clone()),
+		Exists { thread, page } => return Ok(Some((*thread, *page))),
+		DoesNotExist => return Ok(None),
 		NotFetched => (),
 	};
 
 	let mut rec = rec.write().await;
 	Ok(match &mut *rec {
 		// Race with another thread
-		l @ Exists { .. } | l @ DoesNotExist => l.clone(),
+		Exists { thread, page } => Some((*thread, *page)),
+		DoesNotExist => None,
 
 		// Perform fetch
-		l @ NotFetched => {
-			let loc = match db::get_post_parenthood(id).await? {
-				Some((thread, page)) => PostLocation::Exists { thread, page },
-				None => DoesNotExist,
-			};
-			*l = loc.clone();
-			loc
-		}
+		l @ NotFetched => match db::get_post_parenthood(id).await? {
+			Some((thread, page)) => {
+				*l = PostLocation::Exists { thread, page };
+				Some((thread, page))
+			}
+			None => {
+				*l = PostLocation::DoesNotExist;
+				None
+			}
+		},
 	})
 }
 

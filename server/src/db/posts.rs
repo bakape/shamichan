@@ -36,6 +36,23 @@ pub async fn write_open_post_bodies(
 	Ok(())
 }
 
+/// Close open post and set its body
+pub async fn close_post(id: u64, body: &Node) -> DynResult {
+	sqlx::query!(
+		"update posts
+		set
+			open = false,
+			body = $2
+		where id = $1",
+		id as i64,
+		serde_json::to_value(body)?,
+	)
+	.execute(&pool())
+	.await?;
+
+	Ok(())
+}
+
 /// Insert post into the database and return its ID and page
 pub async fn insert_post<'a>(
 	thread: u64,
@@ -77,7 +94,9 @@ pub async fn insert_post<'a>(
 }
 
 /// Return the thread and page of a post, if any
-pub async fn get_post_parenthood(id: u64) -> DynResult<Option<(u64, u32)>> {
+pub async fn get_post_parenthood(
+	id: u64,
+) -> Result<Option<(u64, u32)>, sqlx::Error> {
 	Ok(sqlx::query!(
 		"select thread, page
 		from posts
