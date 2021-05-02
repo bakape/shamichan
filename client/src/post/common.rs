@@ -65,9 +65,15 @@ pub trait PostComponent: Default {
 
 	/// Append extra HTML to the end of the post's root element
 	#[allow(unused_variables)]
+	#[inline]
 	fn render_after<'c>(&self, c: &Ctx<'c, Self>) -> Html {
 		html! {}
 	}
+
+	/// Called each time after the component is rendered
+	#[allow(unused_variables)]
+	#[inline]
+	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, first_render: bool) {}
 }
 
 /// Reference to parent context that might be mutable.
@@ -326,6 +332,12 @@ where
 		use state::Change::*;
 
 		vec![Configs, Options, Location, Post(props.id), OpenPostID]
+	}
+
+	fn rendered(&mut self, c: &mut comp_util::Ctx<Self>, first_render: bool) {
+		if let Some(mut c) = Ctx::new_mut(c, self) {
+			self.inner.rendered(c.as_mut(), first_render);
+		}
 	}
 
 	fn update(

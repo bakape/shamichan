@@ -160,6 +160,10 @@ pub trait Inner: Default {
 
 	/// Same as for yew::Component
 	fn view(&self, c: &Ctx<Self>) -> yew::Html;
+
+	/// Called each time after the component is rendered
+	#[allow(unused_variables)]
+	fn rendered(&mut self, c: &mut Ctx<Self>, first_render: bool) {}
 }
 
 /// Component that is hooked into global state updates
@@ -206,5 +210,11 @@ where
 
 	fn view(&self) -> yew::Html {
 		self.inner.borrow().view(&self.ctx)
+	}
+
+	fn rendered(&mut self, first_render: bool) {
+		self.inner
+			.borrow_mut()
+			.rendered(&mut self.ctx, first_render);
 	}
 }

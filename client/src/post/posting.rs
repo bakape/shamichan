@@ -13,7 +13,6 @@ use yew::{
 /// A post actively being edited by the user
 pub type PostForm = PostCommon<Inner>;
 
-#[derive(Default)]
 pub struct Inner {
 	/// Must not be None after init() has been called
 	#[allow(unused)]
@@ -21,8 +20,23 @@ pub struct Inner {
 
 	render_task: Option<RenderTask>,
 
+	/// Rendered freshly after unhiding
+	fresh_render: bool,
+
 	text_area: NodeRef,
 	state: State,
+}
+
+impl Default for Inner {
+	fn default() -> Self {
+		Self {
+			agent: None,
+			render_task: None,
+			fresh_render: true,
+			text_area: Default::default(),
+			state: Default::default(),
+		}
+	}
 }
 
 #[derive(Clone)]
@@ -242,6 +256,17 @@ impl PostComponent for Inner {
 		&["post-form"]
 	}
 
+	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, _: bool) {
+		// Prevent huge resize right after first input
+		if self.should_render(c) && self.fresh_render {
+			self.fresh_render = false;
+			util::log_error_res(self.resize_textarea());
+		} else {
+			// Next render will be fresh
+			self.fresh_render = true;
+		}
+	}
+
 	fn render_body<'c>(&self, c: &Ctx<'c, Self>) -> Html {
 		html! {
 			<textarea
@@ -355,8 +380,7 @@ impl Inner {
 				s.set_property($k, &format!("{}px", $v))?;
 			};
 			($k:expr, $v:expr, $min:expr) => {
-				let v = $v;
-				set!($k, if v > $min { v } else { $min });
+				set!($k, std::cmp::max($v, $min));
 			};
 		}
 
@@ -366,7 +390,7 @@ impl Inner {
 
 		// Make the line slightly larger, so there is enough space for the next
 		// character. This prevents wrapping on type.
-		set!("width", ta.scroll_width(), 260);
+		set!("width", ta.scroll_width() + 5, 260);
 		ta.set_wrap("soft");
 		set!("height", ta.scroll_height(), 16);
 
