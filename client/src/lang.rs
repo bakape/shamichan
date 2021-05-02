@@ -42,7 +42,7 @@ enum Token {
 /// Parsed format string used for localization
 struct FormatStr(Vec<Token>);
 
-struct TokenVisitor();
+struct TokenVisitor;
 
 impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 	type Value = FormatStr;
@@ -90,7 +90,7 @@ impl<'de> Deserialize<'de> for FormatStr {
 	where
 		D: serde::de::Deserializer<'de>,
 	{
-		d.deserialize_str(TokenVisitor())
+		d.deserialize_str(TokenVisitor)
 	}
 }
 

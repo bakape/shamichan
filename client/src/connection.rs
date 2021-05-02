@@ -583,15 +583,10 @@ impl Connection {
 						focus: None,
 					});
 				}
-				InsertThread => {
-					send(Request::RegisterThread(decode!()));
-				}
-				InsertPost => {
-					send(Request::RegisterPost(decode!()));
-				}
-				PatchPostBody => {
-					send(Request::PatchPostBody(decode!()));
-				}
+				InsertThread => send(Request::RegisterThread(decode!())),
+				InsertPost => send(Request::RegisterPost(decode!())),
+				PatchPostBody => send(Request::PatchPostBody(decode!())),
+				ClosePost => send(Request::ClosePost(decode!())),
 				PartitionedPageStart => {
 					skip_payload!();
 					let mut posts = Vec::<common::payloads::Post>::new();
@@ -615,9 +610,7 @@ impl Connection {
 						}
 					}
 				}
-				ThreadMeta => {
-					send(Request::RegisterThreadMeta(decode!()));
-				}
+				ThreadMeta => send(Request::RegisterThreadMeta(decode!())),
 				PartitionedThreadIndexStart => {
 					skip_payload!();
 					let mut threads =
@@ -642,9 +635,7 @@ impl Connection {
 						}
 					}
 				}
-				UsedTags => {
-					send(Request::SetUsedTags(decode!()));
-				}
+				UsedTags => send(Request::SetUsedTags(decode!())),
 				CurrentTime => {
 					let server_time: u32 = decode!();
 					let now = (js_sys::Date::now() / 1000_f64) as i64;
@@ -652,9 +643,7 @@ impl Connection {
 						(server_time as i64 - now) as i32,
 					));
 				}
-				Configs => {
-					send(Request::SetConfigs(decode!()));
-				}
+				Configs => send(Request::SetConfigs(decode!())),
 				_ => error!("unhandled message type: {:?}", t),
 			}
 		}

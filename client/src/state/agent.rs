@@ -77,6 +77,9 @@ pub enum Request {
 	/// Apply a patch to an existing post body
 	PatchPostBody(common::payloads::post_body::PostBodyPatch),
 
+	/// Close an open body
+	ClosePost(common::payloads::post_body::PostBody),
+
 	/// Set tags used on threads
 	SetUsedTags(Vec<String>),
 
@@ -366,6 +369,18 @@ impl yew::agent::Agent for Agent {
 						self.trigger(&Change::Post(msg.id));
 						Ok(())
 					});
+				}
+			}
+			ClosePost(msg) => {
+				let mut s = state::get_mut();
+				if let Some(p) = s.posts.get_mut(&msg.id) {
+					p.body = msg.body;
+					p.open = false;
+					self.trigger(&Change::Post(msg.id));
+				}
+				if s.open_post_id == Some(msg.id) {
+					s.open_post_id = None;
+					self.trigger(&Change::OpenPostID);
 				}
 			}
 			RegisterPage(posts) => self.register_page(posts),

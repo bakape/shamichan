@@ -18,13 +18,10 @@
 					`/assets/css/${localStorage.theme}.css`;
 			}
 
-			window.language_pack = new Promise((resolve, reject) => {
-				let lang = localStorage.lang || "{{ config.default_lang }}";
+			let lang = localStorage.lang || "{{ config.default_lang }}";
+			window.language_pack =
 				fetch(`/assets/lang/${lang}.json`)
-					.then(r => r.text())
-					.then(resolve)
-					.catch(reject)
-			});
+				.then(r => r.text());
 		</script>
 		<script id="config-data" type="application/json">{{ config|json }}</script>
 		<script src="/assets/client/index.js"></script>

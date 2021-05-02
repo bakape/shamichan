@@ -1,4 +1,4 @@
-use super::common::{Ctx, PostCommon, PostComponent};
+use super::common::{Ctx, Message::Extra, PostCommon, PostComponent};
 use crate::{connection, state, util};
 use common::MessageType;
 use std::collections::HashMap;
@@ -42,6 +42,9 @@ pub enum FormMessage {
 	/// Textarea contents changed
 	TextInput(String),
 
+	/// Close post
+	Close,
+
 	/// Focus the textarea at position
 	Focus {
 		/// Position of cursor
@@ -56,7 +59,6 @@ impl PostComponent for Inner {
 	type MessageExtra = FormMessage;
 
 	fn init(&mut self, link: &ComponentLink<PostCommon<Self>>) {
-		use super::common::Message::Extra;
 		use Response::*;
 
 		let mut a = Agent::bridge(link.callback(|msg| match msg {
@@ -126,6 +128,10 @@ impl PostComponent for Inner {
 				TextInput(s) => {
 					self.resize_textarea()?;
 					self.commit(s);
+					false
+				}
+				Close => {
+					self.send(Request::Close);
 					false
 				}
 				QuotePost(req) => {
@@ -242,16 +248,48 @@ impl PostComponent for Inner {
 				class="post-form-input"
 				ref=self.text_area.clone()
 				oninput=c.link().callback(|yew::html::InputData{value}| {
-					super::common::Message::Extra(FormMessage::TextInput(value))
+					Extra(FormMessage::TextInput(value))
 				})
 			>
 			</textarea>
 		}
 	}
 
-	fn render_after<'c>(&self, _: &Ctx<'c, Self>) -> Html {
+	fn render_after<'c>(&self, c: &Ctx<'c, Self>) -> Html {
+		use State::*;
+
+		let mut inner = vec![];
+		match self.state {
+			Draft { .. } | NeedCaptcha { .. } => {
+				inner.push(html! {
+					<input
+						type="button"
+						value=localize!("cancel")
+						onclick=c.link().callback(|_| {
+							Extra(FormMessage::Close)
+						})
+					/>
+				});
+			}
+			Allocated { .. } | Allocating { .. } => {
+				inner.push(html! {
+					<input
+						type="button"
+						value=localize!("done")
+						disabled=matches!(self.state,  Allocating { .. })
+						onclick=c.link().callback(|_| {
+							Extra(FormMessage::Close)
+						})
+					/>
+				});
+			}
+			_ => (),
+		};
+
+		// TODO: upload controls
+
 		html! {
-			<span>{"TODO: controls"}</span>
+			<div id="post-controls">{inner}</div>
 		}
 	}
 }
@@ -297,9 +335,14 @@ impl Inner {
 		.into();
 	}
 
+	/// Send a request to the agent
+	fn send(&mut self, req: Request) {
+		self.agent.as_mut().unwrap().send(req);
+	}
+
 	/// Commit body changes to server
 	fn commit(&mut self, body: String) {
-		self.agent.as_mut().unwrap().send(Request::CommitText(body));
+		self.send(Request::CommitText(body));
 	}
 
 	/// Resize textarea to content width and adjust height
@@ -387,6 +430,9 @@ pub enum Request {
 		post: u64,
 		target_post: web_sys::Node,
 	},
+
+	/// Close the post form, either clearing a draft or finishing a post
+	Close,
 
 	/// Register as a post form view
 	SubViewUpdates,
@@ -601,6 +647,20 @@ impl yew::agent::Agent for Agent {
 					self.set_state(State::Draft { thread });
 				}
 			}
+			Close => {
+				use State::*;
+
+				match self.state {
+					Draft { .. } | NeedCaptcha { .. } => {
+						self.reset();
+					}
+					Allocated { .. } => {
+						connection::send(MessageType::ClosePost, &());
+						self.reset();
+					}
+					_ => (),
+				};
+			}
 		}
 	}
 }
@@ -623,6 +683,12 @@ impl Agent {
 	#[inline]
 	fn send_current_state(&self, subscriber: HandlerId) {
 		self.link.respond(subscriber, Response::State(self.state));
+	}
+
+	// Reset agent to ready state
+	fn reset(&mut self) {
+		self.post_body.clear();
+		self.set_state(State::Ready);
 	}
 
 	/// Send a message only to view subscribers
