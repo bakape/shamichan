@@ -151,16 +151,24 @@ fn highlight_code(dst: &mut Node, mut frag: &str, _: u8) {
 	}
 	let mut html = gen.finalize();
 
-	// If original fragment did not contain any newlines, strip the introduced
-	// newline from the formatted html.
-	if !frag.bytes().any(|b| b == b'\n') {
-		html = std::mem::take(&mut html)
-			.chars()
-			.filter(|ch| ch != &'\n')
-			.collect();
+	// If frag does not end with newline, strip it from the output
+	const TRAILING: &str = "\n</span>";
+	if frag.bytes().last() != Some(b'\n') && html.ends_with(TRAILING) {
+		html.truncate(html.len() - TRAILING.len());
+		html += "</span>";
 	}
 
-	*dst += Node::Code(html);
+	*dst += Node::Code(html.chars().fold(
+		String::with_capacity(html.len() * 2),
+		|mut dst, ch| {
+			if ch == '\n' {
+				dst += "<br>";
+			} else {
+				dst.push(ch);
+			}
+			dst
+		},
+	));
 }
 
 /// Top level parsing function. Parses line by line and detects quotes.
