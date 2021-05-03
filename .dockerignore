@@ -1,6 +1,7 @@
 .git
 .github
 
+# .gitignore
 .directory
 *.pid
 *.log
@@ -38,15 +39,16 @@ debug.test
 db_*.db
 target
 vendor
+.env
+lcov.info
+target_tarpaulin
 
-websockets/libwebsockets*.a
-websockets/lib_hash.go
-
+# client/.gitignore
+client/node_modules
 client/dist
 client/pkg
 client/wasm-pack.log
 client/target
 
-.env
-lcov.info
-target_tarpaulin
+# common/.gitignore
+common/target
