@@ -333,7 +333,20 @@ function parseOpenLinks(frag: string): string {
             }
         }
         if (!matched) {
-            html += escape(word)
+            const chars = [...word];
+            for (let i = 0; i < chars.length; i++) {
+                const ch = chars[i];
+                if (
+                    ch === "回"
+                    && i + 1 < chars.length
+                    && chars[i + 1] === "レ"
+                ) {
+                    html += `<span class="mawaru">回レ</span>`;
+                    i++;
+                } else {
+                    html += escape(ch);
+                }
+            }
         }
         if (trailPunct) {
             html += trailPunct
@@ -362,10 +375,10 @@ function parseFragment(frag: string, data: PostData): string {
             }
             continue
         }
-        if ((word.indexOf("(") >= 0) && (word.indexOf("http") >= 0)  ){
+        if ((word.indexOf("(") >= 0) && (word.indexOf("http") >= 0)) {
             let countOpen = (word.match(/[(]/g)).length
             let countClosed = (word.match(/[)]/g) || []).length
-            if ((countOpen == countClosed + 1) && (trailPunct == ")")){
+            if ((countOpen == countClosed + 1) && (trailPunct == ")")) {
                 word += ")"
                 trailPunct = " "
             }

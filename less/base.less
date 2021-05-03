@@ -331,6 +331,17 @@ td {
 	}
 }
 
+.mawaru {
+	animation: spin 0.3s linear infinite;
+	display  : inline-block;
+}
+
+@keyframes spin {
+	100% {
+		transform: rotateY(360deg);
+	}
+}
+
 iframe[src^="https://www.youtube"] {
 	width : 480px;
 	height: 270px;
