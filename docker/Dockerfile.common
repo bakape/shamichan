@@ -1,5 +1,3 @@
-# Built using `make dockerfiles`. DO NOT EDIT!
-
 # TODO: separate server image from imager image
 # TODO: coverage report in the CI
 FROM ubuntu:focal
@@ -93,30 +91,3 @@ RUN rm -r \
 
 # Copy all sources
 COPY . .
-
-
-
-RUN NO_DEPS=1 nice -n 19 make
-
-################################################################################
-
-FROM ubuntu::focal
-
-RUN mkdir -p /meguca/images /meguca/www/videos
-WORKDIR /meguca
-CMD ["-a", ":8000"]
-ENTRYPOINT ["./meguca"]
-
-# Install OS dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update
-RUN apt-get install -y \
-	libopencv-dev \
-	libgeoip-dev \
-	libssl-dev && \
-	apt-get clean
-RUN apt-get dist-upgrade -y && apt-get clean
-
-# Copy compiled files from dev image
-COPY --from=0 /meguca/meguca /meguca/meguca
-COPY --from=0 /meguca/www /meguca/ww

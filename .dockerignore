@@ -46,3 +46,7 @@ client/dist
 client/pkg
 client/wasm-pack.log
 client/target
+
+.env
+lcov.info
+target_tarpaulin

@@ -42,6 +42,22 @@ server_debug:
 	cp target/debug/meguca meguca
 	RUST_BACKTRACE=1 ./meguca
 
+dockerfiles:
+	echo -e '# Built using `make dockerfiles`. DO NOT EDIT!\n' \
+		| tee Dockerfile \
+		> Dockerfile.dev
+	cat docker/Dockerfile.common \
+		| tee -a Dockerfile \
+		>> Dockerfile.dev
+
+	cat docker/Dockerfile.dev >> Dockerfile.dev
+	sed -i 's/# Replaced at compile time//' Dockerfile.dev
+	sed -i 's/FROM common//' Dockerfile.dev
+
+	cat docker/Dockerfile.prod >> Dockerfile
+	sed -i 's/# Replaced at compile time//' Dockerfile
+	sed -i 's/FROM common//' Dockerfile
+
 clean:
 	rm -rf meguca www/client www/js target_tarpaulin
 	cargo clean
