@@ -116,6 +116,7 @@ pub struct PostCreationNotification {
 	pub thread: u64,
 	pub time: u32,
 	pub page: u32,
+	pub opts: ReplyCreationOpts,
 }
 
 /// Post from a thread

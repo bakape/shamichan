@@ -98,6 +98,7 @@ impl comp_util::Inner for Inner {
 						}
 					})
 				}
+				<ReplyButton thread=c.props().id />
 			</section>
 		}
 	}
@@ -166,10 +167,8 @@ impl yew::Component for ReplyButton {
 				true
 			}
 			Clicked => {
-				if self.state == posting::State::Ready {
-					self.posting
-						.send(posting::Request::OpenDraft(self.props.thread))
-				}
+				self.posting
+					.send(posting::Request::OpenDraft(self.props.thread));
 				false
 			}
 			NOP => false,

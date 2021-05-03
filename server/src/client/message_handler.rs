@@ -489,6 +489,10 @@ impl MessageHandler {
 					.await??
 			}
 		};
+
+		// At least try to make it arrive before the post insert
+		self.send(MessageType::InsertPostAck, &id)?;
+
 		feed.do_send(feeds::InsertPost {
 			id,
 			thread: req.thread,
@@ -503,7 +507,6 @@ impl MessageHandler {
 			},
 		});
 
-		self.send(MessageType::InsertPostAck, &id)?;
 		self.open_post = Some(OpenPost {
 			loc: feeds::PostLocation { id, page },
 			thread: req.thread,

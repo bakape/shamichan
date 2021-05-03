@@ -527,6 +527,28 @@ impl Connection {
 				state::Agent::dispatcher().send(req);
 			}
 
+			/// Handle post insertion acknowledgement by the server
+			fn ack_post_insertion(
+				dec: &mut Decoder,
+				t: MessageType,
+			) -> util::Result<u64> {
+				let id: u64 = decode(t, dec)?;
+				send(Request::SetMine(id));
+
+				// Insert a placeholder post, so the postform has something
+				// to render
+				send(Request::RegisterPost(common::payloads::Post::new(
+					id,
+					id,
+					0,
+					util::now(),
+					Default::default(),
+				)));
+				send(Request::SetOpenPostID(id.into()));
+
+				Ok(id)
+			}
+
 			match t {
 				Handshake => {
 					let req: HandshakeRes = decode!();
@@ -564,27 +586,23 @@ impl Connection {
 					};
 				}
 				InsertThreadAck => {
-					let id: u64 = decode!();
-					send(Request::SetMine(id));
-
-					// Insert a placeholder post, so the postform has something
-					// to render
-					send(Request::RegisterPost(common::payloads::Post::new(
-						id,
-						id,
-						0,
-						util::now(),
-						Default::default(),
-					)));
-					send(Request::SetOpenPostID(id.into()));
-
+					let id = ack_post_insertion(&mut dec, t)?;
 					state::navigate_to(state::Location {
 						feed: state::FeedID::Thread { id, page: 0 },
 						focus: None,
 					});
 				}
+				InsertPostAck => {
+					ack_post_insertion(&mut dec, t)?;
+				}
 				InsertThread => send(Request::RegisterThread(decode!())),
-				InsertPost => send(Request::RegisterPost(decode!())),
+				InsertPost => {
+					let msg: common::payloads::PostCreationNotification =
+						decode!();
+					send(Request::RegisterPost(common::payloads::Post::new(
+						msg.id, msg.thread, msg.page, msg.time, msg.opts,
+					)));
+				}
 				PatchPostBody => send(Request::PatchPostBody(decode!())),
 				ClosePost => send(Request::ClosePost(decode!())),
 				PartitionedPageStart => {

@@ -591,28 +591,38 @@ where
 					}
 				}
 				<crate::time::view::View time=p.created_on />
-				<nav class="spaced">
-					<a
-						onclick=c.link().callback(move |_| {
-							state::navigate_to(Location{
-								feed: FeedID::Thread{
-									id: thread_id,
-									page: page_id as i32,
-								},
-								focus: Some(Focus::Post(post_id)),
-							});
-							Message::NOP
-						})
-					>
-						{"#"}
-					</a>
-					<a
-						class="quote"
-						onclick=c.link().callback(|_| Message::QuoteSelf)
-					>
-						{p.id}
-					</a>
-				</nav>
+				{
+					if p.id == 0 {
+						html! {}
+					} else {
+						html! {
+							<nav class="spaced">
+								<a
+									onclick=c.link().callback(move |_| {
+										state::navigate_to(Location{
+											feed: FeedID::Thread{
+												id: thread_id,
+												page: page_id as i32,
+											},
+											focus: Some(Focus::Post(post_id)),
+										});
+										Message::NOP
+									})
+								>
+									{"#"}
+								</a>
+								<a
+									class="quote"
+									onclick=c.link().callback(|_|
+										Message::QuoteSelf
+									)
+								>
+									{p.id}
+								</a>
+							</nav>
+						}
+					}
+				}
 				{
 					if thread.is_some()
 					&& !PC::is_preview()

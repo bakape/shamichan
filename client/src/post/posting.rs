@@ -23,6 +23,9 @@ pub struct Inner {
 	/// Rendered freshly after unhiding
 	fresh_render: bool,
 
+	/// Persists body value between textarea replacements
+	body: String,
+
 	text_area: NodeRef,
 	state: State,
 }
@@ -34,6 +37,7 @@ impl Default for Inner {
 			render_task: None,
 			fresh_render: true,
 			text_area: Default::default(),
+			body: Default::default(),
 			state: Default::default(),
 		}
 	}
@@ -116,20 +120,32 @@ impl PostComponent for Inner {
 						return Ok(false);
 					}
 
+					macro_rules! set_id {
+						($id:expr) => {
+							let mut old = c.props().clone();
+							old.id = $id;
+							c.set_props(old);
+						};
+					}
+
 					match &s {
 						State::Allocated { post } if post != &c.props().id => {
-							let mut old = c.props().clone();
-							old.id = *post;
-							c.set_props(old);
+							set_id!(*post);
+						}
+						State::Ready => {
+							self.body.clear();
+							set_id!(0);
 						}
 						_ => (),
 					};
 
-					// Focus input right after opening form
-					if self.state == State::Ready {
+					// Focus input right after opening form or allocating a post
+					if self.state == State::Ready
+						|| matches! {s, State::Allocated{..}}
+					{
 						c.link().send_message(super::common::Message::Extra(
 							Focus {
-								pos: 0,
+								pos: self.body.len() as u32,
 								first: true,
 							},
 						));
@@ -140,6 +156,7 @@ impl PostComponent for Inner {
 					true
 				}
 				TextInput(s) => {
+					self.body = s.clone();
 					self.resize_textarea()?;
 					self.commit(s);
 					false
@@ -256,7 +273,11 @@ impl PostComponent for Inner {
 		&["post-form"]
 	}
 
-	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, _: bool) {
+	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, first: bool) {
+		if first {
+			log::debug!("replaced postform component");
+		}
+
 		// Prevent huge resize right after first input
 		if self.should_render(c) && self.fresh_render {
 			self.fresh_render = false;
@@ -272,6 +293,7 @@ impl PostComponent for Inner {
 			<textarea
 				class="post-form-input"
 				ref=self.text_area.clone()
+				value=self.body
 				oninput=c.link().callback(|yew::html::InputData{value}| {
 					Extra(FormMessage::TextInput(value))
 				})
@@ -367,6 +389,7 @@ impl Inner {
 
 	/// Commit body changes to server
 	fn commit(&mut self, body: String) {
+		log::debug!("committing text to agent: {}", body);
 		self.send(Request::CommitText(body));
 	}
 
@@ -458,7 +481,7 @@ pub enum Request {
 	/// Close the post form, either clearing a draft or finishing a post
 	Close,
 
-	/// Register as a post form view
+	/// Register as a post form view to receive updates
 	SubViewUpdates,
 
 	/// Commit text body changes
@@ -727,15 +750,15 @@ impl Agent {
 	}
 
 	/// Try allocating a post, if it is eligible and not yet allocated.
-	/// Returns, if a post is allocated or allocating.
-	fn try_alloc(&mut self) -> bool {
+	/// Returns, the agent state.
+	fn try_alloc(&mut self) -> &State {
 		use State::*;
 
 		match self.state {
 			Draft { thread } => {
 				let s = self.app_state.get();
 				if !s.location.is_thread() {
-					return false;
+					return &self.state;
 				}
 
 				connection::send(
@@ -749,16 +772,21 @@ impl Agent {
 					},
 				);
 				self.set_state(Allocating { thread });
-				true
+				&self.state
 			}
-			Allocating { .. } | Allocated { .. } => true,
-			_ => false,
+			_ => &self.state,
 		}
 	}
 
+	// TODO: make this actually work
 	fn quote_post(&mut self, post: u64, target_post: web_sys::Node) {
 		util::with_logging(|| {
-			if !self.try_alloc() {
+			if matches!(
+				self.try_alloc(),
+				State::Allocated { .. }
+					| State::Allocating { .. }
+					| State::NeedCaptcha { .. }
+			) {
 				return Ok(());
 			}
 
@@ -811,7 +839,7 @@ impl Agent {
 			return;
 		}
 
-		if !self.try_alloc() {
+		if !matches!(self.try_alloc(), State::Allocated { .. }) {
 			// Buffer post body till alloc
 			self.post_body = new;
 			return;

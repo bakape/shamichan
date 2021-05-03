@@ -248,9 +248,9 @@ impl AsyncHandler<InsertPost> for ThreadFeed {
 			page: req.page,
 			thread: self.thread_meta.id,
 			time: now,
+			opts: req.opts.clone(),
 		};
-		let post =
-			Post::new(req.id, req.thread, req.page, now, req.opts.clone());
+		let post = Post::new(req.id, req.thread, req.page, now, req.opts);
 
 		macro_rules! insert_post {
 			($page:expr) => {
