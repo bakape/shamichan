@@ -80,8 +80,10 @@ RUN cd client && nice -n 19 ./node_modules/.bin/webpack -d
 # Remove dummy sources and artefacts
 RUN rm -r \
 	client/src server/src common/src \
-	target/{release,debug}/deps/libcommon* \
-	target/wasm32-unknown-unknown/{release,debug}/deps/libcommon* \
+	target/release/deps/libcommon* \
+	target/debug/deps/libcommon* \
+	target/wasm32-unknown-unknown/release/deps/libcommon* \
+	target/wasm32-unknown-unknown/debug/deps/libcommon* \
 	client/dist client/pkg
 
 # Copy all sources
