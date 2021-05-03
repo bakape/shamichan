@@ -70,13 +70,18 @@ COPY server/Cargo.toml server
 COPY docker/dummy.rs server/src/lib.rs
 COPY common/Cargo.toml common
 COPY docker/dummy.rs common/src/lib.rs
-RUN nice -n 19 cargo build --release --workspace --exclude client
+
+# Build deps for both prod and dev builds
+RUN nice -n 19 cargo build --workspace --exclude client --release
+RUN nice -n 19 cargo build --workspace --exclude client
 RUN cd client && nice -n 19 ./node_modules/.bin/webpack
+RUN cd client && nice -n 19 ./node_modules/.bin/webpack -d
+
+# Remove dummy sources and artefacts
 RUN rm -r \
 	client/src server/src common/src \
-	target/release/deps/libwebsockets* \
-	target/release/deps/libcommon* \
-	target/wasm32-unknown-unknown/release/deps/libcommon* \
+	target/{release,debug}/deps/libcommon* \
+	target/wasm32-unknown-unknown/{release,debug}/deps/libcommon* \
 	client/dist client/pkg
 
 # Copy all sources
