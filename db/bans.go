@@ -143,6 +143,43 @@ func Unban(board string, id uint64, by string) error {
 	})
 }
 
+// UnbanSystem lifts a system ban from a specific post on a /a/
+func UnbanSystem(id uint64) error {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		_, err = sq.Delete("bans").
+			Where("board = ? and forPost = ? and by = ?", "a", id, "system").
+			RunWith(tx).
+			Exec()
+		if err != nil {
+			return
+		}
+		exists := false
+		err = sq.Select("true").
+			From("posts").
+			Where("id = ? and board = ?", id, "a").
+			QueryRow().
+			Scan(&exists)
+		if err != nil && err != sql.ErrNoRows {
+			return
+		}
+		if exists {
+			err = logModeration(tx, auth.ModLogEntry{
+				ModerationEntry: common.ModerationEntry{
+					Type: common.UnbanPost,
+					By:   "system",
+				},
+				Board: "a",
+				ID:    id,
+			})
+			if err != nil {
+				return
+			}
+		}
+		_, err = tx.Exec("notify bans_updated")
+		return
+	})
+}
+
 func loadBans() error {
 	if err := RefreshBanCache(); err != nil {
 		return err

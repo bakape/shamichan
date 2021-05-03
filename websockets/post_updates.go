@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
+	"time"
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/common"
@@ -22,6 +24,10 @@ var (
 	errSpliceNOOP    = errors.New("splice NOOP")
 	errTextOnly      = errors.New("text only board")
 	errHasImage      = errors.New("post already has image")
+
+	// #ban reasons. Always preceeded by the post number that caused the #ban.
+	// Change to whatever you like
+	reasons = [...]string{"thinks you're dumb", "hates you", "says please stop posting", "wants your attention"}
 )
 
 // Error created, when client supplies invalid splice coordinates to server
@@ -182,6 +188,55 @@ func (c *Client) closePost() (err error) {
 			return
 		}
 	}
+
+	if c.post.board == "a" {
+		// Prevent action duplication
+		isCunt := false  // #ban
+		isNice := false  // #unban
+		isBully := false // #bin
+
+		var ids []uint64
+		for _, l := range links {
+			if l.Board == "a" {
+				ids = append(ids, l.ID)
+			}
+		}
+		for _, c := range com {
+			switch c.Type {
+			case common.Ban:
+				isCunt = true
+			case common.Unban:
+				isNice = true
+			case common.Bin:
+				isBully = true
+			}
+		}
+		if isCunt {
+			for _, id := range ids {
+				err = db.Ban(
+					"a", getReason(c.post.id), "system", time.Minute, id,
+				)
+				if err != nil {
+					return
+				}
+			}
+		}
+		if isNice {
+			for _, id := range ids {
+				err = db.UnbanSystem(id)
+				if err != nil {
+					return
+				}
+			}
+		}
+		if isBully {
+			err = db.DeletePosts(ids, "system")
+			if err != nil {
+				return
+			}
+		}
+	}
+
 	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
 	if err != nil {
 		return
@@ -361,4 +416,10 @@ func (c *Client) spoilerImage() (err error) {
 	c.feed.SpoilerImage(c.post.id, msg)
 
 	return
+}
+
+// Generate a ban reason
+func getReason(id uint64) string {
+	i := rand.Intn(len(reasons))
+	return fmt.Sprintf(">>%v %v", id, reasons[i])
 }
