@@ -81,6 +81,7 @@ jobs:
           DOCKER_BUILDKIT=1 docker build
           --cache-from bakape/meguca-dev
           -t meguca
+          -f Dockerfile.dev
           .
       - name: Run Rust tests
         run: >
