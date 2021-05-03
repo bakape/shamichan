@@ -333,20 +333,7 @@ function parseOpenLinks(frag: string): string {
             }
         }
         if (!matched) {
-            const chars = [...word];
-            for (let i = 0; i < chars.length; i++) {
-                const ch = chars[i];
-                if (
-                    ch === "回"
-                    && i + 1 < chars.length
-                    && chars[i + 1] === "レ"
-                ) {
-                    html += `<span class="mawaru">回レ</span>`;
-                    i++;
-                } else {
-                    html += escape(ch);
-                }
-            }
+            html += escape(word);
         }
         if (trailPunct) {
             html += trailPunct
@@ -440,7 +427,20 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         if (!matched) {
-            html += escape(word)
+            const chars = [...word];
+            for (let i = 0; i < chars.length; i++) {
+                const ch = chars[i];
+                if (
+                    ch === "回"
+                    && i + 1 < chars.length
+                    && chars[i + 1] === "レ"
+                ) {
+                    html += `<span class="mawaru">回レ</span>`;
+                    i++;
+                } else {
+                    html += escape(ch);
+                }
+            }
         }
         if (trailPunct) {
             html += trailPunct
