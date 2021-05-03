@@ -75,7 +75,7 @@ RUN mkdir -p \
 	server/src \
 	common/src
 COPY Cargo.toml Cargo.lock ./
-COPY client/Cargo.toml client/.cargo client/webpack.config.js client/
+COPY client/Cargo.toml client/webpack.config.js client/
 COPY client/js client/js
 COPY docker/dummy.rs client/src/lib.rs
 COPY server/Cargo.toml server
