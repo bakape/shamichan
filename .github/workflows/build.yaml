@@ -42,7 +42,6 @@ jobs:
           context: .
           pull: true
           push: true
-          repository: bakape/meguca-dev
           cache-from: type=registry,ref=bakape/meguca-dev:latest
           cache-to: type=inline
           tags: ${{ steps.prep.outputs.tags }}
@@ -146,7 +145,6 @@ jobs:
           context: .
           pull: true
           push: ${{ github.event_name != 'pull_request' }}
-          repository: bakape/meguca
           cache-from: type=registry,ref=bakape/meguca-dev:latest
           tags: ${{ steps.prep.outputs.tags }}
           file: Dockerfile
