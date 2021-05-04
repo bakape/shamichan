@@ -1,8 +1,6 @@
 name: Build
 on: [push, pull_request]
 
-# TODO: restore server image building
-
 jobs:
   build-dev-image:
     name: Build and push dev image
@@ -10,25 +8,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Prepare
-        id: prep
-        run: |
-          DOCKER_IMAGE=bakape/meguca-dev
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          elif [[ $GITHUB_REF == refs/heads/* ]]; then
-            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-          elif [[ $GITHUB_REF == refs/pull/* ]]; then
-            VERSION=pr-${{ github.event.number }}
-          fi
-          TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
-          fi
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
@@ -39,17 +18,16 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v2
         with:
-          context: .
+          images: bakape/meguca-dev
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
           pull: true
           push: true
           cache-from: type=registry,ref=bakape/meguca-dev:latest
           cache-to: type=inline
-          tags: ${{ steps.prep.outputs.tags }}
           file: Dockerfile.dev
-          labels: |
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.revision=${{ github.sha }}
   test:
     name: Run tests
     runs-on: ubuntu-latest
@@ -113,25 +91,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Prepare
-        id: prep
-        run: |
-          DOCKER_IMAGE=bakape/meguca
-          VERSION=edge
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          elif [[ $GITHUB_REF == refs/heads/* ]]; then
-            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-          elif [[ $GITHUB_REF == refs/pull/* ]]; then
-            VERSION=pr-${{ github.event.number }}
-          fi
-          TAGS="${DOCKER_IMAGE}:${VERSION}"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
-          fi
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
@@ -142,13 +101,12 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v2
         with:
-          context: .
+          images: bakape/meguca
+          tags: |
+            master
+            latest
+            type=sha
           pull: true
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           cache-from: type=registry,ref=bakape/meguca-dev:latest
-          tags: ${{ steps.prep.outputs.tags }}
           file: Dockerfile
-          labels: |
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
-            org.opencontainers.image.revision=${{ github.sha }}
