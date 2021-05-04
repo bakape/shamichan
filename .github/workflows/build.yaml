@@ -30,7 +30,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           pull: true
           push: true
-          cache-from: type=registry,ref=bakape/meguca-dev:latest
+          cache-from: type=registry,ref=bakape/meguca-dev
           cache-to: type=inline
           file: Dockerfile.dev
   test:
@@ -118,5 +118,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           pull: true
           push: true
-          cache-from: type=registry,ref=bakape/meguca-dev:latest
+          cache-from: |
+            type=registry,ref=bakape/meguca-dev
+            type=registry,ref=bakape/meguca
           file: Dockerfile
