@@ -5,7 +5,7 @@ RUN NO_DEPS=1 nice -n 19 make
 
 ################################################################################
 
-FROM ubuntu::focal
+FROM ubuntu:focal
 
 RUN mkdir -p /meguca/images /meguca/www/videos
 WORKDIR /meguca
