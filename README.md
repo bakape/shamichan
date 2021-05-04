@@ -23,7 +23,7 @@ container.
 Simply run
 
 ```
-docker run --network host --mount $image_dir:/meguca/images bakape/meguca -d $DB
+docker run --restart unless-stopped -d --network host --mount type=bind,source=$image_dir,destination=/meguca/images bakape/meguca -d $DB
 ```
 
 where:
