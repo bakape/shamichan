@@ -24,4 +24,4 @@ RUN apt-get dist-upgrade -y && apt-get clean
 
 # Copy compiled files from dev image
 COPY --from=0 /meguca/meguca /meguca/meguca
-COPY --from=0 /meguca/www /meguca/ww
+COPY --from=0 /meguca/www /meguca/www
