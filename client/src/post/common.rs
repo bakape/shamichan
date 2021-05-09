@@ -74,6 +74,12 @@ pub trait PostComponent: Default {
 	#[allow(unused_variables)]
 	#[inline]
 	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, first_render: bool) {}
+
+	/// Should borders not be rendered, if this is an OP post?
+	#[inline]
+	fn should_ops_not_render_borders() -> bool {
+		true
+	}
 }
 
 /// Reference to parent context that might be mutable.
@@ -487,7 +493,7 @@ where
 				self.translation.x, self.translation.y
 			);
 			cls.push("translated");
-		} else if p.id == p.thread {
+		} else if PC::should_ops_not_render_borders() && p.id == p.thread {
 			// Moved OPs need to not blend into the background
 			cls.push("no-border");
 		}

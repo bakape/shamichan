@@ -106,6 +106,11 @@ impl PostComponent for Inner {
 		true
 	}
 
+	#[inline]
+	fn should_ops_not_render_borders() -> bool {
+		false
+	}
+
 	fn update_extra<'c>(
 		&mut self,
 		c: &mut Ctx<'c, Self>,
