@@ -258,6 +258,6 @@ where
 	};
 
 	html! {
-		<strong>{inner}</strong>
+		<strong class="pending">{inner}</strong>
 	}
 }

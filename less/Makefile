@@ -1,6 +1,6 @@
 all: $(patsubst %.less, ../www/css/%.css, $(wildcard *.less))
 
-../www/css/%.css: %.less
+../www/css/%.css: %.less mixins/*
 	../node_modules/.bin/lessc $< \
 		--source-map $@ \
 		--clean-css \

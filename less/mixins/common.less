@@ -12,6 +12,10 @@ blockquote strong {
     color: mix(@body, @link);
 }
 
+blockquote strong.pending {
+    color: darken(mix(@body, @link), 20%);
+}
+
 .super_roll {
     animation: pink_blinker 0.4s linear 25;
     color    : pink;
