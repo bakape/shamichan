@@ -1,51 +1,22 @@
-use crate::time::scheduler::{RelativeTime, Response, Scheduler};
-use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
-
-#[derive(Properties, Clone, PartialEq, Eq)]
-pub struct Props {
-	pub start: u32,
-	pub end: u32,
-}
+use crate::time::view::{Props, Time};
+use yew::{html, Component, ComponentLink, Html};
 
 pub struct Countdown {
 	props: Props,
-	current: RelativeTime,
-
-	#[allow(unused)]
-	scheduler: Box<dyn Bridge<Scheduler>>,
-	#[allow(unused)]
-	link: ComponentLink<Self>,
 }
 
 impl Component for Countdown {
 	comp_prop_change! {Props}
-	type Message = RelativeTime;
+	comp_no_update! {}
 
-	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = Self {
-			scheduler: Scheduler::bridge(link.callback(|u: Response| u.diff)),
-			props,
-			link,
-			current: Default::default(),
-		};
-		s.scheduler
-			.send(crate::time::scheduler::Request::Register(s.props.end));
-		s
-	}
-
-	fn update(&mut self, msg: Self::Message) -> bool {
-		self.current = msg;
-		true
+	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+		Self { props }
 	}
 
 	fn view(&self) -> Html {
 		html! {
 			<strong>
-				{format!(
-					"#countdown({}) {}",
-					self.props.end - self.props.start,
-					self.current
-				)}
+				<Time time=self.props.time />
 			</strong>
 		}
 	}

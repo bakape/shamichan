@@ -3,7 +3,7 @@ use js_sys::Date;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
 
 /// Central thread container
-pub struct View {
+pub struct Time {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
@@ -18,12 +18,12 @@ pub struct Props {
 	pub time: u32,
 }
 
-impl Component for View {
+impl Component for Time {
 	type Message = Response;
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = Self {
+		let mut s = Time {
 			scheduler: Scheduler::bridge(link.callback(|u| u)),
 			props,
 			link,

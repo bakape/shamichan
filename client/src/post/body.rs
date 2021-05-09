@@ -146,14 +146,14 @@ fn render_command(comm: &Command) -> Html {
 	let inner = match comm {
 		Countdown { start, secs } => {
 			return html! {
-				<super::countdown::Countdown start=start end=start+secs />
+				<super::countdown::Countdown time=start+secs />
 			}
 		}
 		Autobahn(hours) => format!("#autobahn({})", hours),
-		EightBall(msg) => format!("#8ball {}", msg),
-		Flip(b) => format!("#flip {}", if *b { "flap" } else { "flop" }),
-		Pyu(n) => format!("#pyu {}", n),
-		PCount(n) => format!("#pcount {}", n),
+		EightBall(msg) => format!("#8ball ➡ {}", msg),
+		Flip(b) => format!("#flip ➡ {}", if *b { "flap" } else { "flop" }),
+		Pyu(n) => format!("#pyu ➡ {}", n),
+		PCount(n) => format!("#pcount ➡ {}", n),
 		Dice {
 			offset,
 			faces,
@@ -175,6 +175,7 @@ fn render_command(comm: &Command) -> Html {
 			if offset != &0 {
 				push!("{}{}", sign, offset.abs());
 			}
+			s += " ➡ ";
 
 			let mut sum = 0_i32;
 			for (i, r) in results.iter().enumerate() {
@@ -208,10 +209,10 @@ where
 	use PendingNode::*;
 
 	let inner = match n {
-		Flip => "#flip ?".into(),
-		EightBall => "#8ball ?".into(),
-		Pyu => "#pyu ?".into(),
-		PCount => "pcount ?".into(),
+		Flip => "#flip ➡ ?".into(),
+		EightBall => "#8ball ➡ ?".into(),
+		Pyu => "#pyu ➡ ?".into(),
+		PCount => "pcount ➡ ?".into(),
 		Countdown(n) => format!("#countdown({})", n),
 		Autobahn(n) => format!("#autobahn({})", n),
 		PostLink(id) => match c.app_state().posts.get(id) {
@@ -239,19 +240,7 @@ where
 			if offset != &0 {
 				push!("{}{}", sign, offset.abs());
 			}
-
-			for i in 0..*rolls {
-				if i != 0 {
-					s += " + ";
-				}
-				s += "?";
-			}
-			if offset != &0 {
-				push!("{} {}", sign, offset.abs());
-			}
-			if rolls != &1 || offset != &0 {
-				s += " = ?";
-			}
+			s += " ➡ ?";
 
 			s
 		}

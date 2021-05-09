@@ -596,7 +596,7 @@ where
 						None => html! {},
 					}
 				}
-				<crate::time::view::View time=p.created_on />
+				<crate::time::view::Time time=p.created_on />
 				{
 					if p.id == 0 {
 						html! {}
