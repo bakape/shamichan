@@ -11,6 +11,7 @@ use std::{hash::Hash, ops::AddAssign, sync::Arc, u64};
 // TODO: bump allocation for entire tree to reduce allocation/deallocation
 // overhead. Depends on https://github.com/rust-lang/rust/issues/32838
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub enum Node {
 	/// No content
 	Empty,
