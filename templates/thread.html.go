@@ -35,209 +35,209 @@ var (
 //line thread.html:7
 func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, id uint64, board string, abbrev, locked bool, pos common.ModerationLevel) {
 //line thread.html:8
+	streamloadingImage(qw422016, board)
+//line thread.html:10
 	conf := config.GetBoardConfigs(board)
 
-//line thread.html:9
+//line thread.html:11
 	ln := lang.Get()
 
-//line thread.html:10
+//line thread.html:12
 	if !locked {
-//line thread.html:10
+//line thread.html:12
 		qw422016.N().S(`<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden"><input name="board" type="text" value="`)
-//line thread.html:12
-		qw422016.N().S(board)
-//line thread.html:12
-		qw422016.N().S(`" hidden><input name="op" type="text" value="`)
-//line thread.html:13
-		qw422016.N().S(strconv.FormatUint(id, 10))
-//line thread.html:13
-		qw422016.N().S(`" hidden>`)
 //line thread.html:14
-		streaminput(qw422016, sageSpec.wrap(), ln)
+		qw422016.N().S(board)
+//line thread.html:14
+		qw422016.N().S(`" hidden><input name="op" type="text" value="`)
 //line thread.html:15
-		streamnoscriptPostCreationFields(qw422016, pos)
+		qw422016.N().S(strconv.FormatUint(id, 10))
+//line thread.html:15
+		qw422016.N().S(`" hidden>`)
 //line thread.html:16
-		if !conf.TextOnly {
+		streaminput(qw422016, sageSpec.wrap(), ln)
 //line thread.html:17
-			streamuploadForm(qw422016)
+		streamnoscriptPostCreationFields(qw422016, pos)
 //line thread.html:18
-		}
+		if !conf.TextOnly {
 //line thread.html:19
+			streamuploadForm(qw422016)
+//line thread.html:20
+		}
+//line thread.html:21
 		streamcaptcha(qw422016, board)
-//line thread.html:20
+//line thread.html:22
 		streamsubmit(qw422016, true)
-//line thread.html:20
+//line thread.html:22
 		qw422016.N().S(`</form>`)
-//line thread.html:22
+//line thread.html:24
 	}
-//line thread.html:22
+//line thread.html:24
 	qw422016.N().S(`<span class="aside-container top-margin"><span class="act" id="top"><a href="#bottom">`)
-//line thread.html:26
+//line thread.html:28
 	qw422016.N().S(ln.Common.UI["bottom"])
-//line thread.html:26
+//line thread.html:28
 	qw422016.N().S(`</a></span><span class="act"><a href=".">`)
-//line thread.html:31
+//line thread.html:33
 	qw422016.N().S(ln.Common.UI["return"])
-//line thread.html:31
+//line thread.html:33
 	qw422016.N().S(`</a></span><span class="act"><a href="catalog">`)
-//line thread.html:36
+//line thread.html:38
 	qw422016.N().S(ln.Common.UI["catalog"])
-//line thread.html:36
+//line thread.html:38
 	qw422016.N().S(`</a></span><span id="expand-images" class="act noscript-hide"><a>`)
-//line thread.html:41
+//line thread.html:43
 	qw422016.N().S(ln.Common.Posts["expandImages"])
-//line thread.html:41
+//line thread.html:43
 	qw422016.N().S(`</a></span>`)
-//line thread.html:44
+//line thread.html:46
 	streamhoverReveal(qw422016, "span", conf.Notice, ln.Common.UI["showNotice"])
-//line thread.html:45
+//line thread.html:47
 	streamhoverReveal(qw422016, "span", conf.Rules, ln.Common.UI["rules"])
-//line thread.html:45
+//line thread.html:47
 	qw422016.N().S(`</span><hr>`)
-//line thread.html:48
+//line thread.html:50
 	qw422016.N().Z(postHTML)
-//line thread.html:48
+//line thread.html:50
 	qw422016.N().S(`<div id="bottom-spacer"></div>`)
-//line thread.html:50
+//line thread.html:52
 	if !locked {
-//line thread.html:50
+//line thread.html:52
 		qw422016.N().S(`<aside class="act posting glass noscript-hide"><a>`)
-//line thread.html:53
+//line thread.html:55
 		qw422016.N().S(ln.Common.UI["reply"])
-//line thread.html:53
+//line thread.html:55
 		qw422016.N().S(`</a></aside>`)
-//line thread.html:56
+//line thread.html:58
 	}
-//line thread.html:56
+//line thread.html:58
 	qw422016.N().S(`<hr><span class="aside-container"><span class="act" id="bottom"><a href=".">`)
-//line thread.html:61
+//line thread.html:63
 	qw422016.N().S(ln.Common.UI["return"])
-//line thread.html:61
+//line thread.html:63
 	qw422016.N().S(`</a></span><span class="act"><a href="catalog">`)
-//line thread.html:66
+//line thread.html:68
 	qw422016.N().S(ln.Common.UI["catalog"])
-//line thread.html:66
+//line thread.html:68
 	qw422016.N().S(`</a></span><span class="act"><a href="#top">`)
-//line thread.html:71
+//line thread.html:73
 	qw422016.N().S(ln.Common.UI["top"])
-//line thread.html:71
+//line thread.html:73
 	qw422016.N().S(`</a></span>`)
-//line thread.html:74
+//line thread.html:76
 	if !abbrev {
-//line thread.html:74
+//line thread.html:76
 		qw422016.N().S(`<span class="act"><a href="?last=100#bottom">`)
-//line thread.html:77
+//line thread.html:79
 		qw422016.N().S(ln.Common.UI["last"])
-//line thread.html:77
+//line thread.html:79
 		qw422016.N().S(` `)
-//line thread.html:77
+//line thread.html:79
 		qw422016.N().S(`100</a></span>`)
-//line thread.html:80
+//line thread.html:82
 	}
-//line thread.html:80
+//line thread.html:82
 	qw422016.N().S(`<span id="lock" style="visibility: hidden;">`)
-//line thread.html:82
+//line thread.html:84
 	qw422016.N().S(ln.Common.UI["lockedToBottom"])
-//line thread.html:82
+//line thread.html:84
 	qw422016.N().S(`</span></span>`)
-//line thread.html:85
-	streamloadingImage(qw422016, board)
-//line thread.html:86
+//line thread.html:87
 }
 
-//line thread.html:86
+//line thread.html:87
 func writerenderThread(qq422016 qtio422016.Writer, postHTML []byte, id uint64, board string, abbrev, locked bool, pos common.ModerationLevel) {
-//line thread.html:86
+//line thread.html:87
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line thread.html:86
+//line thread.html:87
 	streamrenderThread(qw422016, postHTML, id, board, abbrev, locked, pos)
-//line thread.html:86
+//line thread.html:87
 	qt422016.ReleaseWriter(qw422016)
-//line thread.html:86
+//line thread.html:87
 }
 
-//line thread.html:86
+//line thread.html:87
 func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos common.ModerationLevel) string {
-//line thread.html:86
+//line thread.html:87
 	qb422016 := qt422016.AcquireByteBuffer()
-//line thread.html:86
+//line thread.html:87
 	writerenderThread(qb422016, postHTML, id, board, abbrev, locked, pos)
-//line thread.html:86
+//line thread.html:87
 	qs422016 := string(qb422016.B)
-//line thread.html:86
+//line thread.html:87
 	qt422016.ReleaseByteBuffer(qb422016)
-//line thread.html:86
+//line thread.html:87
 	return qs422016
-//line thread.html:86
+//line thread.html:87
 }
 
 // ThreadPosts renders the post content of a thread. Separate function to allow
 // caching of generated posts.
 
-//line thread.html:90
+//line thread.html:91
 func StreamThreadPosts(qw422016 *qt422016.Writer, t common.Thread, json []byte) {
-//line thread.html:90
+//line thread.html:91
 	qw422016.N().S(`<section id="thread-container" data-id="`)
-//line thread.html:91
-	qw422016.N().S(strconv.FormatUint(t.ID, 10))
-//line thread.html:91
-	qw422016.N().S(`">`)
 //line thread.html:92
+	qw422016.N().S(strconv.FormatUint(t.ID, 10))
+//line thread.html:92
+	qw422016.N().S(`">`)
+//line thread.html:93
 	bls := extractBacklinks(1<<10, t)
 
-//line thread.html:93
+//line thread.html:94
 	streamrenderThreadPosts(qw422016, t, bls, config.Get().RootURL, false)
-//line thread.html:93
+//line thread.html:94
 	qw422016.N().S(`<script id="post-data" type="application/json">`)
-//line thread.html:95
+//line thread.html:96
 	qw422016.N().Z(json)
-//line thread.html:95
+//line thread.html:96
 	qw422016.N().S(`</script>`)
-//line thread.html:97
+//line thread.html:98
 	streamencodeBacklinks(qw422016, bls)
-//line thread.html:97
+//line thread.html:98
 	qw422016.N().S(`</section><script id="board-configs" type="application/json">`)
-//line thread.html:100
+//line thread.html:101
 	qw422016.N().Z(config.GetBoardConfigs(t.Board).JSON)
-//line thread.html:100
+//line thread.html:101
 	qw422016.N().S(`</script>`)
-//line thread.html:102
+//line thread.html:103
 }
 
-//line thread.html:102
+//line thread.html:103
 func WriteThreadPosts(qq422016 qtio422016.Writer, t common.Thread, json []byte) {
-//line thread.html:102
+//line thread.html:103
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line thread.html:102
+//line thread.html:103
 	StreamThreadPosts(qw422016, t, json)
-//line thread.html:102
+//line thread.html:103
 	qt422016.ReleaseWriter(qw422016)
-//line thread.html:102
+//line thread.html:103
 }
 
-//line thread.html:102
+//line thread.html:103
 func ThreadPosts(t common.Thread, json []byte) string {
-//line thread.html:102
+//line thread.html:103
 	qb422016 := qt422016.AcquireByteBuffer()
-//line thread.html:102
+//line thread.html:103
 	WriteThreadPosts(qb422016, t, json)
-//line thread.html:102
+//line thread.html:103
 	qs422016 := string(qb422016.B)
-//line thread.html:102
+//line thread.html:103
 	qt422016.ReleaseByteBuffer(qb422016)
-//line thread.html:102
+//line thread.html:103
 	return qs422016
-//line thread.html:102
+//line thread.html:103
 }
 
 // Common functionality between index board pages and threads pages
 
-//line thread.html:105
-func streamrenderThreadPosts(qw422016 *qt422016.Writer, t common.Thread, bls backlinks, root string, index bool) {
 //line thread.html:106
+func streamrenderThreadPosts(qw422016 *qt422016.Writer, t common.Thread, bls backlinks, root string, index bool) {
+//line thread.html:107
 	boardConfig := config.GetBoardConfigs(t.Board)
 
-//line thread.html:107
+//line thread.html:108
 	c := articleContext{
 		index:     index,
 		sticky:    t.Sticky,
@@ -251,94 +251,94 @@ func streamrenderThreadPosts(qw422016 *qt422016.Writer, t common.Thread, bls bac
 		backlinks: bls,
 	}
 
-//line thread.html:119
+//line thread.html:120
 	c.omit, c.imageOmit = CalculateOmit(t)
 
-//line thread.html:120
+//line thread.html:121
 	streamrenderArticle(qw422016, t.Post, c)
-//line thread.html:122
+//line thread.html:123
 	c.sticky = false
 
-//line thread.html:123
+//line thread.html:124
 	c.locked = false
 
-//line thread.html:124
+//line thread.html:125
 	c.omit, c.imageOmit = 0, 0
 
-//line thread.html:125
+//line thread.html:126
 	c.subject = ""
 
-//line thread.html:126
-	for _, p := range t.Posts {
 //line thread.html:127
-		streamrenderArticle(qw422016, p, c)
+	for _, p := range t.Posts {
 //line thread.html:128
+		streamrenderArticle(qw422016, p, c)
+//line thread.html:129
 	}
-//line thread.html:129
+//line thread.html:130
 }
 
-//line thread.html:129
+//line thread.html:130
 func writerenderThreadPosts(qq422016 qtio422016.Writer, t common.Thread, bls backlinks, root string, index bool) {
-//line thread.html:129
+//line thread.html:130
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line thread.html:129
+//line thread.html:130
 	streamrenderThreadPosts(qw422016, t, bls, root, index)
-//line thread.html:129
+//line thread.html:130
 	qt422016.ReleaseWriter(qw422016)
-//line thread.html:129
+//line thread.html:130
 }
 
-//line thread.html:129
+//line thread.html:130
 func renderThreadPosts(t common.Thread, bls backlinks, root string, index bool) string {
-//line thread.html:129
+//line thread.html:130
 	qb422016 := qt422016.AcquireByteBuffer()
-//line thread.html:129
+//line thread.html:130
 	writerenderThreadPosts(qb422016, t, bls, root, index)
-//line thread.html:129
+//line thread.html:130
 	qs422016 := string(qb422016.B)
-//line thread.html:129
+//line thread.html:130
 	qt422016.ReleaseByteBuffer(qb422016)
-//line thread.html:129
+//line thread.html:130
 	return qs422016
-//line thread.html:129
+//line thread.html:130
 }
 
-//line thread.html:131
+//line thread.html:132
 func streamencodeBacklinks(qw422016 *qt422016.Writer, bls backlinks) {
-//line thread.html:131
+//line thread.html:132
 	qw422016.N().S(`<script id="backlink-data" type="application/json">`)
-//line thread.html:133
+//line thread.html:134
 	buf, _ := json.Marshal(bls)
 
-//line thread.html:134
+//line thread.html:135
 	qw422016.N().Z(buf)
-//line thread.html:134
+//line thread.html:135
 	qw422016.N().S(`</script>`)
-//line thread.html:136
+//line thread.html:137
 }
 
-//line thread.html:136
+//line thread.html:137
 func writeencodeBacklinks(qq422016 qtio422016.Writer, bls backlinks) {
-//line thread.html:136
+//line thread.html:137
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line thread.html:136
+//line thread.html:137
 	streamencodeBacklinks(qw422016, bls)
-//line thread.html:136
+//line thread.html:137
 	qt422016.ReleaseWriter(qw422016)
-//line thread.html:136
+//line thread.html:137
 }
 
-//line thread.html:136
+//line thread.html:137
 func encodeBacklinks(bls backlinks) string {
-//line thread.html:136
+//line thread.html:137
 	qb422016 := qt422016.AcquireByteBuffer()
-//line thread.html:136
+//line thread.html:137
 	writeencodeBacklinks(qb422016, bls)
-//line thread.html:136
+//line thread.html:137
 	qs422016 := string(qb422016.B)
-//line thread.html:136
+//line thread.html:137
 	qt422016.ReleaseByteBuffer(qb422016)
-//line thread.html:136
+//line thread.html:137
 	return qs422016
-//line thread.html:136
+//line thread.html:137
 }

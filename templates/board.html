@@ -7,6 +7,8 @@
 {% import ass "github.com/bakape/meguca/assets" %}
 
 {% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos common.ModerationLevel, catalog bool) %}{% stripspace %}
+	{%= loadingImage(conf.ID) %}
+
 	{% code ln := lang.Get() %}
 	{% code bannerID, mime, ok := ass.Banners.Random(conf.ID) %}
 	{% if ok %}
@@ -86,7 +88,6 @@
 			{%= pagination(page, total) %}
 		{% endif %}
 	</span>
-	{%= loadingImage(conf.ID) %}
 {% endstripspace %}{% endfunc %}
 
 CatalogThreads renders thread content for a catalog page. Separate function to

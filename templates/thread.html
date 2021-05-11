@@ -5,6 +5,8 @@
 {% import "encoding/json" %}
 
 {% func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos common.ModerationLevel) %}{% stripspace %}
+	{%= loadingImage(board) %}
+
 	{% code conf := config.GetBoardConfigs(board) %}
 	{% code ln := lang.Get() %}
 	{% if !locked %}
@@ -82,7 +84,6 @@
 			{%s= ln.Common.UI["lockedToBottom"] %}
 		</span>
 	</span>
-	{%= loadingImage(board) %}
 {% endstripspace %}{% endfunc %}
 
 ThreadPosts renders the post content of a thread. Separate function to allow
