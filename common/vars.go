@@ -38,7 +38,7 @@ const (
 	MaxLenEightball    = 2000
 	MaxLenReason       = 100
 	MaxNumBanners      = 20
-	MaxAssetSize       = 100 << 10
+	MaxAssetSize       = 300 << 10
 	MaxDiceSides       = 10000
 	BumpLimit          = 1000
 )
@@ -86,8 +86,10 @@ var (
 
 // Common Regex expressions
 var (
-	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$`)
-	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
+	CommandRegexp = regexp.MustCompile(
+		`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$`,
+	)
+	DiceRegexp = regexp.MustCompile(`(\d*)d(\d+)`)
 )
 
 func init() {
