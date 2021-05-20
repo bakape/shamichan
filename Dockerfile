@@ -47,7 +47,7 @@ RUN go get -u github.com/valyala/quicktemplate \
 	github.com/rakyll/statik \
 	github.com/valyala/quicktemplate/qtc
 
-# Download go deps
+# Download Go deps
 COPY go.mod go.sum ./
 RUN go mod download
 
