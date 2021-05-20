@@ -777,7 +777,7 @@ impl MessageHandler {
 
 								let mut rng = thread_rng();
 								for _ in 0..*rolls {
-									res.push(rng.gen::<u16>() % *faces);
+									res.push(rng.gen::<u16>() % *faces + 1);
 								}
 
 								res

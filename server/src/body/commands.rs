@@ -80,7 +80,13 @@ pub fn parse_dice(word: &str) -> Option<Node> {
 			}
 			r
 		},
-		faces: parse!(word[d_pos + 1..sign_pos.unwrap_or(word.len())]),
+		faces: {
+			let n = parse!(word[d_pos + 1..sign_pos.unwrap_or(word.len())]);
+			if n == 0 {
+				return None;
+			}
+			n
+		},
 		offset: match sign_pos {
 			Some(i) => parse!(word[i..]),
 			None => 0,
