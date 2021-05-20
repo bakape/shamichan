@@ -143,6 +143,7 @@ where
 fn render_command(comm: &Command) -> Html {
 	use Command::*;
 
+	let mut class = "";
 	let inner = match comm {
 		Countdown { start, secs } => {
 			return html! {
@@ -150,10 +151,10 @@ fn render_command(comm: &Command) -> Html {
 			}
 		}
 		Autobahn(hours) => format!("#autobahn({})", hours),
-		EightBall(msg) => format!("#8ball ➡ {}", msg),
-		Flip(b) => format!("#flip ➡ {}", if *b { "flap" } else { "flop" }),
-		Pyu(n) => format!("#pyu ➡ {}", n),
-		PCount(n) => format!("#pcount ➡ {}", n),
+		EightBall(msg) => format!("#8ball ({})", msg),
+		Flip(b) => format!("#flip ({})", if *b { "flap" } else { "flop" }),
+		Pyu(n) => format!("#pyu ({})", n),
+		PCount(n) => format!("#pcount ({})", n),
 		Dice {
 			offset,
 			faces,
@@ -175,7 +176,7 @@ fn render_command(comm: &Command) -> Html {
 			if offset != &0 {
 				push!("{}{}", sign, offset.abs());
 			}
-			s += " ➡ ";
+			s += " (";
 
 			let mut sum = 0_i32;
 			for (i, r) in results.iter().enumerate() {
@@ -187,10 +188,52 @@ fn render_command(comm: &Command) -> Html {
 			}
 			if offset != &0 {
 				sum += *offset as i32;
-				push!("{} {}", sign, offset.abs());
+				push!(" {} {}", sign, offset.abs());
 			}
 			if results.len() != 1 || offset != &0 {
 				push!(" = {}", sum);
+			}
+			s.push(')');
+
+			let max_raw = *faces as i32 * results.len() as i32;
+			let max = max_raw + *offset as i32;
+			// No special formatting for small rolls
+			if max_raw >= 10 && faces != &1 {
+				if sum == max {
+					class = "max-roll";
+				} else if sum as usize == results.len() {
+					class = "shit-roll";
+				} else if sum == 69 || sum == 6969 {
+					class = "lewd-roll";
+				} else if {
+					let mut n = sum;
+					let digit = sum % 10;
+					let mut repeating = false;
+					loop {
+						n /= 10;
+						if n == 0 {
+							repeating = true;
+							break;
+						}
+						if n % 10 != digit {
+							break;
+						}
+					}
+					repeating
+				} {
+					match sum {
+						11..=99 => {
+							class = "dubs-roll";
+						}
+						111..=999 => {
+							class = "trips-roll";
+						}
+						1111..=9999 => {
+							class = "quads-roll";
+						}
+						_ => (),
+					}
+				}
 			}
 
 			s
@@ -198,7 +241,7 @@ fn render_command(comm: &Command) -> Html {
 	};
 
 	html! {
-		<strong>{inner}</strong>
+		<strong class=class>{inner}</strong>
 	}
 }
 
@@ -209,10 +252,10 @@ where
 	use PendingNode::*;
 
 	let inner = match n {
-		Flip => "#flip ➡ ?".into(),
-		EightBall => "#8ball ➡ ?".into(),
-		Pyu => "#pyu ➡ ?".into(),
-		PCount => "pcount ➡ ?".into(),
+		Flip => "#flip (?)".into(),
+		EightBall => "#8ball (?)".into(),
+		Pyu => "#pyu (?)".into(),
+		PCount => "#pcount (?)".into(),
 		Countdown(n) => format!("#countdown({})", n),
 		Autobahn(n) => format!("#autobahn({})", n),
 		PostLink(id) => match c.app_state().posts.get(id) {
@@ -238,9 +281,9 @@ where
 			}
 			push!("d{}", faces);
 			if offset != &0 {
-				push!("{}{}", sign, offset.abs());
+				push!(" {}{}", sign, offset.abs());
 			}
-			s += " ➡ ?";
+			s += " (?)";
 
 			s
 		}
