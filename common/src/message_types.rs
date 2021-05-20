@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 
 /// Types of messages passed through websockets
 #[repr(u8)]
-#[serde(untagged)]
 #[derive(
 	Serialize, Deserialize, FromPrimitive, Copy, Clone, Eq, PartialEq, Debug,
 )]
+#[serde(untagged)]
 pub enum MessageType {
 	/// Initial handshake with server
 	Handshake = 0,
