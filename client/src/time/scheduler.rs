@@ -64,7 +64,7 @@ pub struct RelativeTime {
 impl std::fmt::Display for RelativeTime {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		if self.duration == 0 {
-			write!(f, "{}", localize!("now"));
+			write!(f, "{}", localize!("now"))?;
 			return Ok(());
 		}
 
