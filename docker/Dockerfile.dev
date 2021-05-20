@@ -2,4 +2,4 @@
 FROM common
 
 # Build meguca
-RUN DEBUG=1 NO_DEPS=1 nice -n 19 make
+RUN DEBUG=1 NO_DEPS=1 make

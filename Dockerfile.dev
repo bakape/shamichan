@@ -34,7 +34,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=$PATH:/root/.cargo/bin
 
 # Build WASM build tools
-RUN nice -n 19 cargo install wasm-pack
+RUN cargo install wasm-pack
 
 # Install Go
 RUN wget -O- \
@@ -43,7 +43,7 @@ RUN wget -O- \
 ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Go build tools
-RUN nice -n 19 go get -u github.com/valyala/quicktemplate \
+RUN go get -u github.com/valyala/quicktemplate \
 	github.com/rakyll/statik \
 	github.com/valyala/quicktemplate/qtc
 
@@ -72,10 +72,10 @@ COPY common/Cargo.toml common
 COPY docker/dummy.rs common/src/lib.rs
 
 # Build deps for both prod and dev builds
-RUN nice -n 19 cargo build --workspace --exclude client --release
-RUN nice -n 19 cargo build --workspace --exclude client
-RUN cd client && nice -n 19 ./node_modules/.bin/webpack
-RUN cd client && nice -n 19 ./node_modules/.bin/webpack -d
+RUN cargo build --workspace --exclude client --release
+RUN cargo build --workspace --exclude client
+RUN cd client && ./node_modules/.bin/webpack
+RUN cd client && ./node_modules/.bin/webpack -d
 
 # Remove dummy sources and artefacts
 RUN rm -r \
@@ -92,4 +92,4 @@ COPY . .
 
 
 # Build meguca
-RUN DEBUG=1 NO_DEPS=1 nice -n 19 make
+RUN DEBUG=1 NO_DEPS=1 make

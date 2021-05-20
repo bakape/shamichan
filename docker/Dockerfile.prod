@@ -1,7 +1,7 @@
 # Replaced at compile time
 FROM common
 
-RUN NO_DEPS=1 nice -n 19 make
+RUN NO_DEPS=1 make
 
 ################################################################################
 
