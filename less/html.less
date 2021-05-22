@@ -1,0 +1,158 @@
+@import 'posts.mix.less';
+
+// mod
+.post-moderation {
+	font-size: 110%;
+}
+
+.deleted-toggle {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	cursor: pointer;
+	margin: 0;
+	background-image: url(/assets/css/ui/deleted.svg);
+	width: 1.1em;
+	height: 1.1em;
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+article, section {
+	&:not(.deleted) > .deleted-toggle {
+		display: none;
+	}
+}
+
+// overlay
+.overlay {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: ~"calc(100% - 1.5em)";
+	pointer-events: none;
+	align-items: flex-start;
+}
+
+.top-overlay {
+	bottom: 0;
+	right: 0;
+	position: fixed;
+	z-index: 320;
+}
+
+.preview {
+	padding: 4px 10px;
+	position: fixed;
+	pointer-events: none;
+	z-index: 320;
+	.svg-link, .image-search, .mod-checkbox {
+		display: none;
+	}
+}
+
+// base
+a {
+	border         : none;
+	text-decoration: none !important;
+
+	&.nope,
+	&.nope:hover {
+		color: inherit;
+	}
+
+	&.disabled {
+		pointer-events: none;
+		color         : inherit;
+	}
+}
+
+a,
+.svg-link {
+	cursor: pointer;
+}
+
+article,
+aside {
+	padding: 4px 10px;
+	margin : 1px;
+}
+
+aside {
+	display: table;
+
+	&.disabled a {
+		color : grey !important;
+		cursor: default;
+	}
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.mono {
+	font-family: monospace;
+}
+
+iframe {
+	background: white;
+}
+
+.hidden {
+	display: none;
+}
+
+.spaced {
+	&>*:before {
+		content: ' ';
+	}
+
+	&>.act:not(.expanded):before {
+		content: " [";
+	}
+}
+
+.flag {
+	height     : .8em;
+	margin-left: .3em;
+	border     : 1px solid black;
+}
+
+.fileinfo {
+	margin-left: 1ex;
+
+	&::before {
+		content: "(";
+	}
+
+	&::after {
+		content: ")";
+	}
+
+	&>span::empty {
+		display: none;
+	}
+
+	&>span:not(:empty):not([hidden])~span::before {
+		content: ", ";
+	}
+
+	&>span.media-artist:not(:empty)+span.media-title::before {
+		content: "\00a0-\00a0";
+	}
+}
+
+iframe[src^="https://www.youtube"] {
+	width : 480px;
+	height: 270px;
+}
+
+// test
+article {
+    background-color: aqua;
+}
+
+.editing {
+	background-color: yellow;
+}

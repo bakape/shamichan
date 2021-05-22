@@ -21,7 +21,7 @@ Report submission form
 
 Render list of all reports on board
 {% func ReportList(reports []auth.Report) %}{% stripspace %}
-	{%= tableStyle() %}
+	{%= BoilerPlate() %}
 	<table>
 		{%= tableHeaders("id", "post", "reason", "time") %}
 		{% for _, r := range reports %}

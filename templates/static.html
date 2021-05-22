@@ -1,0 +1,53 @@
+{% import "encoding/json" %}
+{% import "github.com/bakape/meguca/lang" %}
+
+{% func BoilerPlate() %}{% stripspace %}
+<meta charset="utf-8">
+<link rel="stylesheet" href="/assets/css/html.css">
+{% code ln := lang.Get() %}
+{%= tableStyle() %}
+<template name="article">
+    <input type="checkbox" class="deleted-toggle">
+    <header class="spaced">
+        <b  class="name spaced"></b>
+        <img class="flag" hidden>
+        <time></time>
+        <nav>
+            <a>
+                No.
+            </a>
+            <a class="quote"></a>
+        </nav>
+    </header>
+    <div class="post-container">
+        <blockquote></blockquote>
+    </div>
+</template>
+<template name="figcaption">
+    <figcaption class="spaced">
+        <span class="fileinfo">
+            <span class="media-artist"></span>
+            <span class="media-title"></span>
+            <span hidden class="has-audio">♫</span>
+            <span class="media-length"></span>
+            <span class="filesize"></span>
+            <span class="dims"></span>
+        </span>
+        <a></a>
+    </figcaption>
+</template>
+<template name="figure">
+    <figure>
+        <a target="_blank">
+            <img>
+        </a>
+    </figure>
+</template>
+<script src="/assets/js/vendor/almond.js"></script>
+<script id="lang-data" type="application/json">
+    {% code buf, _ := json.Marshal(ln.Common) %}
+    {%z= buf %}
+</script>
+<script src="/assets/js/scripts/htmlLoader.js"></script>
+<div class="overlay top-overlay" id="hover-overlay"></div>
+{% endstripspace %}{% endfunc %}
