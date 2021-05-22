@@ -180,7 +180,6 @@ impl yew::Component for ReplyButton {
 			posting::State::Ready => html! {
 				<buttons::AsideButton
 					text="reply"
-					disabled=matches!(self.state, Locked),
 					on_click=self.link.callback(|e: yew::events::MouseEvent| {
 						if e.button() == 0 {
 							ReplyMessage::Clicked

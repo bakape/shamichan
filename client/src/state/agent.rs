@@ -10,9 +10,9 @@ use std::collections::{hash_map::Entry, HashMap};
 use wasm_bindgen::JsCast;
 use yew::{
 	agent::{AgentLink, Bridge, Context, Dispatched, HandlerId},
-	services::render::{RenderService, RenderTask},
 	Callback, Component, ComponentLink,
 };
+use yew_services::render::{RenderService, RenderTask};
 
 // TODO: resync on disconnect
 // TODO: received page trigger

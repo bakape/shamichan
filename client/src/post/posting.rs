@@ -5,10 +5,9 @@ use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{
 	agent::{AgentLink, Bridge, Bridged, HandlerId},
-	html,
-	services::render::{RenderService, RenderTask},
-	ComponentLink, Html, NodeRef,
+	html, ComponentLink, Html, NodeRef,
 };
+use yew_services::render::{RenderService, RenderTask};
 
 /// A post actively being edited by the user
 pub type PostForm = PostCommon<Inner>;
@@ -299,7 +298,7 @@ impl PostComponent for Inner {
 				class="post-form-input"
 				ref=self.text_area.clone()
 				value=self.body
-				oninput=c.link().callback(|yew::html::InputData{value}| {
+				oninput=c.link().callback(|yew::html::InputData{value, ..}| {
 					Extra(FormMessage::TextInput(value))
 				})
 			>

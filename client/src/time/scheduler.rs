@@ -2,7 +2,7 @@
 use super::queue::Queue;
 use crate::state;
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
-use yew::services::interval::{IntervalService, IntervalTask};
+use yew_services::interval::{IntervalService, IntervalTask};
 
 // TODO: apply correction from server clock
 

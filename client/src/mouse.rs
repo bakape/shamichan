@@ -1,7 +1,5 @@
-use yew::{
-	agent::{AgentLink, HandlerId},
-	services::render::{RenderService, RenderTask},
-};
+use yew::agent::{AgentLink, HandlerId};
+use yew_services::render::{RenderService, RenderTask};
 
 #[derive(Default, Copy, Clone, Debug)]
 pub struct Coordinates {

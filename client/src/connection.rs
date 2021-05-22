@@ -7,10 +7,9 @@ use serde::Serialize;
 use std::{collections::HashSet, fmt::Debug};
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
-	html,
-	services::timeout::{TimeoutService, TimeoutTask},
-	Bridge, Bridged, Component, ComponentLink, Html,
+	html, Bridge, Bridged, Component, ComponentLink, Html,
 };
+use yew_services::timeout::{TimeoutService, TimeoutTask};
 
 // TODO: break up into submodules
 

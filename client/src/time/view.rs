@@ -53,6 +53,8 @@ impl Component for Time {
 	}
 
 	fn view(&self) -> Html {
+		use std::borrow::Cow;
+
 		// Placeholder post
 		if self.props.time == 0 {
 			return html! {};
@@ -83,7 +85,7 @@ impl Component for Time {
 		];
 
 		let d = Date::new(&(self.props.time as f64 * 1000.0).into());
-		let abs = format!(
+		let abs = Cow::Owned(format!(
 			"{:0>2} {} {} ({}) {:0>2}:{:0>2}:{:0>2}",
 			d.get_date(),
 			localize!(MONTHS[d.get_month() as usize]),
@@ -92,26 +94,17 @@ impl Component for Time {
 			d.get_hours(),
 			d.get_minutes(),
 			d.get_seconds(),
-		);
+		));
 
-		let rel = self.current.diff.to_string();
+		let rel = Cow::Owned(self.current.diff.to_string());
 
+		let (title, text) = if self.current.use_relative {
+			(abs, rel)
+		} else {
+			(rel, abs)
+		};
 		html! {
-			<time
-				title=if self.current.use_relative {
-					&abs
-				} else {
-					&rel
-				}
-			>
-				{
-					if self.current.use_relative {
-						&rel
-					} else {
-						&abs
-					}
-				}
-			</time>
+			<time title=title>{text}</time>
 		}
 	}
 }

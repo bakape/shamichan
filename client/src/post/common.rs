@@ -886,6 +886,7 @@ where
 	}
 
 	fn render_figure<'c>(&self, c: &Ctx<'c, PC>, img: &Image) -> Html {
+		use std::borrow::Cow;
 		use yew::events::MouseEvent;
 		use FileType::*;
 
@@ -932,6 +933,8 @@ where
 		} else {
 			(img.width, img.height, src.clone())
 		};
+		let w = Cow::Owned(w.to_string());
+		let h = Cow::Owned(h.to_string());
 
 		if self.expand_image && !is_audio {
 			use state::ImageExpansionMode;
@@ -1029,7 +1032,7 @@ where
 								autoplay=true
 								loop=true
 								controls=true
-								src=src,
+								src=src
 							/>
 						}
 					} else {

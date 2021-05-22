@@ -105,7 +105,7 @@ impl Component for AsideRow {
 						FeedID::Thread { id, .. } => html! {
 							<aside class="glass">
 								<crate::page_selector::PageSelector
-									thread=id
+									thread=*id
 								/>
 							</aside>
 						},
@@ -373,7 +373,7 @@ impl NewThreadForm {
 							)
 							.map(|t| {
 								html! {
-									<option value=t></option>
+									<option value=t.to_owned()></option>
 								}
 							})
 					}
@@ -409,7 +409,7 @@ impl NewThreadForm {
 					type="text"
 					maxlength="20"
 					minlength="1"
-					value=tag
+					value=tag.to_owned()
 					name="tag"
 					list="used-tags"
 					pattern=r".*\S+.*"
