@@ -91,7 +91,7 @@ where
 	// if not passed from server
 	// TODO: Persist all single post fetches from server in global post
 	// collection
-	let mut extra = String::new();
+	let mut text = format!(">>{}", id);
 	if match &c.app_state().location.feed {
 		// If thread = 0, link has not had it's parenthood looked up yet on the
 		// server
@@ -100,26 +100,18 @@ where
 		}
 		_ => true,
 	} {
-		extra += " ➡";
+		text += " ➡";
 	}
 	if c.app_state().mine.contains(&id) {
-		extra.push(' ');
-		extra += localize!("you");
+		text.push(' ');
+		text += localize!("you");
 	}
 
 	html! {
 		// TODO: Hover preview on both
 		<>
 			// TODO: inline post on click
-			<a>
-				{
-					if !extra.is_empty() {
-						html! {extra}
-					} else {
-						html! {}
-					}
-				}
-			</a>
+			<a>{text}</a>
 			<a
 				onclick=c.link().callback(move |_| {
 					// TODO:  Handle middle click
