@@ -1,5 +1,4 @@
 import { Post } from "./post"
-import PostView from "./view"
 // Have to be very specific with imports
 import { fetchJSON } from "../client/util/fetch"
 import { emitChanges, ChangeEmitter } from "../client/util/changes"
@@ -26,10 +25,9 @@ class PostPreview {
     public el: HTMLElement;
     private parent: HTMLElement;
 
-    constructor(model: Post, parent: HTMLElement) {
+    constructor(model: HTMLElement, parent: HTMLElement) {
         this.parent = parent;
-        this.el = model.view.el;
-        this.el.classList.add("preview");
+        this.el = model;
         this.render();
     }
 
@@ -87,13 +85,17 @@ async function renderPostPreview(event: MouseEvent) {
         return;
     }
 
-    const [data] = await fetchJSON<PostData>(`/json/post/${id}`);
-    if (!data) {
-        return;
+    let el: HTMLElement;
+    const [data, err] = await fetchJSON<PostData>(`/json/post/${id}`);
+    if (data) {
+        const post = new Post(data);
+        await post.render();
+        el = post.el;
+    } else {
+        el = document.createElement("article");
+        el.textContent = `failed to load post: ${err}`;
     }
-    const post = new Post(data);
-    new PostView(post); // TODO: I do not like this
-    postPreview = new PostPreview(post, target);
+    postPreview = new PostPreview(el, target);
 }
 
 // Clear any previews

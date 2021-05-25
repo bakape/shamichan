@@ -7,20 +7,10 @@
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/mnemonics" %}
 
-// Header of a standalone HTML page
+Header of a standalone HTML page
 {% func htmlHeader() %}{% stripspace %}
 	<!DOCTYPE html>
-	<html>
-		<head>
-			<meta charset="utf-8"/>
-		</head>
-		<body>
-{% endstripspace %}{% endfunc %}
-
-// End of a standalone HTML page
-{% func htmlEnd() %}{% stripspace %}
-		</body>
-	</html>
+		<meta charset="utf-8"/>
 {% endstripspace %}{% endfunc %}
 
 BanPage renders a ban page for a banned user
@@ -52,13 +42,11 @@ BanPage renders a ban page for a banned user
 		{%s= fmt.Sprintf(ln[2], bold(rec.IP)) %}
 		<br>
 	</div>
-	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
 
 Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
-	{%= htmlHeader() %}
-	{%= tableStyle() %}
+	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
@@ -93,19 +81,6 @@ Renders a list of bans for a specific page with optional unbanning API links
 			{%= submit(false) %}
 		{% endif %}
 	</form>
-	{%= htmlEnd() %}
-{% endstripspace %}{% endfunc %}
-
-Common style for plain html tables
-{% func tableStyle() %}{% stripspace %}
-	<style>
-		table, th, td {
-			border: 1px solid black;
-		}
-		.hash-link {
-			display: none;
-		}
-	</style>
 {% endstripspace %}{% endfunc %}
 
 Post link, that will redirect to the post from any page
@@ -115,9 +90,8 @@ Post link, that will redirect to the post from any page
 
 Renders a moderation log page
 {% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
-	{%= htmlHeader() %}
+	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
-	{%= tableStyle() %}
 	<table>
 		{%= tableHeaders("type", "by", "post", "time", "data", "duration") %}
 		{% for _, l := range log %}
@@ -166,5 +140,4 @@ Renders a moderation log page
 			</tr>
 		{% endfor %}
 	</table>
-	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}

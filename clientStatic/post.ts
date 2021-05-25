@@ -1,44 +1,54 @@
-import { Post } from "./post"
-
+import {
+    PostData, PostLink, ModerationLevel, ModerationEntry, Command, ImageData,
+    ModerationAction, fileTypes
+} from "../client/common"
 import { importTemplate } from "../client/util/render"
-import { ModerationAction, fileTypes } from "../client/common"
+import countries from "../client/posts/countries"
 import lang from "../client/lang"
 import { secondsToTime } from "../client/util/time"
-import countries from "../client/posts/countries"
-
 
 const modLevelStrings = ["", "janitor", "moderators", "owners", "admin"];
 
-// Base post view class
-export default class PostView {
-    public el: HTMLElement;
-    public model: Post;
+let imageRoot: string;
 
-    constructor(model: Post) {
-        this.model = model;
-        
-        this.el = document.createElement("article");
-        if (model.editing) {
-            this.el.classList.add("editing");
-        }
-        if (model.isDeleted()) {
-            this.el.classList.add("deleted");
-        }
-        this.el.id = `p${model.id}`;
-        
-        this.model.view = this; // TODO: do not like
-        this.el.append(importTemplate("article"));
-        this.render();
+export class Post {
+    public el: HTMLElement;
+
+    public editing: boolean;
+    public sage: boolean;
+    public image: ImageData;
+    public time: number;
+    public id: number;
+    public op: number;
+    public body: string;
+    public name: string;
+    public trip: string;
+    public auth: ModerationLevel;
+    public board: string;
+    public flag: string;
+    public links: PostLink[];
+    public commands: Command[];
+    public moderation: ModerationEntry[];
+
+    constructor(attrs: PostData) {
+        extend(this, attrs);
     }
 
-    private render() {
-        this.el.querySelector("blockquote").innerHTML = this.model.body;
-        if (this.model.moderation && this.model.moderation.length) {
+    public async render() {
+        this.el = document.createElement("article");
+        if (this.isDeleted()) {
+            this.el.classList.add("deleted");
+        }
+        this.el.id = `p${this.id}`;
+        this.el.append(importTemplate("article"));
+
+        this.el.querySelector("blockquote").innerHTML = this.body;
+        if (this.moderation && this.moderation.length) {
             this.renderModerationLog();
         }
         this.renderHeader();
-        if (this.model.image) {
-            this.renderImage();
+        if (this.image) {
+            await this.renderImage();
         }
     }
 
@@ -48,19 +58,18 @@ export default class PostView {
         this.renderName();
 
         const nav = this.el.querySelector("nav"),
-            quote = nav.lastElementChild as HTMLAnchorElement,
-            { id, flag } = this.model;
-        quote.textContent = id.toString();
+            quote = nav.lastElementChild as HTMLAnchorElement;
+        quote.textContent = this.id.toString();
 
         // Render country flag, if any
-        if (flag) {
+        if (this.flag) {
             const el = this.el.querySelector(".flag") as HTMLImageElement;
-            el.src = `/assets/flags/${flag}.svg`;
-            el.title = countries[flag] || flag;
+            el.src = `/assets/flags/${this.flag}.svg`;
+            el.title = countries[this.flag] || this.flag;
             el.hidden = false;
-            if (flag.includes("us-")) {
+            if (this.flag.includes("us-")) {
                 const sec = el.cloneNode(true) as HTMLImageElement;
-                sec.src = `/assets/flags/us.svg`;
+                sec.src = "/assets/flags/us.svg";
                 sec.title = countries["us"] || "us";
                 el.insertAdjacentElement("beforebegin", sec);
             }
@@ -70,7 +79,7 @@ export default class PostView {
     // Renders classic absolute timestamp
     private renderTime() {
         const el = this.el.querySelector("time");
-        const d = new Date(this.model.time * 1000);
+        const d = new Date(this.time * 1000);
         el.textContent = `${pad(d.getDate())} ${lang.time.calendar[d.getMonth()]} `
             + `${d.getFullYear()} (${lang.time.week[d.getDay()]}) `
             + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -80,24 +89,24 @@ export default class PostView {
     private renderName() {
         const el = this.el.querySelector(".name");
         let html = "";
-        const { trip, name, auth, sage, id } = this.model;
-        if (name || !trip) {
-            html += `<span>${name ? escape(name) : lang.posts["anon"]}</span>`;
+        if (this.name || !this.trip) {
+            html += `<span>${
+                this.name ? escape(this.name) : lang.posts["anon"]}</span>`;
         }
-        if (trip) {
-            html += `<code>!${escape(trip)}</code>`;
+        if (this.trip) {
+            html += `<code>!${escape(this.trip)}</code>`;
         }
-        if (auth) { // Render staff title
+        if (this.auth) { // Render staff title
             el.classList.add("admin");
-            html += 
-                `<span>## ${lang.posts[modLevelStrings[auth]] || "??"}</span>`;
+            html += `<span>## ${
+                lang.posts[modLevelStrings[this.auth]] || "??"}</span>`;
         }
-        el.classList.toggle("sage", !!sage);
+        el.classList.toggle("sage", !!this.sage);
         el.innerHTML = html;
     }
 
     private renderModerationLog() {
-        for (let { type, length, by, data } of this.model.moderation) {
+        for (let { type, length, by, data } of this.moderation) {
             let s: string;
             switch (type) {
                 case ModerationAction.banPost:
@@ -121,7 +130,7 @@ export default class PostView {
                     s = this.format(
                         "threadLockToggled",
                         lang.posts[data === "true" ? "locked" : "unlocked"],
-                        by
+                        by,
                     );
                     break;
                 case ModerationAction.meidoVision:
@@ -150,30 +159,24 @@ export default class PostView {
     }
 
     // Render the figure and figcaption of a post
-    private renderImage() {
-        this.el.classList.add("media");
-
+    private async renderImage() {
         const el = importTemplate("figure").firstChild as HTMLElement;
         this.el.querySelector(".post-container").prepend(el);
         (el.firstElementChild as HTMLElement).hidden = false;
-        this.renderThumbnail();
+        await this.renderThumbnail();
         this.renderFigCaption();
     }
 
     // Render the actual thumbnail image
-    private renderThumbnail() {
-        const el = this.el.querySelector("figure a"),
-        { sha1, file_type: file_type, thumb_type: thumbType, dims, spoiler } = this
-            .model
-            .image,
-        src = sourcePath(sha1, file_type);
+    private async renderThumbnail() {
+        const el = this.el.querySelector("figure a");
         let thumb: string,
-            [, , thumbWidth, thumbHeight] = dims;
-        
-        if (thumbType === fileTypes.noFile) {
+            [, , thumbWidth, thumbHeight] = this.image.dims;
+
+        if (this.image.thumb_type === fileTypes.noFile) {
             // No thumbnail exists
             let file: string;
-            switch (file_type) {
+            switch (this.image.file_type) {
                 case fileTypes.webm:
                 case fileTypes.mp4:
                 case fileTypes.mp3:
@@ -186,11 +189,11 @@ export default class PostView {
             }
             thumb = `/assets/${file}.png`;
             thumbHeight = thumbWidth = 150;
-        } else if (spoiler) {
+        } else if (this.image.spoiler) {
             thumb = "/assets/spoil/default.jpg";
             thumbHeight = thumbWidth = 150;
         } else {
-            thumb = thumbPath(sha1, thumbType);
+            thumb = await thumbPath(this.image.sha1, this.image.thumb_type);
         }
 
         (el.firstElementChild as HTMLImageElement).src = thumb;
@@ -208,46 +211,45 @@ export default class PostView {
         const [info, ...tmp] = Array.from(el.children) as HTMLElement[];
         let link = tmp[tmp.length - 1];
 
-        const data = this.model.image;
         const arr = [];
 
-        if (data.audio) {
+        if (this.image.audio) {
             arr.push("♫");
         }
 
-        if (data.length) {
+        if (this.image.length) {
             let s: string;
-            if (data.length < 60) {
-                s = `0:${pad(data.length)}`;
+            if (this.image.length < 60) {
+                s = `0:${pad(this.image.length)}`;
             } else {
-                const min = Math.floor(data.length / 60);
-                s = `${pad(min)}:${pad(data.length - min * 60)}`;
+                const min = Math.floor(this.image.length / 60);
+                s = `${pad(min)}:${pad(this.image.length - min * 60)}`;
             }
             arr.push(s);
         }
 
-        const { size } = data;
         let s: string;
-        if (size < (1 << 10)) {
-            s = size + " B";
-        } else if (size < (1 << 20)) {
-            s = Math.round(size / (1 << 10)) + " KB";
+        if (this.image.size < (1 << 10)) {
+            s = this.image.size + " B";
+        } else if (this.image.size < (1 << 20)) {
+            s = Math.round(this.image.size / (1 << 10)) + " KB";
         } else {
-            const text = Math.round(size / (1 << 20) * 10).toString();
+            const text = Math.round(this.image.size / (1 << 20) * 10)
+                .toString();
             s = `${text.slice(0, -1)}.${text.slice(-1)} MB`;
         }
         arr.push(s);
 
-        const [w, h] = data.dims;
+        const [w, h] = this.image.dims;
         if (w || h) {
             arr.push(`${w}x${h}`);
         }
 
-        if (data.artist) {
-            arr.push(data.artist);
+        if (this.image.artist) {
+            arr.push(this.image.artist);
         }
-        if (data.title) {
-            arr.push(data.title);
+        if (this.image.title) {
+            arr.push(this.image.title);
         }
 
         let html = "";
@@ -257,13 +259,25 @@ export default class PostView {
         info.innerHTML = html;
 
         // Render name of an image
-        const ext = fileTypes[data.file_type],
-            name = `${escape(data.name)}.${ext}`;
+        const ext = fileTypes[this.image.file_type],
+            name = `${escape(this.image.name)}.${ext}`;
         link.innerHTML = name;
 
         el.hidden = false;
     }
 
+    private isDeleted(): boolean {
+        if (!this.moderation) {
+            return false;
+        }
+        for (let { type } of this.moderation) {
+            if (type === ModerationAction.deletePost) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     // C-like sprintf() but only for `%s` tags
     private format(formatKey: string, ...args: string[]): string {
@@ -273,26 +287,42 @@ export default class PostView {
     }
 }
 
-// TODO: config.imageRootOverrride
-function imageRoot(): string {
-    return "/assets/images";
+// Copy all properties from the source object to the destination object. Nested
+// objects are extended recursively.
+function extend(dest: {}, source: {}) {
+	for (let key in source) {
+		const val = source[key]
+		if (typeof val === "object" && val !== null) {
+			const d = dest[key]
+			if (d) {
+				extend(d, val)
+			} else {
+				dest[key] = val
+			}
+		} else {
+			dest[key] = val
+		}
+	}
+}
+
+async function getImageRoot(): Promise<string> {
+    if (!imageRoot) {
+        const res = await fetch("/json/config");
+        const { imageRootOverride } = await res.json();
+        imageRoot = imageRootOverride || "/assets/images";
+    }
+    return imageRoot;
 }
 
 // Get the thumbnail path of an image, accounting for thumbnail of specific
 // type not being present
-function thumbPath(sha1: string, thumbType: fileTypes): string {
-    return `${imageRoot()}/thumb/${sha1}.${fileTypes[thumbType]}`;
-}
-
-// Resolve the path to the source file of an upload
-function sourcePath(sha1: string, fileType: fileTypes): string {
-    return `${imageRoot()}/src/${sha1}.${fileTypes[fileType]}`;
+async function thumbPath(sha1: string, thumbType: fileTypes): Promise<string> {
+    return `${await getImageRoot()}/thumb/${sha1}.${fileTypes[thumbType]}`;
 }
 
 // Pad an integer with a leading zero, if below 10
-// NOTE: utils/index problem
 function pad(n: number): string {
-	return (n < 10 ? '0' : '') + n
+	return (n < 10 ? '0' : '') + n;
 }
 
 const escapeMap: { [key: string]: string } = {
@@ -301,11 +331,10 @@ const escapeMap: { [key: string]: string } = {
 	"<": "&lt;",
 	">": "&gt;",
 	"\"": "&#34;", // "&#34;" is shorter than "&quot;"
-}
+};
 
 // Escape a user-submitted unsafe string to protect against XSS.
-// NOTE: utils/index
 function escape(str: string): string {
 	return str.replace(/[&'<>"]/g, char =>
-		escapeMap[char])
+		escapeMap[char]);
 }

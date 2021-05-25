@@ -1,11 +1,11 @@
 {% import "encoding/json" %}
 {% import "github.com/bakape/meguca/lang" %}
 
+Boilerplate HTML for hover post previews on standalone pages
 {% func BoilerPlate() %}{% stripspace %}
-<meta charset="utf-8">
-<link rel="stylesheet" href="/assets/css/html.css">
+{%= htmlHeader() %}
+<link rel="stylesheet" href="/assets/css/static.css">
 {% code ln := lang.Get() %}
-{%= tableStyle() %}
 <template name="article">
     <input type="checkbox" class="deleted-toggle">
     <header class="spaced">
@@ -38,7 +38,7 @@
 </template>
 <template name="figure">
     <figure>
-        <a target="_blank">
+        <a>
             <img>
         </a>
     </figure>
@@ -48,6 +48,7 @@
     {% code buf, _ := json.Marshal(ln.Common) %}
     {%z= buf %}
 </script>
-<script src="/assets/js/scripts/htmlLoader.js"></script>
-<div class="overlay top-overlay" id="hover-overlay"></div>
+<script src="/assets/js/scripts/staticLoader.js"></script>
+<body>
+<div id="hover-overlay"></div>
 {% endstripspace %}{% endfunc %}
