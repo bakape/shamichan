@@ -25,7 +25,7 @@ type reclaimRequest struct {
 	Password string
 }
 
-// Synchronise the client to a certain thread, assign it's ID and prepare to
+// Synchronise the client to a certain thread, assign its ID and prepare to
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
 	var msg syncRequest
@@ -45,7 +45,7 @@ func (c *Client) synchronise(data []byte) error {
 		}
 	}
 
-	err = db.IsBanned(msg.Board, c.ip)
+	_, err = db.IsBanned(msg.Board, c.ip)
 	if err != nil {
 		return err
 	}

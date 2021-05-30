@@ -21,7 +21,7 @@ func TestBanUnban(t *testing.T) {
 	}
 
 	for _, board := range [...]string{"a", "all"} {
-		err = IsBanned(board, "::1")
+		_, err = IsBanned(board, "::1")
 		if err != common.ErrBanned {
 			UnexpectedError(t, err)
 		}

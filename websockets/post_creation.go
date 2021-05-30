@@ -44,7 +44,7 @@ type ImageRequest struct {
 	Token, Name string
 }
 
-// CreateThread creates a new tread and writes it to the database.
+// CreateThread creates a new thread and writes it to the database.
 // open specifies, if the thread OP should stay open after creation.
 func CreateThread(req ThreadCreationRequest, ip string) (
 	post db.Post, err error,
@@ -53,7 +53,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		err = common.ErrInvalidBoard(req.Board)
 		return
 	}
-	err = db.IsBanned(req.Board, ip)
+	_, err = db.IsBanned(req.Board, ip)
 	if err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func CreatePost(
 ) (
 	post db.Post, msg []byte, err error,
 ) {
-	err = db.IsBanned(board, ip)
+	_, err = db.IsBanned(board, ip)
 	if err != nil {
 		return
 	}
