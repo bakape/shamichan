@@ -28,6 +28,16 @@ createTask("client", `client/**/*.ts`, src =>
 		.pipe(gulp.dest('www/js'))
 )
 
+createTask("static", "clientStatic/*.ts", src => 
+	src.pipe(sourcemaps.init())
+		.pipe(ts.createProject("client/tsconfig.json", {
+			typescript: require("typescript"),
+		})())
+		.on("error", handleError)
+		.pipe(sourcemaps.write("maps"))
+		.pipe(gulp.dest("www/js/static"))
+)
+
 // Various little scripts
 createTask('scripts', 'clientScripts/*.js', src =>
 	src.pipe(sourcemaps.init())

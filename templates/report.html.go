@@ -95,7 +95,7 @@ func ReportForm(id uint64) string {
 //line report.html:23
 func StreamReportList(qw422016 *qt422016.Writer, reports []auth.Report) {
 //line report.html:24
-	streamtableStyle(qw422016)
+	StreamBoilerPlate(qw422016)
 //line report.html:24
 	qw422016.N().S(`<table>`)
 //line report.html:26
