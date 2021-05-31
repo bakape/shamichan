@@ -129,7 +129,7 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 		httpError(w, r, common.StatusError{err, 400})
 		return false
 	}
-	err = db.IsBanned(board, ip)
+	isGlobal, err := db.IsBanned(board, ip)
 	switch err {
 	case nil:
 		return true
@@ -139,6 +139,9 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 		return false
 	}
 
+	if isGlobal {
+		board = "all"
+	}
 	rec, err := db.GetBanInfo(ip, board)
 	switch err {
 	case nil:

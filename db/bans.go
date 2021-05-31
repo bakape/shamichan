@@ -194,19 +194,21 @@ func RefreshBanCache() (err error) {
 	return
 }
 
-// IsBanned checks,  if the IP is banned on the target board or globally
-func IsBanned(board, ip string) error {
+// IsBanned checks, if the IP is banned on the target board or globally.
+// Returns ErrBanned error if banned and boolean for if the ban is global
+func IsBanned(board, ip string) (bool, error) {
 	bansMu.RLock()
 	defer bansMu.RUnlock()
 	global := banCache["all"]
 	ips := banCache[board]
+	isGlobal := false
 
 	if (global != nil && global[ip]) || (ips != nil && ips[ip]) {
 		// Need to assert ban has not expired and cache is invalid
 
 		r, err := selectBans("board").Where("ip = ?", ip).Query()
 		if err != nil {
-			return err
+			return isGlobal, err
 		}
 		defer r.Close()
 
@@ -217,16 +219,20 @@ func IsBanned(board, ip string) error {
 		for r.Next() {
 			err = r.Scan(&resBoard)
 			if err != nil {
-				return err
+				return isGlobal, err
 			}
-			if resBoard == "all" || resBoard == board {
+			if resBoard == "all" {
+				matched = true
+				isGlobal = true
+				break
+			} else if resBoard == board {
 				matched = true
 				break
 			}
 		}
 		err = r.Err()
 		if err != nil {
-			return err
+			return isGlobal, err
 		}
 
 		if matched {
@@ -241,12 +247,12 @@ func IsBanned(board, ip string) error {
 				}()
 			}
 
-			return common.ErrBanned
+			return isGlobal, common.ErrBanned
 		}
-		return nil
+		return isGlobal, nil
 	}
 
-	return nil
+	return isGlobal, nil
 }
 
 // GetBanInfo retrieves information about a specific ban
