@@ -1,7 +1,7 @@
 import { View } from "../base"
 import { postJSON, toggleHeadStyle, trigger } from "../util"
 import { Post } from "../posts"
-import { getModel } from "../state"
+import { getModel, config } from "../state"
 
 let displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
@@ -103,8 +103,12 @@ export default class ModPanel extends View<null> {
 				if (checked.length) {
 					const args = HidableForm.forms["ban"].vals();
 					args["ids"] = mapToIDs(models);
-					trigger("renderCaptchaForm", () =>
-						this.postJSON("/api/ban", args));
+					if (config.captcha) {
+						trigger("renderCaptchaForm", () =>
+							this.postJSON("/api/ban", args));
+					} else {
+						this.postJSON("/api/ban", args);
+					}
 				}
 				break;
 			case "purgePost":
