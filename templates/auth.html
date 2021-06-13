@@ -92,11 +92,17 @@ Post link, that will redirect to the post from any page
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page
-{% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
+{% func ModLog(log []auth.ModLogEntry, canSeeIPHashes bool) %}{% stripspace %}
 	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
 	<table>
-		{%= tableHeaders("type", "by", "post", "time", "data", "ipHash", "duration") %}
+		{% code headers := []string{
+			"type", "by", "post", "time", "data", "duration",
+		} %}
+		{% if canSeeIPHashes %}
+			{% code headers = append(headers, "ipHash") %}
+		{% endif %}
+		{%= tableHeaders(headers...) %}
 		{% for _, l := range log %}
 			<tr>
 				<td>
@@ -135,12 +141,14 @@ Renders a moderation log page
 				</td>
 				<td>{%s l.Created.Format(time.UnixDate) %}</td>
 				<td>{%s l.Data %}</td>
-				<td>{%= ipHash(l.IP) %}</td>
 				<td>
 					{% if l.Length != 0 %}
-						{%s (time.Second * time.Duration(l.Length)).String() %}
+					{%s (time.Second * time.Duration(l.Length)).String() %}
 					{% endif %}
 				</td>
+				{% if canSeeIPHashes %}
+					<td>{%= ipHash(l.IP) %}</td>
+				{% endif %}
 			</tr>
 		{% endfor %}
 	</table>
