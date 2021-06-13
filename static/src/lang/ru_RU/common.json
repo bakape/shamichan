@@ -112,6 +112,7 @@
 		"googleSong": "Нажмите чтобы искать песню",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
 		"importDone": "Импорт завершён. Страница будет перезагружена.",
+		"ipHash": "IP hash",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Последний",
 		"lockThread": "Toggle thread lock",

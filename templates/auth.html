@@ -2,10 +2,8 @@
 {% import "time" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/auth" %}
-{% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/common" %}
-{% import "github.com/bakape/mnemonics" %}
 
 Header of a standalone HTML page
 {% func htmlHeader() %}{% stripspace %}
@@ -51,22 +49,18 @@ Renders a list of bans for a specific page with optional unbanning API links
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
 			{% code headers := []string{
-				"reason", "by", "post", "posterID", "expires", "type",
+				"reason", "by", "post", "ipHash", "expires", "type",
 			} %}
 			{% if canUnban %}
 				{% code headers = append(headers, "unban") %}
 			{% endif %}
 			{%= tableHeaders(headers...) %}
-			{% code salt := config.Get().Salt %}
 			{% for _, b := range bans %}
 				<tr>
 					<td>{%s b.Reason %}</td>
 					<td>{%s b.By %}</td>
 					<td>{%= staticPostLink(b.ForPost) %}</td>
-					{% code buf := make([]byte, 0, len(salt)+len(b.IP)) %}
-					{% code buf = append(buf, salt...) %}
-					{% code buf = append(buf, b.IP...) %}
-					<td>{%s mnemonic.FantasyName(buf) %}</td>
+					<td>ipHash(b.IP)</td>
 					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
 					<td>{%s ln.UI[b.Type] %}</td>
 					{% if canUnban %}
@@ -83,6 +77,15 @@ Renders a list of bans for a specific page with optional unbanning API links
 	</form>
 {% endstripspace %}{% endfunc %}
 
+{% func ipHash(ip string) %}{% stripspace %}
+	{% if ip == "" %}
+		{% return %}
+	{% endif %}
+
+	{% code title, hash := auth.HashToTitle([]byte(ip)) %}
+	<span title="{%s= hash %}">{%s title %}</span>
+{% endstripspace %}{% endfunc %}
+
 Post link, that will redirect to the post from any page
 {% func staticPostLink(id uint64) %}{% stripspace %}
 	{%= postLink(common.Link{id, id, "all"}, true, true) %}
@@ -93,7 +96,7 @@ Renders a moderation log page
 	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
 	<table>
-		{%= tableHeaders("type", "by", "post", "time", "data", "duration") %}
+		{%= tableHeaders("type", "by", "post", "time", "data", "ipHash", "duration") %}
 		{% for _, l := range log %}
 			<tr>
 				<td>
@@ -132,6 +135,7 @@ Renders a moderation log page
 				</td>
 				<td>{%s l.Created.Format(time.UnixDate) %}</td>
 				<td>{%s l.Data %}</td>
+				<td>ipHash(l.IP)</td>
 				<td>
 					{% if l.Length != 0 %}
 						{%s (time.Second * time.Duration(l.Length)).String() %}

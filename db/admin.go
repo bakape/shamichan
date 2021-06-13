@@ -324,13 +324,30 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
 	err = queryAll(
-		sq.Select("type", "post_id", "by", "created", "length", "data").
-			From("mod_log").
-			Where("board = ?", board).
-			OrderBy("created desc"),
+		sq.
+			Select(
+				"ml.type",
+				"ml.post_id",
+				"ml.by",
+				"ml.created",
+				"ml.length",
+				"ml.data",
+				"coalesce(p.ip::text, '')",
+			).
+			From("mod_log as ml").
+			LeftJoin("posts p on p.id = ml.post_id").
+			Where("ml.board = ?", board).
+			OrderBy("ml.created desc"),
 		func(r *sql.Rows) (err error) {
-			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
-				&e.Data)
+			err = r.Scan(
+				&e.Type,
+				&e.ID,
+				&e.By,
+				&e.Created,
+				&e.Length,
+				&e.Data,
+				&e.IP,
+			)
 			if err != nil {
 				return
 			}

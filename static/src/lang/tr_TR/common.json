@@ -112,6 +112,7 @@
 		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
 		"importCorrupt": "Import failed. File corrupt.",
 		"importDone": "Import successful. The page will now reload.",
+		"ipHash": "IP hash",
 		"keepDeletingFor": "Keep deleting for",
 		"last": "Son",
 		"lockThread": "Toggle thread lock",
