@@ -60,7 +60,7 @@ Renders a list of bans for a specific page with optional unbanning API links
 					<td>{%s b.Reason %}</td>
 					<td>{%s b.By %}</td>
 					<td>{%= staticPostLink(b.ForPost) %}</td>
-					<td>ipHash(b.IP)</td>
+					<td>{%= ipHash(b.IP) %}</td>
 					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
 					<td>{%s ln.UI[b.Type] %}</td>
 					{% if canUnban %}
@@ -135,7 +135,7 @@ Renders a moderation log page
 				</td>
 				<td>{%s l.Created.Format(time.UnixDate) %}</td>
 				<td>{%s l.Data %}</td>
-				<td>ipHash(l.IP)</td>
+				<td>{%= ipHash(l.IP) %}</td>
 				<td>
 					{% if l.Length != 0 %}
 						{%s (time.Second * time.Duration(l.Length)).String() %}

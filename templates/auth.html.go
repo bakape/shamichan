@@ -192,7 +192,11 @@ func StreamBanList(qw422016 *qt422016.Writer, bans []auth.BanRecord, board strin
 //line auth.html:62
 		streamstaticPostLink(qw422016, b.ForPost)
 //line auth.html:62
-		qw422016.N().S(`</td><td>ipHash(b.IP)</td><td>`)
+		qw422016.N().S(`</td><td>`)
+//line auth.html:63
+		streamipHash(qw422016, b.IP)
+//line auth.html:63
+		qw422016.N().S(`</td><td>`)
 //line auth.html:64
 		qw422016.E().S(b.Expires.Format(time.UnixDate))
 //line auth.html:64
@@ -429,7 +433,11 @@ func StreamModLog(qw422016 *qt422016.Writer, log []auth.ModLogEntry) {
 //line auth.html:137
 		qw422016.E().S(l.Data)
 //line auth.html:137
-		qw422016.N().S(`</td><td>ipHash(l.IP)</td><td>`)
+		qw422016.N().S(`</td><td>`)
+//line auth.html:138
+		streamipHash(qw422016, l.IP)
+//line auth.html:138
+		qw422016.N().S(`</td><td>`)
 //line auth.html:140
 		if l.Length != 0 {
 //line auth.html:141
