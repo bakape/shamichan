@@ -6,7 +6,7 @@ anonymous realtime imageboard focused on high performance, free speech and trans
 
 Platforms: Linux, Docker
 
-License: GNU AGPL
+License: GNU GPLv3
 
 
 __The master branch is currently undergoing active breaking changes towards meguca v7. If you intend to deploy meguca, please use the v6 branch.__
