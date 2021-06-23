@@ -58,6 +58,7 @@ features = [
   "CryptoKey",
   "CryptoKeyPair",
   "BinaryType",
+  "DomRect",
   "FormData",
   "HtmlFormElement",
   "HtmlAnchorElement",

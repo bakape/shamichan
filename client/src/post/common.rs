@@ -53,6 +53,13 @@ pub trait PostComponent: Default {
 	/// Can be dragged and repositioned across the screen
 	fn is_draggable<'c>(&self, c: &Ctx<'c, Self>) -> bool;
 
+	/// ID attribute to set on the top article element
+	#[allow(unused_variables)]
+	#[inline]
+	fn id_attribute<'c>(&self, c: &Ctx<'c, Self>) -> Option<String> {
+		None
+	}
+
 	/// Extra classes to assign to the post's root element
 	#[allow(unused_variables)]
 	#[inline]
@@ -485,6 +492,12 @@ where
 		if p.open {
 			cls.push("open");
 		}
+		match &c.app_state().location.focus {
+			Some(Focus::Post(id)) if id == &c.post().id => {
+				cls.push("highlight");
+			}
+			_ => (),
+		}
 
 		let mut style = String::new();
 		if !self.translation.is_zero() {
@@ -511,6 +524,7 @@ where
 		html! {
 			<article
 				class=cls
+				id?=self.inner.id_attribute(c)
 				key=c.props().id
 				ref=self.el.clone()
 				style=style
@@ -672,26 +686,28 @@ where
 			</>
 		};
 
-		// TODO: return to original position on double click
-		if self.inner.is_draggable(&c) {
-			html! {
-				<header
-					class="spaced draggable"
-					ondragstart=c.link().callback(|e: web_sys::DragEvent| {
-						e.prevent_default();
-						Message::DragStart(Coordinates::from(&*e))
-					})
-					draggable="true"
-				>
-					{inner}
-				</header>
-			}
-		} else {
-			html! {
-				<header class="spaced">
-					{inner}
-				</header>
-			}
+		let mut cls = vec!["spaced"];
+		let is_draggable = self.inner.is_draggable(&c);
+		let mut on_drag_start = None;
+		if is_draggable {
+			cls.push("draggable");
+
+			// TODO: render pin icon, when a post is repositioned
+			// TODO: return to original position, when a pin icon is clicked
+			on_drag_start = Some(c.link().callback(|e: web_sys::DragEvent| {
+				e.prevent_default();
+				Message::DragStart(Coordinates::from(&*e))
+			}));
+		}
+
+		html! {
+			<header
+				class=cls
+				ondragstart?=on_drag_start
+				draggable?=if is_draggable { Some("true") } else { None }
+			>
+				{inner}
+			</header>
 		}
 	}
 

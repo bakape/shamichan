@@ -27,4 +27,9 @@ impl PostComponent for Inner {
 		// TODO: inlined posts should never be draggable
 		c.app_state().location.is_thread()
 	}
+
+	#[inline]
+	fn id_attribute<'c>(&self, c: &Ctx<'c, Self>) -> Option<String> {
+		format!("p-{}", c.post().id).into()
+	}
 }

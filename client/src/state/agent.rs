@@ -26,9 +26,16 @@ use yew_services::render::{RenderService, RenderTask};
 // TODO: there is technically a data race, if the sure rapidly switches between
 // 2 feeds. Need to figure a way to address it.
 
-/// Location setting flags
+/// Push new location to history
 const PUSH_STATE: u8 = 1;
+
+/// Set new location to global state and trigger updates
 const SET_STATE: u8 = 1 << 1;
+
+/// Scroll to to the set location, if anything focused
+const SCROLL_TO_FOCUSED: u8 = 1 << 2;
+
+/// Do not trigger updates on new location setting
 const NO_TRIGGER: u8 = 1 << 3;
 
 /// Subscribe to updates of a value type
@@ -197,7 +204,7 @@ where
 }
 
 pub enum Message {
-	Focus(Focus),
+	ScrollTo(Focus),
 	PoppedState,
 }
 
@@ -286,44 +293,13 @@ impl yew::agent::Agent for Agent {
 		use Message::*;
 
 		match msg {
-			Focus(f) => {
-				use self::Focus::*;
-				use util::document;
-				use web_sys::HtmlElement;
-
-				fn banner_height() -> f64 {
-					document()
-						.get_element_by_id("banner")
-						.map(|el| {
-							el.dyn_into::<HtmlElement>()
-								.ok()
-								.map(|el| el.offset_height() - 5)
-						})
-						.flatten()
-						.unwrap_or_default() as f64
-				}
-
-				util::window().scroll_with_x_and_y(
-					0.0,
-					match f {
-						Top => banner_height(),
-						Bottom => document()
-							.document_element()
-							.map(|el| el.scroll_height())
-							.unwrap_or_default() as f64,
-						Post(id) => document()
-							.get_element_by_id(&format!("p-{}", id))
-							.map(|el| {
-								el.dyn_into::<HtmlElement>().ok().map(|el| {
-									el.offset_height() as f64 + banner_height()
-								})
-							})
-							.flatten()
-							.unwrap_or_default(),
-					},
-				);
+			ScrollTo(f) => {
+				Self::scroll_to(&f);
 			}
-			PoppedState => self.set_location(Location::from_path(), SET_STATE),
+			PoppedState => self.set_location(
+				Location::from_path(),
+				SET_STATE | SCROLL_TO_FOCUSED,
+			),
 		}
 
 		self.flush_triggers();
@@ -348,7 +324,7 @@ impl yew::agent::Agent for Agent {
 			}
 			NavigateTo { loc, flags } => self.set_location(loc, flags),
 			FetchFeed(loc) => {
-				self.try_sync_feed(&loc, 0);
+				self.try_sync_feed(&loc, SCROLL_TO_FOCUSED);
 			}
 			SetKeyID(id) => util::with_logging(|| {
 				let mut s = state::get_mut();
@@ -457,6 +433,14 @@ impl Agent {
 		let mut s = state::get_mut();
 		let old = s.location.clone();
 		if old == new {
+			// Scroll to focused element, even if the location did not change.
+			// This enables automatic scrolling to the focused element even
+			// after some other (possibly user-caused) scrolling ocurred.
+			if flags & SCROLL_TO_FOCUSED != 0 {
+				if let Some(f) = &new.focus {
+					Self::scroll_to(f);
+				}
+			}
 			return;
 		}
 
@@ -521,17 +505,17 @@ impl Agent {
 			if flags & NO_TRIGGER == 0 {
 				self.trigger(&Change::Location);
 			}
+		}
+		if flags & SCROLL_TO_FOCUSED != 0 {
 			if let Some(f) = new.focus.clone() {
 				self.render_task = RenderService::request_animation_frame(
-					self.link.callback(move |_| Message::Focus(f.clone())),
+					self.link.callback(move |_| Message::ScrollTo(f.clone())),
 				)
 				.into();
 			}
 		}
 
 		if flags & PUSH_STATE != 0 {
-			// TODO: Set last scroll position on back and hash navigation
-			// using replace_state()
 			util::with_logging(|| {
 				util::window().history()?.push_state_with_url(
 					&wasm_bindgen::JsValue::NULL,
@@ -541,6 +525,48 @@ impl Agent {
 				Ok(())
 			});
 		}
+	}
+
+	/// Scroll the browser to the focused element, if any
+	fn scroll_to(f: &Focus) {
+		use self::Focus::*;
+		use util::document;
+		use web_sys::HtmlElement;
+
+		fn banner_height() -> f64 {
+			document()
+				.get_element_by_id("banner")
+				.map(|el| {
+					el.dyn_into::<HtmlElement>().ok().map(|el| {
+						// Add an extra 5px offset for some margin between the
+						// focused element and the banner
+						el.offset_height() + 5
+					})
+				})
+				.flatten()
+				.unwrap_or_default() as f64
+		}
+
+		let y = match f {
+			Top => banner_height(),
+			Bottom => document()
+				.document_element()
+				.map(|el| el.scroll_height())
+				.unwrap_or_default() as f64,
+			Post(id) => document()
+				.get_element_by_id(&format!("p-{}", id))
+				.map(|el| {
+					el.dyn_into::<HtmlElement>().ok().map(|el| {
+						el.get_bounding_client_rect().top() as f64
+							+ util::window().scroll_y().unwrap()
+							- banner_height()
+					})
+				})
+				.flatten()
+				.unwrap_or_default(),
+		};
+		log::debug!("scrolling to: {:?} = (0, {})", f, y);
+		util::window().scroll_with_x_and_y(0.0, y);
 	}
 
 	/// Register posts of a page in the application state
@@ -738,6 +764,6 @@ impl Agent {
 pub fn navigate_to(loc: Location) {
 	Agent::dispatcher().send(Request::NavigateTo {
 		loc,
-		flags: PUSH_STATE | SET_STATE,
+		flags: PUSH_STATE | SET_STATE | SCROLL_TO_FOCUSED,
 	});
 }
