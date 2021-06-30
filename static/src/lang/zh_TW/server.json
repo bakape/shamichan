@@ -320,6 +320,10 @@
 			"R/a/dio",
 			"R/a/dio now playing banner"
 		],
+		"randomNameHours": [
+			"Random name hours",
+			"Randomly once every 12 assign a name to a poster in a thread"
+		],
 		"rbText": [
 			"紅/藍 文字",
 			"顯示紅和藍的文字如果該文字用 '^r' 或 '^b' 格式化"

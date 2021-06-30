@@ -2,9 +2,14 @@ package websockets
 
 import (
 	"database/sql"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"math/rand"
 	"strings"
+	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
@@ -21,7 +26,33 @@ var (
 	errReadOnly          = common.ErrInvalidInput("read only board")
 	errInvalidImageToken = common.ErrInvalidInput("image token")
 	errNoTextOrImage     = common.ErrInvalidInput("no text or image")
+
+	randomNameHours randomNameHoursType
 )
+
+type randomNameHoursType struct {
+	mu sync.Mutex
+
+	lastDetermined        time.Time
+	hourFirst, hourSecond int
+}
+
+func (r *randomNameHoursType) IsRandomNameHour() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now := time.Now().UTC()
+	if r.lastDetermined.IsZero() || r.lastDetermined.Day() != now.Day() {
+		rand.Seed(now.UnixNano())
+
+		r.lastDetermined = now
+		r.hourFirst = rand.Intn(12)
+		r.hourSecond = rand.Intn(12) + 12
+	}
+
+	h := now.Hour()
+	return h == r.hourFirst || h == r.hourSecond
+}
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
@@ -61,7 +92,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	if err != nil {
 		return
 	}
-	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
+	post, err = constructPost(req.ReplyCreationRequest, conf, ip, 0)
 	if err != nil {
 		return
 	}
@@ -147,7 +178,7 @@ func CreatePost(
 		return
 	}
 
-	post, err = constructPost(req, conf, ip)
+	post, err = constructPost(req, conf, ip, op)
 	if err != nil {
 		return
 	}
@@ -249,6 +280,7 @@ func constructPost(
 	req ReplyCreationRequest,
 	conf config.BoardConfigs,
 	ip string,
+	op uint64,
 ) (
 	post db.Post, err error,
 ) {
@@ -263,10 +295,24 @@ func constructPost(
 		IP: ip,
 	}
 
-	if !conf.ForcedAnon {
+	isRNH := conf.RandomNameHours && randomNameHours.IsRandomNameHour()
+	if isRNH || !conf.ForcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
 			return
+		}
+		if isRNH {
+			post.Trip = ""
+			if post.Name == "" {
+				post.Name = "Anonymous"
+			}
+
+			b := make([]byte, 8, 64)
+			binary.LittleEndian.PutUint64(b, op)
+			b = append(b, ip...)
+			b = append(b, config.Get().Salt...)
+			title, _ := auth.HashToTitle(b)
+			post.Name = fmt.Sprintf("%s the %s", post.Name, title)
 		}
 	}
 

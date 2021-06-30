@@ -320,6 +320,10 @@
 			"R/a/dio",
 			"R/a/dio now playing banner"
 		],
+		"randomNameHours": [
+			"Random name hours",
+			"Randomly once every 12 hours assign a name and title to posters in a thread"
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
