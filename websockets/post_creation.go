@@ -37,11 +37,11 @@ type randomNameHoursType struct {
 	hourFirst, hourSecond int
 }
 
-func (r *randomNameHoursType) IsRandomNameHour() bool {
+func (r *randomNameHoursType) GetRandomNameHour() (now time.Time, is bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	now := time.Now().UTC()
+	now = time.Now().UTC()
 	if r.lastDetermined.IsZero() || r.lastDetermined.Day() != now.Day() {
 		rand.Seed(now.UnixNano())
 
@@ -51,7 +51,8 @@ func (r *randomNameHoursType) IsRandomNameHour() bool {
 	}
 
 	h := now.Hour()
-	return h == r.hourFirst || h == r.hourSecond
+	is = h == r.hourFirst || h == r.hourSecond
+	return
 }
 
 // ThreadCreationRequest contains data for creating a new thread
@@ -295,7 +296,11 @@ func constructPost(
 		IP: ip,
 	}
 
-	isRNH := conf.RandomNameHours && randomNameHours.IsRandomNameHour()
+	isRNH := false
+	var now time.Time
+	if conf.RandomNameHours {
+		now, isRNH = randomNameHours.GetRandomNameHour()
+	}
 	if isRNH || !conf.ForcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
@@ -307,8 +312,11 @@ func constructPost(
 				post.Name = "Anonymous"
 			}
 
-			b := make([]byte, 8, 64)
+			b := make([]byte, 24, 128)
 			binary.LittleEndian.PutUint64(b, op)
+			binary.LittleEndian.PutUint64(b, uint64(now.Hour()))
+			binary.LittleEndian.PutUint64(b[8:], uint64(now.Day()))
+			binary.LittleEndian.PutUint64(b[16:], uint64(now.Month()))
 			b = append(b, ip...)
 			b = append(b, config.Get().Salt...)
 			title, _ := auth.HashToTitle(b)
