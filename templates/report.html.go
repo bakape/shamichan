@@ -123,32 +123,32 @@ func StreamReportList(qw422016 *qt422016.Writer, reports []auth.Report) {
 //line report.html:34
 	}
 //line report.html:34
-	qw422016.N().S(`</table>`)
-//line report.html:36
+	qw422016.N().S(`</table><script src="/assets/js/scripts/reports.js"></script>`)
+//line report.html:37
 }
 
-//line report.html:36
+//line report.html:37
 func WriteReportList(qq422016 qtio422016.Writer, reports []auth.Report) {
-//line report.html:36
+//line report.html:37
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line report.html:36
+//line report.html:37
 	StreamReportList(qw422016, reports)
-//line report.html:36
+//line report.html:37
 	qt422016.ReleaseWriter(qw422016)
-//line report.html:36
+//line report.html:37
 }
 
-//line report.html:36
+//line report.html:37
 func ReportList(reports []auth.Report) string {
-//line report.html:36
+//line report.html:37
 	qb422016 := qt422016.AcquireByteBuffer()
-//line report.html:36
+//line report.html:37
 	WriteReportList(qb422016, reports)
-//line report.html:36
+//line report.html:37
 	qs422016 := string(qb422016.B)
-//line report.html:36
+//line report.html:37
 	qt422016.ReleaseByteBuffer(qb422016)
-//line report.html:36
+//line report.html:37
 	return qs422016
-//line report.html:36
+//line report.html:37
 }
