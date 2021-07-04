@@ -6,6 +6,7 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 
 require (
 	github.com/Masterminds/squirrel v1.4.0
+	github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa // indirect
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20190827161153-36995ce6b19f
 	github.com/bakape/captchouli/v2 v2.0.3
