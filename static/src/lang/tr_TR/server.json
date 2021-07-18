@@ -473,7 +473,7 @@
 		"add": "Add",
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
-		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 300 KB and no sound.",
+		"bannerSpecs": "Accepts up to 100 JPEG, PNG, GIF or WebM files with maximum dimensions of 300x100, maximum file size of 300 KB and no sound.",
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Change password",

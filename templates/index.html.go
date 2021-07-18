@@ -255,7 +255,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:231
 	qw422016.N().S(` `)
 //line index.html:231
-	qw422016.N().S(`<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">GNU Affero General Public License</a><br>Source code repository:`)
+	qw422016.N().S(`<a href="https://www.gnu.org/licenses/gpl.html" target="_blank">GNU General Public License version 3</a><br>Source code repository:`)
 //line index.html:236
 	qw422016.N().S(` `)
 //line index.html:236

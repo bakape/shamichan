@@ -37,7 +37,7 @@ const (
 	MaxLenRules        = 5000
 	MaxLenEightball    = 2000
 	MaxLenReason       = 100
-	MaxNumBanners      = 20
+	MaxNumBanners      = 100
 	MaxAssetSize       = 300 << 10
 	MaxDiceSides       = 10000
 	BumpLimit          = 1000

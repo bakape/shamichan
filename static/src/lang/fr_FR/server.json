@@ -473,7 +473,7 @@
 		"add": "Ajouter",
 		"assignStaff": "Équipe",
 		"ban": "Bannir",
-		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WebM sans son (dimension : 300x100, taille : 300 KB).",
+		"bannerSpecs": "Accepte jusqu'à 100 fichiers JPEG, PNG, GIF ou WebM sans son (dimension : 300x100, taille : 300 KB).",
 		"by": "Par",
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",

@@ -473,7 +473,7 @@
 		"add": "新增",
 		"assignStaff": "指派版務人員",
 		"ban": "封鎖",
-		"bannerSpecs": "最多可接受 20 個 JPEG、PNG、GIF 或 WebM 文件，最大尺寸為 300x100，最大文件大小為 300 KB，無聲音。",
+		"bannerSpecs": "最多可接受 100 個 JPEG、PNG、GIF 或 WebM 文件，最大尺寸為 300x100，最大文件大小為 300 KB，無聲音。",
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",

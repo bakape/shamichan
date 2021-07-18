@@ -17,7 +17,7 @@ RUN apt-get install -y \
 	libavcodec-dev libavutil-dev libavformat-dev libswscale-dev \
 	libwebp-dev \
 	libopencv-dev \
-	libgeoip-dev \
+	libgeoip-dev geoip-database \
 	python3 python3-requests \
 	git lsb-release wget curl netcat postgresql-client gzip
 RUN apt-get dist-upgrade -y
@@ -25,10 +25,6 @@ RUN apt-get dist-upgrade -y
 # Install Node.js
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
-
-COPY scripts/download_geoloc_db.py .
-RUN python3 download_geoloc_db.py
-RUN rm download_geoloc_db.py
 
 # Cache dependency downloads, if possible
 COPY go.mod .
