@@ -137,7 +137,7 @@ export class Post {
                     s = this.format("viewedSameIP", by);
                     break;
                 case ModerationAction.purgePost:
-                    s = this.format("purgedPost", by);
+                    s = this.format("purgedPost", by, data);
                     break;
                 case ModerationAction.unbanPost:
                     s = this.format("unbanned", by);
