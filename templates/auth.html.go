@@ -40,461 +40,461 @@ var (
 //line auth.html:9
 func streamhtmlHeader(qw422016 *qt422016.Writer) {
 //line auth.html:9
-	qw422016.N().S(`<!DOCTYPE html><meta charset="utf-8"/>`)
-//line auth.html:12
+	qw422016.N().S(`<!DOCTYPE html><meta charset="utf-8"/><link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">`)
+//line auth.html:13
 }
 
-//line auth.html:12
+//line auth.html:13
 func writehtmlHeader(qq422016 qtio422016.Writer) {
-//line auth.html:12
+//line auth.html:13
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:12
+//line auth.html:13
 	streamhtmlHeader(qw422016)
-//line auth.html:12
+//line auth.html:13
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:12
+//line auth.html:13
 }
 
-//line auth.html:12
+//line auth.html:13
 func htmlHeader() string {
-//line auth.html:12
+//line auth.html:13
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:12
+//line auth.html:13
 	writehtmlHeader(qb422016)
-//line auth.html:12
+//line auth.html:13
 	qs422016 := string(qb422016.B)
-//line auth.html:12
+//line auth.html:13
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:12
+//line auth.html:13
 	return qs422016
-//line auth.html:12
+//line auth.html:13
 }
 
 // BanPage renders a ban page for a banned user
 
-//line auth.html:15
-func StreamBanPage(qw422016 *qt422016.Writer, rec auth.BanRecord) {
 //line auth.html:16
-	streamhtmlHeader(qw422016)
+func StreamBanPage(qw422016 *qt422016.Writer, rec auth.BanRecord) {
 //line auth.html:17
+	streamhtmlHeader(qw422016)
+//line auth.html:18
 	ln := lang.Get().Templates["banPage"]
 
-//line auth.html:18
-	if len(ln) < 3 {
 //line auth.html:19
+	if len(ln) < 3 {
+//line auth.html:20
 		panic(fmt.Errorf("invalid ban format strings: %v", ln))
 
-//line auth.html:20
-	}
 //line auth.html:21
+	}
+//line auth.html:22
 	if rec.By == "system" && rec.Reason == "brum brum" {
-//line auth.html:21
+//line auth.html:22
 		qw422016.N().S(`<img src="/assets/autobahn.gif" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-100;"/><audio src="/assets/autobahn.mp3" style="display:none" autoplay loop></audio>`)
-//line auth.html:24
+//line auth.html:25
 	}
-//line auth.html:24
+//line auth.html:25
 	qw422016.N().S(`<div class="ban-page glass">`)
-//line auth.html:26
+//line auth.html:27
 	qw422016.N().S(fmt.Sprintf(ln[0], bold(rec.Board), bold(rec.By)))
-//line auth.html:26
+//line auth.html:27
 	qw422016.N().S(`<br><br><b>`)
-//line auth.html:30
+//line auth.html:31
 	qw422016.E().S(rec.Reason)
-//line auth.html:30
+//line auth.html:31
 	qw422016.N().S(`</b><br><br>`)
-//line auth.html:34
+//line auth.html:35
 	exp := rec.Expires.Round(time.Second)
 
-//line auth.html:35
+//line auth.html:36
 	date := exp.Format(time.UnixDate)
 
-//line auth.html:36
+//line auth.html:37
 	till := exp.Sub(time.Now().Round(time.Second)).String()
 
-//line auth.html:37
+//line auth.html:38
 	qw422016.N().S(fmt.Sprintf(ln[1], bold(date), bold(till)))
-//line auth.html:37
+//line auth.html:38
 	qw422016.N().S(`<br><br>`)
-//line auth.html:40
+//line auth.html:41
 	qw422016.N().S(fmt.Sprintf(ln[2], bold(rec.IP)))
-//line auth.html:40
+//line auth.html:41
 	qw422016.N().S(`<br></div>`)
-//line auth.html:43
+//line auth.html:44
 }
 
-//line auth.html:43
+//line auth.html:44
 func WriteBanPage(qq422016 qtio422016.Writer, rec auth.BanRecord) {
-//line auth.html:43
+//line auth.html:44
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:43
+//line auth.html:44
 	StreamBanPage(qw422016, rec)
-//line auth.html:43
+//line auth.html:44
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:43
+//line auth.html:44
 }
 
-//line auth.html:43
+//line auth.html:44
 func BanPage(rec auth.BanRecord) string {
-//line auth.html:43
+//line auth.html:44
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:43
+//line auth.html:44
 	WriteBanPage(qb422016, rec)
-//line auth.html:43
+//line auth.html:44
 	qs422016 := string(qb422016.B)
-//line auth.html:43
+//line auth.html:44
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:43
+//line auth.html:44
 	return qs422016
-//line auth.html:43
+//line auth.html:44
 }
 
 // Renders a list of bans for a specific page with optional unbanning API links
 
-//line auth.html:46
-func StreamBanList(qw422016 *qt422016.Writer, bans []auth.BanRecord, board string, canUnban bool) {
 //line auth.html:47
-	StreamBoilerPlate(qw422016)
+func StreamBanList(qw422016 *qt422016.Writer, bans []auth.BanRecord, board string, canUnban bool) {
 //line auth.html:48
+	StreamBoilerPlate(qw422016)
+//line auth.html:49
 	ln := lang.Get()
 
-//line auth.html:48
+//line auth.html:49
 	qw422016.N().S(`<form method="post" action="/api/unban/`)
-//line auth.html:49
+//line auth.html:50
 	qw422016.N().S(board)
-//line auth.html:49
+//line auth.html:50
 	qw422016.N().S(`"><table>`)
-//line auth.html:51
+//line auth.html:52
 	headers := []string{
 		"reason", "by", "post", "ipHash", "expires", "type",
 	}
 
-//line auth.html:54
-	if canUnban {
 //line auth.html:55
+	if canUnban {
+//line auth.html:56
 		headers = append(headers, "unban")
 
-//line auth.html:56
-	}
 //line auth.html:57
+	}
+//line auth.html:58
 	streamtableHeaders(qw422016, headers...)
-//line auth.html:58
+//line auth.html:59
 	for _, b := range bans {
-//line auth.html:58
+//line auth.html:59
 		qw422016.N().S(`<tr><td>`)
-//line auth.html:60
+//line auth.html:61
 		qw422016.E().S(b.Reason)
-//line auth.html:60
-		qw422016.N().S(`</td><td>`)
 //line auth.html:61
+		qw422016.N().S(`</td><td>`)
+//line auth.html:62
 		qw422016.E().S(b.By)
-//line auth.html:61
-		qw422016.N().S(`</td><td>`)
 //line auth.html:62
+		qw422016.N().S(`</td><td>`)
+//line auth.html:63
 		streamstaticPostLink(qw422016, b.ForPost)
-//line auth.html:62
-		qw422016.N().S(`</td><td>`)
 //line auth.html:63
+		qw422016.N().S(`</td><td>`)
+//line auth.html:64
 		streamipHash(qw422016, b.IP)
-//line auth.html:63
-		qw422016.N().S(`</td><td>`)
 //line auth.html:64
+		qw422016.N().S(`</td><td>`)
+//line auth.html:65
 		qw422016.E().S(b.Expires.Format(time.UnixDate))
-//line auth.html:64
+//line auth.html:65
 		qw422016.N().S(`</td><td>`)
-//line auth.html:65
+//line auth.html:66
 		qw422016.E().S(ln.UI[b.Type])
-//line auth.html:65
+//line auth.html:66
 		qw422016.N().S(`</td>`)
-//line auth.html:66
+//line auth.html:67
 		if canUnban {
-//line auth.html:66
+//line auth.html:67
 			qw422016.N().S(`<td><input type="checkbox" name="`)
-//line auth.html:68
+//line auth.html:69
 			qw422016.E().S(strconv.FormatUint(b.ForPost, 10))
-//line auth.html:68
+//line auth.html:69
 			qw422016.N().S(`"></td>`)
-//line auth.html:70
+//line auth.html:71
 		}
-//line auth.html:70
+//line auth.html:71
 		qw422016.N().S(`</tr>`)
-//line auth.html:72
+//line auth.html:73
 	}
-//line auth.html:72
+//line auth.html:73
 	qw422016.N().S(`</table>`)
-//line auth.html:74
-	if canUnban {
 //line auth.html:75
+	if canUnban {
+//line auth.html:76
 		streamsubmit(qw422016, false)
-//line auth.html:76
+//line auth.html:77
 	}
-//line auth.html:76
+//line auth.html:77
 	qw422016.N().S(`</form>`)
-//line auth.html:78
+//line auth.html:79
 }
 
-//line auth.html:78
+//line auth.html:79
 func WriteBanList(qq422016 qtio422016.Writer, bans []auth.BanRecord, board string, canUnban bool) {
-//line auth.html:78
+//line auth.html:79
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:78
+//line auth.html:79
 	StreamBanList(qw422016, bans, board, canUnban)
-//line auth.html:78
+//line auth.html:79
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:78
+//line auth.html:79
 }
 
-//line auth.html:78
+//line auth.html:79
 func BanList(bans []auth.BanRecord, board string, canUnban bool) string {
-//line auth.html:78
+//line auth.html:79
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:78
+//line auth.html:79
 	WriteBanList(qb422016, bans, board, canUnban)
-//line auth.html:78
+//line auth.html:79
 	qs422016 := string(qb422016.B)
-//line auth.html:78
+//line auth.html:79
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:78
+//line auth.html:79
 	return qs422016
-//line auth.html:78
+//line auth.html:79
 }
 
-//line auth.html:80
-func streamipHash(qw422016 *qt422016.Writer, ip string) {
 //line auth.html:81
-	if ip == "" {
+func streamipHash(qw422016 *qt422016.Writer, ip string) {
 //line auth.html:82
-		return
+	if ip == "" {
 //line auth.html:83
+		return
+//line auth.html:84
 	}
-//line auth.html:85
+//line auth.html:86
 	title, hash := auth.HashToTitle([]byte(ip))
 
-//line auth.html:85
+//line auth.html:86
 	qw422016.N().S(`<span title="`)
-//line auth.html:86
+//line auth.html:87
 	qw422016.N().S(hash)
-//line auth.html:86
+//line auth.html:87
 	qw422016.N().S(`">`)
-//line auth.html:86
+//line auth.html:87
 	qw422016.E().S(title)
-//line auth.html:86
+//line auth.html:87
 	qw422016.N().S(`</span>`)
-//line auth.html:87
+//line auth.html:88
 }
 
-//line auth.html:87
+//line auth.html:88
 func writeipHash(qq422016 qtio422016.Writer, ip string) {
-//line auth.html:87
+//line auth.html:88
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:87
+//line auth.html:88
 	streamipHash(qw422016, ip)
-//line auth.html:87
+//line auth.html:88
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:87
+//line auth.html:88
 }
 
-//line auth.html:87
+//line auth.html:88
 func ipHash(ip string) string {
-//line auth.html:87
+//line auth.html:88
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:87
+//line auth.html:88
 	writeipHash(qb422016, ip)
-//line auth.html:87
+//line auth.html:88
 	qs422016 := string(qb422016.B)
-//line auth.html:87
+//line auth.html:88
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:87
+//line auth.html:88
 	return qs422016
-//line auth.html:87
+//line auth.html:88
 }
 
 // Post link, that will redirect to the post from any page
 
-//line auth.html:90
-func streamstaticPostLink(qw422016 *qt422016.Writer, id uint64) {
 //line auth.html:91
+func streamstaticPostLink(qw422016 *qt422016.Writer, id uint64) {
+//line auth.html:92
 	streampostLink(qw422016, common.Link{id, id, "all"}, true, true)
-//line auth.html:92
+//line auth.html:93
 }
 
-//line auth.html:92
+//line auth.html:93
 func writestaticPostLink(qq422016 qtio422016.Writer, id uint64) {
-//line auth.html:92
+//line auth.html:93
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:92
+//line auth.html:93
 	streamstaticPostLink(qw422016, id)
-//line auth.html:92
+//line auth.html:93
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:92
+//line auth.html:93
 }
 
-//line auth.html:92
+//line auth.html:93
 func staticPostLink(id uint64) string {
-//line auth.html:92
+//line auth.html:93
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:92
+//line auth.html:93
 	writestaticPostLink(qb422016, id)
-//line auth.html:92
+//line auth.html:93
 	qs422016 := string(qb422016.B)
-//line auth.html:92
+//line auth.html:93
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:92
+//line auth.html:93
 	return qs422016
-//line auth.html:92
+//line auth.html:93
 }
 
 // Renders a moderation log page
 
-//line auth.html:95
-func StreamModLog(qw422016 *qt422016.Writer, log []auth.ModLogEntry, canSeeIPHashes bool) {
 //line auth.html:96
-	StreamBoilerPlate(qw422016)
+func StreamModLog(qw422016 *qt422016.Writer, log []auth.ModLogEntry, canSeeIPHashes bool) {
 //line auth.html:97
+	StreamBoilerPlate(qw422016)
+//line auth.html:98
 	ln := lang.Get()
 
-//line auth.html:97
+//line auth.html:98
 	qw422016.N().S(`<table>`)
-//line auth.html:99
+//line auth.html:100
 	headers := []string{
 		"type", "by", "post", "time", "data", "duration",
 	}
 
-//line auth.html:102
-	if canSeeIPHashes {
 //line auth.html:103
+	if canSeeIPHashes {
+//line auth.html:104
 		headers = append(headers, "ipHash")
 
-//line auth.html:104
-	}
 //line auth.html:105
-	streamtableHeaders(qw422016, headers...)
-//line auth.html:106
-	for _, l := range log {
-//line auth.html:106
-		qw422016.N().S(`<tr><td>`)
-//line auth.html:109
-		switch l.Type {
-//line auth.html:110
-		case common.BanPost:
-//line auth.html:111
-			qw422016.E().S(ln.UI["ban"])
-//line auth.html:112
-		case common.ShadowBinPost:
-//line auth.html:113
-			qw422016.E().S(ln.UI["shadowBin"])
-//line auth.html:114
-		case common.UnbanPost:
-//line auth.html:115
-			qw422016.E().S(ln.UI["unban"])
-//line auth.html:116
-		case common.DeletePost:
-//line auth.html:117
-			qw422016.E().S(ln.UI["deletePost"])
-//line auth.html:118
-		case common.DeleteImage:
-//line auth.html:119
-			qw422016.E().S(ln.UI["deleteImage"])
-//line auth.html:120
-		case common.SpoilerImage:
-//line auth.html:121
-			qw422016.E().S(ln.UI["spoilerImage"])
-//line auth.html:122
-		case common.LockThread:
-//line auth.html:123
-			qw422016.E().S(ln.Common.UI["lockThread"])
-//line auth.html:124
-		case common.DeleteBoard:
-//line auth.html:125
-			qw422016.E().S(ln.Common.UI["deleteBoard"])
-//line auth.html:126
-		case common.MeidoVision:
-//line auth.html:127
-			qw422016.E().S(ln.Common.UI["meidoVisionPost"])
-//line auth.html:128
-		case common.PurgePost:
-//line auth.html:129
-			qw422016.E().S(ln.UI["purgePost"])
-//line auth.html:130
-		case common.RedirectIP:
-//line auth.html:131
-			qw422016.E().S(ln.UI["redirectIP"])
-//line auth.html:132
-		case common.RedirectThread:
-//line auth.html:133
-			qw422016.E().S(ln.UI["redirectThread"])
-//line auth.html:134
-		}
-//line auth.html:134
-		qw422016.N().S(`</td><td>`)
-//line auth.html:136
-		qw422016.E().S(l.By)
-//line auth.html:136
-		qw422016.N().S(`</td><td>`)
-//line auth.html:138
-		if l.ID != 0 {
-//line auth.html:139
-			streamstaticPostLink(qw422016, l.ID)
-//line auth.html:140
-		}
-//line auth.html:140
-		qw422016.N().S(`</td><td>`)
-//line auth.html:142
-		qw422016.E().S(l.Created.Format(time.UnixDate))
-//line auth.html:142
-		qw422016.N().S(`</td><td>`)
-//line auth.html:143
-		qw422016.E().S(l.Data)
-//line auth.html:143
-		qw422016.N().S(`</td><td>`)
-//line auth.html:145
-		if l.Length != 0 {
-//line auth.html:146
-			qw422016.E().S((time.Second * time.Duration(l.Length)).String())
-//line auth.html:147
-		}
-//line auth.html:147
-		qw422016.N().S(`</td>`)
-//line auth.html:149
-		if canSeeIPHashes {
-//line auth.html:149
-			qw422016.N().S(`<td>`)
-//line auth.html:150
-			streamipHash(qw422016, l.IP)
-//line auth.html:150
-			qw422016.N().S(`</td>`)
-//line auth.html:151
-		}
-//line auth.html:151
-		qw422016.N().S(`</tr>`)
-//line auth.html:153
 	}
-//line auth.html:153
+//line auth.html:106
+	streamtableHeaders(qw422016, headers...)
+//line auth.html:107
+	for _, l := range log {
+//line auth.html:107
+		qw422016.N().S(`<tr><td>`)
+//line auth.html:110
+		switch l.Type {
+//line auth.html:111
+		case common.BanPost:
+//line auth.html:112
+			qw422016.E().S(ln.UI["ban"])
+//line auth.html:113
+		case common.ShadowBinPost:
+//line auth.html:114
+			qw422016.E().S(ln.UI["shadowBin"])
+//line auth.html:115
+		case common.UnbanPost:
+//line auth.html:116
+			qw422016.E().S(ln.UI["unban"])
+//line auth.html:117
+		case common.DeletePost:
+//line auth.html:118
+			qw422016.E().S(ln.UI["deletePost"])
+//line auth.html:119
+		case common.DeleteImage:
+//line auth.html:120
+			qw422016.E().S(ln.UI["deleteImage"])
+//line auth.html:121
+		case common.SpoilerImage:
+//line auth.html:122
+			qw422016.E().S(ln.UI["spoilerImage"])
+//line auth.html:123
+		case common.LockThread:
+//line auth.html:124
+			qw422016.E().S(ln.Common.UI["lockThread"])
+//line auth.html:125
+		case common.DeleteBoard:
+//line auth.html:126
+			qw422016.E().S(ln.Common.UI["deleteBoard"])
+//line auth.html:127
+		case common.MeidoVision:
+//line auth.html:128
+			qw422016.E().S(ln.Common.UI["meidoVisionPost"])
+//line auth.html:129
+		case common.PurgePost:
+//line auth.html:130
+			qw422016.E().S(ln.UI["purgePost"])
+//line auth.html:131
+		case common.RedirectIP:
+//line auth.html:132
+			qw422016.E().S(ln.UI["redirectIP"])
+//line auth.html:133
+		case common.RedirectThread:
+//line auth.html:134
+			qw422016.E().S(ln.UI["redirectThread"])
+//line auth.html:135
+		}
+//line auth.html:135
+		qw422016.N().S(`</td><td>`)
+//line auth.html:137
+		qw422016.E().S(l.By)
+//line auth.html:137
+		qw422016.N().S(`</td><td>`)
+//line auth.html:139
+		if l.ID != 0 {
+//line auth.html:140
+			streamstaticPostLink(qw422016, l.ID)
+//line auth.html:141
+		}
+//line auth.html:141
+		qw422016.N().S(`</td><td>`)
+//line auth.html:143
+		qw422016.E().S(l.Created.Format(time.UnixDate))
+//line auth.html:143
+		qw422016.N().S(`</td><td>`)
+//line auth.html:144
+		qw422016.E().S(l.Data)
+//line auth.html:144
+		qw422016.N().S(`</td><td>`)
+//line auth.html:146
+		if l.Length != 0 {
+//line auth.html:147
+			qw422016.E().S((time.Second * time.Duration(l.Length)).String())
+//line auth.html:148
+		}
+//line auth.html:148
+		qw422016.N().S(`</td>`)
+//line auth.html:150
+		if canSeeIPHashes {
+//line auth.html:150
+			qw422016.N().S(`<td>`)
+//line auth.html:151
+			streamipHash(qw422016, l.IP)
+//line auth.html:151
+			qw422016.N().S(`</td>`)
+//line auth.html:152
+		}
+//line auth.html:152
+		qw422016.N().S(`</tr>`)
+//line auth.html:154
+	}
+//line auth.html:154
 	qw422016.N().S(`</table>`)
-//line auth.html:155
+//line auth.html:156
 }
 
-//line auth.html:155
+//line auth.html:156
 func WriteModLog(qq422016 qtio422016.Writer, log []auth.ModLogEntry, canSeeIPHashes bool) {
-//line auth.html:155
+//line auth.html:156
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line auth.html:155
+//line auth.html:156
 	StreamModLog(qw422016, log, canSeeIPHashes)
-//line auth.html:155
+//line auth.html:156
 	qt422016.ReleaseWriter(qw422016)
-//line auth.html:155
+//line auth.html:156
 }
 
-//line auth.html:155
+//line auth.html:156
 func ModLog(log []auth.ModLogEntry, canSeeIPHashes bool) string {
-//line auth.html:155
+//line auth.html:156
 	qb422016 := qt422016.AcquireByteBuffer()
-//line auth.html:155
+//line auth.html:156
 	WriteModLog(qb422016, log, canSeeIPHashes)
-//line auth.html:155
+//line auth.html:156
 	qs422016 := string(qb422016.B)
-//line auth.html:155
+//line auth.html:156
 	qt422016.ReleaseByteBuffer(qb422016)
-//line auth.html:155
+//line auth.html:156
 	return qs422016
-//line auth.html:155
+//line auth.html:156
 }

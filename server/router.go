@@ -181,6 +181,7 @@ func createRouter() http.Handler {
 		api.POST("/set-loading", setLoadingAnimation)
 		api.POST("/report", report)
 		api.POST("/purge-post", purgePost)
+		api.GET("/sse", sse)
 
 		redir := api.NewGroup("/redirect")
 		redir.POST("/by-ip", redirectByIP)
