@@ -135,7 +135,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 
 	var h, f string
-	switch r.Host {
+	switch r.Header.Get("X-Forwarded-Host") {
 	case "cute.reisen":
 		h = "cute"
 		f = "reise"
