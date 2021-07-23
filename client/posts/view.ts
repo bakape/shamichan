@@ -45,6 +45,10 @@ export default class PostView extends ImageHandler {
         }
         super(attrs)
 
+        if (this.model.flag) {
+            this.el.style.background = `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(/assets/flags/${this.model.flag}.svg)`;
+        }
+
         this.model.view = this
         if (!el) {
             this.el.append(importTemplate("article"))

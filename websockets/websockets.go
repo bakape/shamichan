@@ -149,7 +149,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		h = "hidamari"
 		f = "wide"
 	case "jinboch.ooo":
-		h = "snek"
+		h = "jinbo"
 		f = "jinbo"
 	case "mcdoogle.cafe":
 		h = "melody"

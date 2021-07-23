@@ -9,7 +9,9 @@
 {% func renderArticle(p common.Post, c articleContext) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code ln := lang.Get() %}
-	<article id="p{%s= id %}" {% space %} {%= postClass(p, c.op) %}>
+	<article id="p{%s= id %}" {% space %} {%= postClass(p, c.op) %} {% if p.Flag != "" %}
+		style="background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(/assets/flags/{%s= p.Flag %}.svg)"
+	{% endif %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
