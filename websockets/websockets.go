@@ -142,12 +142,12 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	case "desun.ooo":
 		h = "desu"
 		f = "desu"
-	case "dind.in":
-		h = "din"
-		f = "din"
 	case "gosenz.ooo":
 		h = "gosenzo"
 		f = "gosen"
+	case "hidamari.moe":
+		h = "hidamari"
+		f = "wide"
 	case "jinboch.ooo":
 		h = "snek"
 		f = "jinbo"
@@ -172,6 +172,12 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	case "shamik.ooo":
 		h = "shami"
 		f = "shami"
+	case "suwak.ooo":
+		h = "suwako"
+		f = "suwak"
+	case "sxrop.casa":
+		h = "sxrop"
+		f = "sxrop"
 	case "yangel.ooo":
 		h = "yangelo"
 		f = "yange"
