@@ -377,10 +377,6 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Moderation rights are checked in plpgsql
-		err = assertSolvedCaptcha(w, r)
-		if err != nil {
-			return
-		}
 		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
@@ -476,10 +472,6 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = assertSolvedCaptcha(w, r)
-		if err != nil {
-			return
-		}
 		creds, err := isLoggedIn(w, r)
 		switch {
 		case err != nil:

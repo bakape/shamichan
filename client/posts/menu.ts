@@ -91,7 +91,7 @@ class DeleteByIPForm extends MenuForm {
 		s += HTML`
 		<input type="text" name="reason" class="full-width" placeholder="${lang.ui["reason"]}">
 		<hr>`;
-		super(parent, parentID, s, { needCaptcha: true });
+		super(parent, parentID, s);
 		this.el.style.padding = "0.5em";
 
 		// Reason is required, if duration set
