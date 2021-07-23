@@ -46,7 +46,11 @@ export default class PostView extends ImageHandler {
         super(attrs)
 
         if (this.model.flag) {
-            this.el.style.background = `linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(/assets/flags/${this.model.flag}.svg)`;
+            let gradient = "rgba(0, 0, 0, 0.8)";
+            if (["gar", "moe", "moon", "rave", "tea", "win95"].indexOf(options.theme)) {
+                gradient = "rgba(255, 255, 255, 0.8)";
+            }
+            this.el.style.background = `linear-gradient(${gradient}, ${gradient}), url(/assets/flags/${this.model.flag}.svg)`;
             this.el.classList.remove("editing");
         }
 
