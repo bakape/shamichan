@@ -1,6 +1,6 @@
 import { on, fetchBoard } from '../util'
 import lang from '../lang'
-import { page, posts, loadFromDB, displayLoading } from '../state'
+import { page, posts, loadFromDB, displayLoading, hidden } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
@@ -49,26 +49,29 @@ function isBanned(): boolean {
 }
 
 async function extractCatalogModels() {
-	// Don't really need these in the catalog, so just load empty sets
-	await loadFromDB()
-
 	const data = extractPageData<BoardData>();
+	await loadFromDB(...(data.threads.threads).map(t => t.id));
+	
 	for (let t of data.threads.threads) {
 		threads[t.id] = t;
 		extractPost(t, t.id, t.board, data.backlinks)
+		if (hidden.has(t.id)) {
+			document.getElementById(`p${t.id}`).classList.add("hidden")
+		}
 	}
 }
 
 async function extractThreads() {
 	const data = extractPageData<BoardData>();
-	await loadFromDB(...(data.threads.threads).map(t =>
-		t.id));
+	await loadFromDB(...(data.threads.threads).map(t => t.id));
+
 	for (let thread of data.threads.threads) {
 		const { posts } = thread
 		delete thread.posts
 		threads[thread.id] = thread;
-		if (extractPost(thread, thread.id, thread.board, data.backlinks)) {
-			document.querySelector(`section[data-id="${thread.id}"]`).remove()
+		extractPost(thread, thread.id, thread.board, data.backlinks)
+		if (hidden.has(thread.id)) {
+			document.querySelector(`section[data-id="${thread.id}"]`).classList.add("hidden")
 			continue
 		}
 		for (let post of posts) {
