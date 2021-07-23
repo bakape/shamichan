@@ -13,6 +13,7 @@ type ModLogEntry struct {
 	ID      uint64    `json:"id"`
 	Created time.Time `json:"created"`
 	Board   string    `json:"board"`
+	IP      string    `json:"-"`
 }
 
 // Ban holds an entry of an IP being banned from a board

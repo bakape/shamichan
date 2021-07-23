@@ -2,25 +2,14 @@
 {% import "time" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/auth" %}
-{% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/common" %}
-{% import "github.com/bakape/mnemonics" %}
 
-// Header of a standalone HTML page
+Header of a standalone HTML page
 {% func htmlHeader() %}{% stripspace %}
 	<!DOCTYPE html>
-	<html>
-		<head>
-			<meta charset="utf-8"/>
-		</head>
-		<body>
-{% endstripspace %}{% endfunc %}
-
-// End of a standalone HTML page
-{% func htmlEnd() %}{% stripspace %}
-		</body>
-	</html>
+		<meta charset="utf-8"/>
+		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
 {% endstripspace %}{% endfunc %}
 
 BanPage renders a ban page for a banned user
@@ -52,33 +41,27 @@ BanPage renders a ban page for a banned user
 		{%s= fmt.Sprintf(ln[2], bold(rec.IP)) %}
 		<br>
 	</div>
-	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
 
 Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
-	{%= htmlHeader() %}
-	{%= tableStyle() %}
+	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
 			{% code headers := []string{
-				"reason", "by", "post", "posterID", "expires", "type",
+				"reason", "by", "post", "ipHash", "expires", "type",
 			} %}
 			{% if canUnban %}
 				{% code headers = append(headers, "unban") %}
 			{% endif %}
 			{%= tableHeaders(headers...) %}
-			{% code salt := config.Get().Salt %}
 			{% for _, b := range bans %}
 				<tr>
 					<td>{%s b.Reason %}</td>
 					<td>{%s b.By %}</td>
 					<td>{%= staticPostLink(b.ForPost) %}</td>
-					{% code buf := make([]byte, 0, len(salt)+len(b.IP)) %}
-					{% code buf = append(buf, salt...) %}
-					{% code buf = append(buf, b.IP...) %}
-					<td>{%s mnemonic.FantasyName(buf) %}</td>
+					<td>{%= ipHash(b.IP) %}</td>
 					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
 					<td>{%s ln.UI[b.Type] %}</td>
 					{% if canUnban %}
@@ -93,19 +76,15 @@ Renders a list of bans for a specific page with optional unbanning API links
 			{%= submit(false) %}
 		{% endif %}
 	</form>
-	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
 
-Common style for plain html tables
-{% func tableStyle() %}{% stripspace %}
-	<style>
-		table, th, td {
-			border: 1px solid black;
-		}
-		.hash-link {
-			display: none;
-		}
-	</style>
+{% func ipHash(ip string) %}{% stripspace %}
+	{% if ip == "" %}
+		{% return %}
+	{% endif %}
+
+	{% code title, hash := auth.HashToTitle([]byte(ip)) %}
+	<span title="{%s= hash %}">{%s title %}</span>
 {% endstripspace %}{% endfunc %}
 
 Post link, that will redirect to the post from any page
@@ -114,12 +93,17 @@ Post link, that will redirect to the post from any page
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page
-{% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
-	{%= htmlHeader() %}
+{% func ModLog(log []auth.ModLogEntry, canSeeIPHashes bool) %}{% stripspace %}
+	{%= BoilerPlate() %}
 	{% code ln := lang.Get() %}
-	{%= tableStyle() %}
 	<table>
-		{%= tableHeaders("type", "by", "post", "time", "data", "duration") %}
+		{% code headers := []string{
+			"type", "by", "post", "time", "data", "duration",
+		} %}
+		{% if canSeeIPHashes %}
+			{% code headers = append(headers, "ipHash") %}
+		{% endif %}
+		{%= tableHeaders(headers...) %}
 		{% for _, l := range log %}
 			<tr>
 				<td>
@@ -160,11 +144,13 @@ Renders a moderation log page
 				<td>{%s l.Data %}</td>
 				<td>
 					{% if l.Length != 0 %}
-						{%s (time.Second * time.Duration(l.Length)).String() %}
+					{%s (time.Second * time.Duration(l.Length)).String() %}
 					{% endif %}
 				</td>
+				{% if canSeeIPHashes %}
+					<td>{%= ipHash(l.IP) %}</td>
+				{% endif %}
 			</tr>
 		{% endfor %}
 	</table>
-	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}

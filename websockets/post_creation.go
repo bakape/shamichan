@@ -2,9 +2,14 @@ package websockets
 
 import (
 	"database/sql"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"math/rand"
 	"strings"
+	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
@@ -21,7 +26,34 @@ var (
 	errReadOnly          = common.ErrInvalidInput("read only board")
 	errInvalidImageToken = common.ErrInvalidInput("image token")
 	errNoTextOrImage     = common.ErrInvalidInput("no text or image")
+
+	randomNameHours randomNameHoursType
 )
+
+type randomNameHoursType struct {
+	mu sync.Mutex
+
+	lastDetermined        time.Time
+	hourFirst, hourSecond int
+}
+
+func (r *randomNameHoursType) GetRandomNameHour() (now time.Time, is bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	now = time.Now().UTC()
+	if r.lastDetermined.IsZero() || r.lastDetermined.Day() != now.Day() {
+		rand.Seed(now.UnixNano())
+
+		r.lastDetermined = now
+		r.hourFirst = rand.Intn(12)
+		r.hourSecond = rand.Intn(12) + 12
+	}
+
+	h := now.Hour()
+	is = h == r.hourFirst || h == r.hourSecond
+	return
+}
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
@@ -44,7 +76,7 @@ type ImageRequest struct {
 	Token, Name string
 }
 
-// CreateThread creates a new tread and writes it to the database.
+// CreateThread creates a new thread and writes it to the database.
 // open specifies, if the thread OP should stay open after creation.
 func CreateThread(req ThreadCreationRequest, ip string) (
 	post db.Post, err error,
@@ -53,7 +85,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		err = common.ErrInvalidBoard(req.Board)
 		return
 	}
-	err = db.IsBanned(req.Board, ip)
+	_, err = db.IsBanned(req.Board, ip)
 	if err != nil {
 		return
 	}
@@ -61,7 +93,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	if err != nil {
 		return
 	}
-	post, err = constructPost(req.ReplyCreationRequest, conf, ip, "")
+	post, err = constructPost(req.ReplyCreationRequest, conf, ip, "", 0)
 	if err != nil {
 		return
 	}
@@ -121,7 +153,7 @@ func CreatePost(
 ) (
 	post db.Post, msg []byte, err error,
 ) {
-	err = db.IsBanned(board, ip)
+	_, err = db.IsBanned(board, ip)
 	if err != nil {
 		return
 	}
@@ -148,7 +180,7 @@ func CreatePost(
 		return
 	}
 
-	post, err = constructPost(req, conf, ip, flagOverride)
+	post, err = constructPost(req, conf, ip, flagOverride, op)
 	if err != nil {
 		return
 	}
@@ -253,6 +285,7 @@ func constructPost(
 	req ReplyCreationRequest,
 	conf config.BoardConfigs,
 	ip, flagOverride string,
+	op uint64,
 ) (
 	post db.Post, err error,
 ) {
@@ -267,10 +300,31 @@ func constructPost(
 		IP: ip,
 	}
 
-	if !conf.ForcedAnon {
+	isRNH := false
+	var now time.Time
+	if conf.RandomNameHours {
+		now, isRNH = randomNameHours.GetRandomNameHour()
+	}
+	if isRNH || !conf.ForcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
 			return
+		}
+		if isRNH {
+			post.Trip = ""
+			if post.Name == "" {
+				post.Name = "Anonymous"
+			}
+
+			b := make([]byte, 24, 128)
+			binary.LittleEndian.PutUint64(b, op)
+			binary.LittleEndian.PutUint64(b, uint64(now.Hour()))
+			binary.LittleEndian.PutUint64(b[8:], uint64(now.Day()))
+			binary.LittleEndian.PutUint64(b[16:], uint64(now.Month()))
+			b = append(b, ip...)
+			b = append(b, config.Get().Salt...)
+			title, _ := auth.HashToTitle(b)
+			post.Name = fmt.Sprintf("%s the %s", post.Name, title)
 		}
 	}
 

@@ -125,7 +125,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	err = db.IsBanned("all", ip)
+	_, err = db.IsBanned("all", ip)
 	if err != nil {
 		return
 	}

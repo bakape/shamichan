@@ -38,7 +38,7 @@ const (
 	MaxLenEightball    = 2000
 	MaxLenReason       = 100
 	MaxNumBanners      = 100
-	MaxAssetSize       = 100 << 10
+	MaxAssetSize       = 300 << 10
 	MaxDiceSides       = 10000
 	BumpLimit          = 1000
 )

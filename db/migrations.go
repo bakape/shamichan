@@ -21,7 +21,7 @@ import (
 
 var version = len(migrations)
 
-var migrations = []func(*sql.Tx) error{
+var migrations = []func(tx *sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		// Initialize DB
 		err = execAll(tx,
@@ -963,7 +963,8 @@ var migrations = []func(*sql.Tx) error{
 		for _, col := range [...]string{"deleted", "banned", "meidovision"} {
 			tasks = append(tasks, "alter table posts drop column "+col)
 		}
-		tasks = append(tasks,
+		tasks = append(
+			tasks,
 			`alter table posts add column moderated bool not null default false`,
 			`create table post_moderation (
 				post_id bigint not null references posts on delete cascade,
@@ -1374,7 +1375,8 @@ var migrations = []func(*sql.Tx) error{
 		})
 	},
 	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+		return execAll(
+			tx,
 			`alter table boards alter column id type varchar(10)`,
 			`alter table boards alter column defaultcss type varchar(20)`,
 
@@ -1524,6 +1526,12 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) error {
 		return execAll(tx,
 			`truncate table sessions;`,
+		)
+	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`alter table boards
+			add randomNameHours bool not null default false`,
 		)
 	},
 }

@@ -13,9 +13,6 @@ export * from "./specs"
 export { getPostName } from "./nowPlaying"
 export { persistMessages } from "./meguTV"
 
-// Delete legacy options localStorage entry, if any
-localStorage.removeItem("options")
-
 interface Options extends ChangeEmitter {
 	hideThumbs: boolean
 	imageHover: boolean
@@ -148,7 +145,44 @@ class OptionModel {
 	}
 }
 
+function migrateOption(key: string, fn: (value: string) => void) {
+	const value = localStorage.getItem(key)
+	if (value !== null) {
+		fn(value)
+		localStorage.removeItem(key)
+	}
+}
+
 export function initOptions() {
+	// Delete legacy options localStorage entry, if any
+	localStorage.removeItem("options")
+
+	// Migrate old options
+	migrateOption("nowPlaying", value => {
+		switch (value) {
+			case "true":
+			case "r/a/dio":
+				localStorage.setItem("radio", "true")
+				break
+			case "eden":
+				localStorage.setItem("eden", "true")
+				break
+			case "both":
+				localStorage.setItem("radio", "true")
+				localStorage.setItem("eden", "true")
+				break
+			default:
+				const flags = parseInt(value, 10)
+				for (const [i, key] of ["radio", "eden", "shamiradio"].entries()) {
+					if (flags & 1 << i) {
+						localStorage.setItem(key, "true")
+					}
+				}
+		}
+	})
+	migrateOption("whatAnime", value => localStorage.setItem("tracemoe", value))
+	migrateOption("desustorage", value => localStorage.setItem("desuarchive", value))
+
 	// Populate option model collection and central model
 	for (let id in specs) {
 		new OptionModel(id, specs[id])

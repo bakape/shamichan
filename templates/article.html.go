@@ -549,21 +549,21 @@ func streamimageSearch(qw422016 *qt422016.Writer, root string, img common.Image)
 //line article.html:220
 	qw422016.N().S(url)
 //line article.html:220
-	qw422016.N().S(`">Sn</a><a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://trace.moe/?url=`)
+	qw422016.N().S(`">Sn</a><a class="image-search tracemoe" target="_blank" rel="nofollow" href="https://trace.moe/?url=`)
 //line article.html:223
 	qw422016.N().S(url)
 //line article.html:223
-	qw422016.N().S(`">Wa</a>`)
+	qw422016.N().S(`">Tm</a>`)
 //line article.html:226
 	switch img.FileType {
 //line article.html:227
 	case common.JPEG, common.PNG, common.GIF, common.WEBM:
 //line article.html:227
-		qw422016.N().S(`<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/`)
+		qw422016.N().S(`<a class="image-search desuarchive" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/`)
 //line article.html:228
 		qw422016.N().S(img.MD5)
 //line article.html:228
-		qw422016.N().S(`">Ds</a>`)
+		qw422016.N().S(`">Da</a>`)
 //line article.html:231
 	}
 //line article.html:232

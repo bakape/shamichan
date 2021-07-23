@@ -7,7 +7,7 @@ performance, free speech and transparent moderation
 
 Platforms: Linux, Docker
 
-License: GNU AGPL
+License: GNU GPLv3
 
 ## Runtime dependencies
 

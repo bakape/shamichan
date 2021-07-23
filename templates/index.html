@@ -83,8 +83,8 @@
 						{"yandex", "Yd"},
 						{"iqdb", "Iq"},
 						{"saucenao", "Sn"},
-						{"whatAnime", "Wa"},
-						{"desustorage", "Ds"},
+						{"tracemoe", "Tm"},
+						{"desuarchive", "Da"},
 						{"exhentai", "Ex"},
 					} %}
 					{% for _, e := range engines %}
@@ -122,6 +122,12 @@
 						<label>
 							<input type="checkbox" name="spoiler">
 							{%s= ln.Common.Posts["spoiler"] %}
+						</label>
+					</span>
+					<span data-id="mask">
+						<label title="{%s ln.Common.Posts["maskTT"] %}">
+							<input type="checkbox" name="mask">
+							{%s= ln.Common.Posts["mask"] %}
 						</label>
 					</span>
 					<input type="file" hidden name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain, application/pdf, video/quicktime, audio/x-flac">
@@ -223,8 +229,8 @@
 				{% endcomment %}
 				<div id="FAQ" class="modal glass">
 					meguca is licensed under the{% space %}
-					<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
-						GNU Affero General Public License
+					<a href="https://www.gnu.org/licenses/gpl.html" target="_blank">
+						GNU General Public License version 3
 					</a>
 					<br>
 					Source code repository:{% space %}

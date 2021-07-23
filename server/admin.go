@@ -377,10 +377,6 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Moderation rights are checked in plpgsql
-		err = assertSolvedCaptcha(w, r)
-		if err != nil {
-			return
-		}
 		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
@@ -476,10 +472,6 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = assertSolvedCaptcha(w, r)
-		if err != nil {
-			return
-		}
 		creds, err := isLoggedIn(w, r)
 		switch {
 		case err != nil:
@@ -694,8 +686,12 @@ func banList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setHTMLHeaders(w)
-	templates.WriteBanList(w, bans, board,
-		detectCanPerform(r, board, common.Moderator))
+	templates.WriteBanList(
+		w,
+		bans,
+		board,
+		detectCanPerform(r, board, common.Moderator),
+	)
 }
 
 // Detect, if a  client can perform moderation on a board. Unlike canPerform,
@@ -787,7 +783,7 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	setHTMLHeaders(w)
-	templates.WriteModLog(w, log)
+	templates.WriteModLog(w, log, detectCanPerform(r, board, common.Janitor))
 }
 
 // Decodes params for client forced redirection

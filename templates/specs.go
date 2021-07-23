@@ -118,6 +118,7 @@ var specs = map[string][]inputSpec{
 		{ID: "readOnly"},
 		{ID: "textOnly"},
 		{ID: "forcedAnon"},
+		{ID: "randomNameHours"},
 		{ID: "disableRobots"},
 		{ID: "flags"},
 		{ID: "NSFW"},
@@ -371,8 +372,8 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "yandex"},
 		{ID: "iqdb"},
 		{ID: "saucenao"},
-		{ID: "whatAnime"},
-		{ID: "desustorage"},
+		{ID: "tracemoe"},
+		{ID: "desuarchive"},
 		{ID: "exhentai"},
 	},
 	{
