@@ -158,7 +158,7 @@ func sse(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-listener.Ping:
 			// Send a comment line to stop cloudflare killing the connection
-			fmt.Fprint(w, ":")
+			fmt.Fprint(w, ":\n\n")
 			flusher.Flush()
 		case msg := <-listener.Msg:
 			fmt.Fprintf(w, "data: %s\n\n", msg)
