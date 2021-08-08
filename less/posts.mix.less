@@ -293,7 +293,10 @@ header {
 		margin        : 0.15em;
 
 		&.deleted .deleted-toggle:checked~.thread-links {
-			clear  : none;
+			clear: none;
+		}
+
+		&.deleted:not(.hidden) .deleted-toggle:checked~.thread-links {
 			display: inline-block;
 		}
 	}

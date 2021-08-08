@@ -1,27 +1,27 @@
 @import "common.mix.less";
-@body: #c5c8c6;
-@link: #81a2be;
-@em: #b5bd68;
-@del: black;
+@body  : #c5c8c6;
+@link  : #81a2be;
+@em    : #b5bd68;
+@del   : black;
 @postBG: #282a2e;
 @border: 1px solid #282a2e;
-@bold: #c5c8c6;
-@admin: #f00000;
-@mod: #9775ff;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : #c5c8c6;
+@admin : #f00000;
+@mod   : #9775ff;
+@red   : @admin;
+@blue  : #57e8ed;
 
 a {
     color: #81a2be;
 }
 
 a.embed {
-    background-color: #2f343e ;
-    color: #5f89ac ;
-    font-style: italic;
-    font-family: serif;
-    font-size: 14px;
-    border: double 3px ;
+    background-color: #2f343e;
+    color           : #5f89ac;
+    font-style      : italic;
+    font-family     : serif;
+    font-size       : 14px;
+    border          : double 3px;
 }
 
 .banner-modal hr {
@@ -30,83 +30,103 @@ a.embed {
 
 body {
     background-color: #2f2f2f;
-    font-family: Arial,Helvetica,sans-serif;
-    font-size: 9pt;
+    font-family     : Arial, Helvetica, sans-serif;
+    font-size       : 9pt;
 }
 
 b {
     color: #c5c8c6;
-    font: italic 14px serif;
+    font : italic 14px serif;
 }
 
-.modal, article, aside {
+.modal,
+article,
+aside {
     background-color: #2f343e;
 }
 
-article, aside {
-    padding: 4px 10px;
-    margin: 5px;
-    box-shadow: 1px 2px 4px rgba(0,0,0,0.24);
+article,
+aside {
+    padding      : 4px 10px;
+    margin       : 5px;
+    box-shadow   : 1px 2px 4px rgba(0, 0, 0, 0.24);
     border-radius: 7px 7px 7px 0;
-    border: none;
+    border       : none;
 }
 
 .editing-mixin() {
     background-color: #fa9cfd;
-    border-color: #bc5dc5;
-    color: #000;
+    border-color    : #bc5dc5;
+    color           : #000;
+
     .red {
-		color: #9a0000;
-	}
-	.blue {
-		color: #1048ff;
-	}
-	& > header, & > figcaption {
-		a, b:not(.admin):not(.sage) {
-			color: #222;
-		}
-	}
-	& > .post-container > blockquote, & > .backlinks {
-		& > em > a, & > a {
-			color: #222;
-		}
-		& > em {
-			color: #656d28;
-		}
-	}
+        color: #9a0000;
+    }
+
+    .blue {
+        color: #1048ff;
+    }
+
+    &>header,
+    &>figcaption {
+
+        a,
+        b:not(.admin):not(.sage) {
+            color: #222;
+        }
+    }
+
+    &>.post-container>blockquote,
+    &>.backlinks {
+
+        &>em>a,
+        &>a {
+            color: #222;
+        }
+
+        &>em {
+            color: #656d28;
+        }
+    }
+
     code.code-tag {
-		background: @postBG;
-	}
+        background: @postBG;
+    }
 }
 
 #threads {
-	&:not(.custom-BG) section > article.editing:not(.op) {
-		.editing-mixin;
-	}
-	&.custom-BG section > article.editing {
-		.editing-mixin;
-	}
+    &:not(.custom-BG) section>article.editing:not(.op) {
+        .editing-mixin;
+    }
+
+    &.custom-BG section>article.editing {
+        .editing-mixin;
+    }
 }
 
 article.preview.editing {
-	.editing-mixin;
+    .editing-mixin;
 }
 
-#banner, .modal, .popup-menu, .preview, .reply-form {
-    box-shadow: 0px -1px 7px 0px rgba(0,0,0,0.5);
+#banner,
+.modal,
+.popup-menu,
+.preview,
+.reply-form {
+    box-shadow: 0px -1px 7px 0px rgba(0, 0, 0, 0.5);
 }
 
 #banner {
     background: rgb(66, 55, 86);
 }
 
-#threads:not(.custom-BG) section > article.op {
-    padding-left: 1em;
+#threads:not(.custom-BG) section>article.op {
+    padding-left : 1em;
     padding-right: 1em;
-    border: none;
-    background: none;
-    box-shadow: none;
-    margin: auto;
+    border       : none;
+    background   : none;
+    box-shadow   : none;
+    margin       : auto;
 }
 
 .admin {
@@ -122,8 +142,7 @@ article.preview.editing {
 }
 
 audio::-webkit-media-controls-current-time-display,
-audio::-webkit-media-controls-time-remaining-display
-{
+audio::-webkit-media-controls-time-remaining-display {
     color: #81a2be;
 }
 
@@ -131,13 +150,16 @@ blockquote a:hover {
     color: #81a2be;
 }
 
-a:hover, blockquote a {
+a:hover,
+blockquote a {
     color: #5f89ac;
 }
 
-.popup-menu, article.highlight, article:target {
+.popup-menu,
+article.highlight,
+article:target {
     background-color: #1d1d21;
-    border-color: #111;
+    border-color    : #111;
 }
 
 .preview {
@@ -149,7 +171,7 @@ a:hover, blockquote a {
 }
 
 h1 {
-    font: bolder 30px serif;
+    font          : bolder 30px serif;
     letter-spacing: 1px;
 }
 
@@ -166,11 +188,12 @@ hr {
 }
 
 .popup-menu {
-	// Need extra override for open posts
-	color: @body;
-	li:hover {
-		background-color: #136;
-	}
+    // Need extra override for open posts
+    color: @body;
+
+    li:hover {
+        background-color: #136;
+    }
 }
 
 .omit {
@@ -182,16 +205,18 @@ a.tab-sel {
 }
 
 #catalog article {
-    width: 160px;
-    max-height: 320px;
-    display: inline-block;
-    text-align: center;
-    word-wrap: break-word;
-    overflow: hidden;
-    vertical-align: top;
-    background-color: #3c314a ;
-    border: none;
-    padding: .6em;
-    margin: .15em;
-}
+    width           : 160px;
+    max-height      : 320px;
+    text-align      : center;
+    word-wrap       : break-word;
+    overflow        : hidden;
+    vertical-align  : top;
+    background-color: #3c314a;
+    border          : none;
+    padding         : .6em;
+    margin          : .15em;
 
+    &:not(.hidden) {
+        display: inline-block;
+    }
+}
