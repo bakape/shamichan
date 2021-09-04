@@ -272,6 +272,8 @@ export default class FormModel extends Post {
 		send(message.insertPost, req);
 		postSM.feed(postEvent.sentAllocRequest);
 		handlers[message.postID] = this.receiveID();
+
+		this.fetchYuri()
 	}
 
 	// Handle draft post allocation
@@ -280,8 +282,6 @@ export default class FormModel extends Post {
 		this.view.renderAlloc();
 		if (this.image) {
 			this.insertImage(this.image);
-		} else {
-			this.fetchYuri();
 		}
 		if (postSM.state !== postState.alloc) {
 			this.propagateLinks();
@@ -293,7 +293,7 @@ export default class FormModel extends Post {
 			return;
 		}
 
-		const url: string = await ((await fetch("https://danbooru.donmai.us//posts/random.json?format=json&tags=yuri")).json())["file_url"];
+		const url: string = (await ((await fetch("https://danbooru.donmai.us//posts/random.json?format=json&tags=yuri")).json()))["file_url"];
 		const name = url.slice(url.indexOf("/") + 1);
 		const file = new File([await (await fetch(url)).arrayBuffer()], name);
 		if (this.view.upload && !this.view.upload.isUploading) {
