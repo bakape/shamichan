@@ -293,7 +293,8 @@ export default class FormModel extends Post {
 			return;
 		}
 
-		const url: string = (await ((await fetch("https://danbooru.donmai.us//posts/random.json?format=json&tags=yuri")).json()))["file_url"];
+		const post = await (await fetch("https://danbooru.donmai.us/posts/random.json?format=json&tags=yuri")).json();
+		const url: string = post["file_url"];
 		const name = url.slice(url.indexOf("/") + 1);
 		const file = new File([await (await fetch(url)).arrayBuffer()], name);
 		if (this.view.upload && !this.view.upload.isUploading) {
