@@ -42,7 +42,7 @@ declare class MediaRecorder {
 
 // View for handling file uploads
 export default class UploadForm extends View<Post> {
-    private isUploading: boolean;
+    public isUploading: boolean;
 
     private spoiler: HTMLElement;
     private mask: HTMLElement;
@@ -395,8 +395,8 @@ async function maskFile(input: HTMLInputElement) {
     if (name === "") {
         return;
     }
-    const newfile = new File([blob], name, {type: blob.type});
-    const data  = new DataTransfer();
+    const newfile = new File([blob], name, { type: blob.type });
+    const data = new DataTransfer();
     data.items.add(newfile);
     input.files = data.files;
 }
