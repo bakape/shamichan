@@ -163,6 +163,6 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 // SetPostCounter sets the post counter.
 // Should only be used in tests.
 func SetPostCounter(c uint64) error {
-	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
+	_, err := sqlDB.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
 }

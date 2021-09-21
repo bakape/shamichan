@@ -328,6 +328,12 @@ export default class FormModel extends Post {
 
 	// Insert the uploaded image into the model
 	public insertImage(img: ImageData) {
+		if (!this.editing) {
+			// Stolen image
+			super.insertImage(img);
+			return;
+		}
+
 		this.image = img
 		this.view.insertImage()
 	}

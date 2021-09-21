@@ -86,6 +86,7 @@ func (i *imageScanner) Val() *common.Image {
 
 	return &common.Image{
 		Spoiler: i.Spoiler.Bool,
+		Name:    i.Name.String,
 		ImageCommon: common.ImageCommon{
 			Audio:     i.Audio.Bool,
 			Video:     i.Video.Bool,
@@ -99,7 +100,6 @@ func (i *imageScanner) Val() *common.Image {
 			Title:     i.Title.String,
 			Artist:    i.Artist.String,
 		},
-		Name: i.Name.String,
 	}
 }
 

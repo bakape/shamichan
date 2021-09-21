@@ -23,7 +23,7 @@ var (
 	connectionURL string
 
 	// Stores the postgres database instance
-	db *sql.DB
+	sqlDB *sql.DB
 
 	// Statement builder and cacher
 	sq squirrel.StatementBuilderType
@@ -111,13 +111,13 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Set, for creating extra connections using Listen()
 	connectionURL = connURL
 
-	db, err = sql.Open("postgres", connURL)
+	sqlDB, err = sql.Open("postgres", connURL)
 	if err != nil {
 		return
 	}
 
 	sq = squirrel.StatementBuilder.
-		RunWith(squirrel.NewStmtCacheProxy(db)).
+		RunWith(squirrel.NewStmtCacheProxy(sqlDB)).
 		PlaceholderFormat(squirrel.Dollar)
 
 	var exists bool
@@ -125,7 +125,7 @@ func loadDB(connURL, dbSuffix string) (err error) {
 			select 1 from information_schema.tables
 				where table_schema = 'public' and table_name = 'main'
 		)`
-	err = db.QueryRow(q).Scan(&exists)
+	err = sqlDB.QueryRow(q).Scan(&exists)
 	if err != nil {
 		return
 	}
@@ -172,7 +172,7 @@ func loadDB(connURL, dbSuffix string) (err error) {
 func initDB() (err error) {
 	log.Info("initializing database")
 
-	_, err = db.Exec(
+	_, err = sqlDB.Exec(
 		`create table main (
 			id text primary key,
 			val text not null
@@ -181,7 +181,7 @@ func initDB() (err error) {
 	if err != nil {
 		return
 	}
-	_, err = db.Exec(
+	_, err = sqlDB.Exec(
 		`insert into main (id, val)
 		values ('version', '0'),
 				('pyu', '0')`,
@@ -239,7 +239,7 @@ func ClearTables(tables ...string) error {
 			}
 		}
 
-		if _, err := db.Exec(`DELETE FROM ` + t); err != nil {
+		if _, err := sqlDB.Exec(`DELETE FROM ` + t); err != nil {
 			return err
 		}
 	}

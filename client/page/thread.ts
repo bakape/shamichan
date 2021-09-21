@@ -71,6 +71,12 @@ export function incrementPostCount(post: boolean, hasImage: boolean) {
     renderPostCounter()
 }
 
+// Increment thread post counters and rerender the indicator in the banner
+export function decrementImageCount() {
+    image_count--
+    renderPostCounter()
+}
+
 function renderPostCounter() {
     let text = ""
     if (post_count) {

@@ -1,18 +1,19 @@
 package websockets
 
 import (
-	"github.com/bakape/meguca/common"
 	"unicode/utf8"
+
+	"github.com/bakape/meguca/common"
 )
 
 // Data of a post currently being written to by a Client
 type openPost struct {
-	hasImage, isSpoilered bool
-	len, lines            int
-	id, op                uint64
-	time                  int64
-	body                  []byte
-	board                 string
+	isSpoilered bool
+	len, lines  int
+	id, op      uint64
+	time        int64
+	body        []byte
+	board       string
 }
 
 // Initialize a new open post from a post struct
@@ -27,7 +28,6 @@ func (o *openPost) init(p common.StandalonePost) {
 	}
 	o.countLines()
 	if p.Image != nil {
-		o.hasImage = true
 		o.isSpoilered = p.Image.Spoiler
 	}
 }

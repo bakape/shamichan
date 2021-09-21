@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/meguca/websockets/feeds"
 )
 
 var (
@@ -181,6 +183,43 @@ func (c *Client) closePost() (err error) {
 		if err != nil {
 			return
 		}
+		if len(links) != 0 && bytes.Contains(c.post.body, []byte("#steal")) {
+			var (
+				from         = links[len(links)-1].ID
+				img          *common.Image
+				sourceThread uint64
+			)
+			img, sourceThread, err = db.TransferImage(from, c.post.id)
+			if err != nil {
+				return
+			}
+			if img != nil {
+				var msg []byte
+				msg, err = common.EncodeMessage(
+					common.MessageStoleImageFrom,
+					from,
+				)
+				if err != nil {
+					return
+				}
+				feeds.SendTo(sourceThread, msg)
+
+				msg, err = common.EncodeMessage(
+					common.MessageStoleImageTo,
+					struct {
+						ID    uint64        `json:"id"`
+						Image *common.Image `json:"image"`
+					}{
+						ID:    c.post.id,
+						Image: img,
+					},
+				)
+				if err != nil {
+					return
+				}
+				c.feed.Send(msg)
+			}
+		}
 	}
 	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
 	if err != nil {
@@ -297,10 +336,18 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return
 	case !has:
 		return errNoPostOpen
-	case c.post.hasImage:
+	}
+
+	hasImage, err := c.hasImage()
+	if err != nil {
+		return
+	}
+	if hasImage {
 		// Can be caused by network latency - NOP it
 		return nil
 	}
+
+	// So the poster can reupload a new image, if
 
 	var req ImageRequest
 	err = decodeMessage(data, &req)
@@ -323,11 +370,24 @@ func (c *Client) insertImage(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-	c.post.hasImage = true
 	c.post.isSpoilered = req.Spoiler
 	c.feed.InsertImage(c.post.id, req.Spoiler,
 		common.PrependMessageType(common.MessageInsertImage, msg))
 
+	return
+}
+
+// Check, if post has an image. Done through the DB, so the poster can reupload,
+// after his has been stolen.
+func (c *Client) hasImage() (has bool, err error) {
+	has, err = db.HasImage(c.post.id)
+	if err != nil {
+		return
+	}
+	if !has {
+		// Allow respoilering
+		c.post.isSpoilered = false
+	}
 	return
 }
 
@@ -343,9 +403,16 @@ func (c *Client) spoilerImage() (err error) {
 		return err
 	case !has:
 		return errNoPostOpen
-	case !c.post.hasImage:
+	}
+
+	hasImage, err := c.hasImage()
+	if err != nil {
+		return
+	}
+	if !hasImage {
 		return errors.New("post does not have an image")
-	case c.post.isSpoilered:
+	}
+	if c.post.isSpoilered {
 		// Can be caused by network latency - NOP it
 		return nil
 	}

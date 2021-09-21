@@ -231,6 +231,6 @@ func WriteConfigs(c config.Configs) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = db.Exec("select pg_notify('config_updates', '')")
+	_, err = sqlDB.Exec("select pg_notify('config_updates', '')")
 	return
 }

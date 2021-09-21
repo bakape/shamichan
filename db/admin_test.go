@@ -191,7 +191,7 @@ func TestDeletePostsByIP(t *testing.T) {
 
 	assertDeleted := func(t *testing.T, id uint64, std bool) {
 		var deleted bool
-		err := db.QueryRow(
+		err := sqlDB.QueryRow(
 			`select exists (select 1
 							from post_moderation
 							where post_id = $1 and type = $2)`,

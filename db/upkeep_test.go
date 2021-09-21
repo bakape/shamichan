@@ -83,7 +83,7 @@ func TestOpenPostClosing(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			var editing bool
-			err := db.
+			err := sqlDB.
 				QueryRow(`SELECT editing FROM posts WHERE id = $1`, c.id).
 				Scan(&editing)
 			if err != nil {
@@ -102,7 +102,7 @@ func assertDeleted(t *testing.T, q string, del bool) {
 
 	q = fmt.Sprintf(`select exists (select 1 %s)`, q)
 	var exists bool
-	err := db.QueryRow(q).Scan(&exists)
+	err := sqlDB.QueryRow(q).Scan(&exists)
 	if err != nil {
 		t.Fatal(err)
 	}

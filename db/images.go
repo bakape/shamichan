@@ -192,6 +192,82 @@ func SpoilerImage(id, op uint64) error {
 	return err
 }
 
+// Try to transfer image from one post to another. Return image, if anything was
+// transferred
+func TransferImage(
+	fromPost, toPost uint64,
+) (
+	transferred *common.Image,
+	sourceThread uint64,
+	err error,
+) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		var scanner imageScanner
+		err = tx.
+			QueryRow(
+				`select p.op, p.imageName, p.spoiler, i.*
+				from posts p
+				join images i on i.sha1 = p.sha1
+				where p.id = $1
+				for update of p`,
+				fromPost,
+			).
+			Scan(
+				append(
+					[]interface{}{
+						&sourceThread,
+						&scanner.Name,
+						&scanner.Spoiler,
+					},
+					scanner.ScanArgs()...,
+				)...,
+			)
+		if err != nil {
+			return
+		}
+		transferred = scanner.Val()
+
+		res, err := tx.Exec(
+			`update posts
+			set
+				sha1 = $2,
+				imageName = $3,
+				spoiler = $4
+			where id = $1`,
+			toPost,
+			transferred.SHA1,
+			transferred.Name,
+			transferred.Spoiler,
+		)
+		if err != nil {
+			return
+		}
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return
+		}
+		if affected == 0 {
+			return sql.ErrNoRows
+		}
+
+		_, err = tx.Exec(
+			`update posts
+			set
+				imageName = '',
+				spoiler = false,
+				sha1 = null
+			where id = $1`,
+			fromPost,
+		)
+		return
+	})
+	if err == sql.ErrNoRows {
+		err = nil
+		transferred = nil
+	}
+	return
+}
+
 // VideoPlaylist returns a video playlist for a board
 func VideoPlaylist(board string) (videos []Video, err error) {
 	videos = make([]Video, 0, 128)
@@ -233,7 +309,7 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 
 // Delete images not used in any posts
 func deleteUnusedImages() (err error) {
-	r, err := db.Query(`
+	r, err := sqlDB.Query(`
 		delete from images
 		where (
 			(select count(*) from posts where SHA1 = images.SHA1)

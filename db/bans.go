@@ -33,7 +33,7 @@ func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 
 // Propagate ban updates through DB and disconnect all banned IPs
 func propagateBans(board string, ip string) (err error) {
-	_, err = db.Exec(`notify bans_updated`)
+	_, err = sqlDB.Exec(`notify bans_updated`)
 	if err != nil {
 		return
 	}
