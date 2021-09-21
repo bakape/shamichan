@@ -194,6 +194,8 @@ func (c *Client) closePost() (err error) {
 				return
 			}
 			if img != nil {
+				c.incrementSpamScore(config.Get().ImageScore)
+
 				var msg []byte
 				msg, err = common.EncodeMessage(
 					common.MessageStoleImageFrom,
