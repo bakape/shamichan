@@ -54,7 +54,7 @@ func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
 ) (
 	err error,
 ) {
-	return writeBan(tx, ip, auth.ModLogEntry{
+	err = writeBan(tx, ip, auth.ModLogEntry{
 		ModerationEntry: common.ModerationEntry{
 			Type:   common.BanPost,
 			Data:   reason,
