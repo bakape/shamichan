@@ -85,7 +85,7 @@ func returnLargeBuf(buf []byte) {
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	var id string
 	err := func() (err error) {
-		err = validateUploader(w, r)
+		bypass, err := validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -96,7 +96,10 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		id, err = ParseUpload(r)
 		switch err {
 		case nil:
-			return incrementSpamScore(w, r)
+			if !bypass {
+				err = incrementSpamScore(w, r)
+			}
+			return
 		case io.EOF:
 			return common.StatusError{
 				Err:  err,
@@ -114,11 +117,15 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // Apply security restrictions to uploader
-func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
+func validateUploader(
+	w http.ResponseWriter,
+	r *http.Request,
+) (bypass bool, err error) {
 	if s := r.Header.Get("Authorization"); s != "" &&
 		s == "Bearer "+config.Get().Salt {
 		// Internal upload bypass
-		return nil
+		bypass = true
+		return
 	}
 
 	ip, err := auth.GetIP(r)
@@ -140,7 +147,8 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 	if need {
-		return common.StatusError{errors.New("captcha required"), 403}
+		err = common.StatusError{errors.New("captcha required"), 403}
+		return
 	}
 
 	return
@@ -153,7 +161,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	token, err := func() (token string, err error) {
-		err = validateUploader(w, r)
+		bypass, err := validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -177,7 +185,9 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		err = incrementSpamScore(w, r)
+		if !bypass {
+			err = incrementSpamScore(w, r)
+		}
 		return
 	}()
 	if err != nil {
