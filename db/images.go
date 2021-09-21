@@ -194,28 +194,27 @@ func SpoilerImage(id, op uint64) error {
 
 // Try to transfer image from one post to another. Return image, if anything was
 // transferred
-func TransferImage(
-	fromPost, toPost uint64,
-) (
+func TransferImage(fromPost, toPost, thread uint64) (
 	transferred *common.Image,
-	sourceThread uint64,
 	err error,
 ) {
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		var scanner imageScanner
 		err = tx.
 			QueryRow(
-				`select p.op, p.imageName, p.spoiler, i.*
+				`select p.imageName, p.spoiler, i.*
 				from posts p
 				join images i on i.sha1 = p.sha1
-				where p.id = $1
+				where
+					p.id = $1
+					and p.op = $2
 				for update of p`,
 				fromPost,
+				thread,
 			).
 			Scan(
 				append(
 					[]interface{}{
-						&sourceThread,
 						&scanner.Name,
 						&scanner.Spoiler,
 					},
@@ -230,11 +229,15 @@ func TransferImage(
 		res, err := tx.Exec(
 			`update posts
 			set
-				sha1 = $2,
-				imageName = $3,
-				spoiler = $4
-			where id = $1`,
+				sha1 = $3,
+				imageName = $4,
+				spoiler = $5
+			where
+				id = $1
+				and op = $2`,
 			toPost,
+			thread,
+
 			transferred.SHA1,
 			transferred.Name,
 			transferred.Spoiler,
@@ -256,8 +259,11 @@ func TransferImage(
 				imageName = '',
 				spoiler = false,
 				sha1 = null
-			where id = $1`,
+			where
+				id = $1
+				and op = $2`,
 			fromPost,
+			thread,
 		)
 		return
 	})

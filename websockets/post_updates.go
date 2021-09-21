@@ -13,7 +13,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/util"
-	"github.com/bakape/meguca/websockets/feeds"
 )
 
 var (
@@ -185,11 +184,10 @@ func (c *Client) closePost() (err error) {
 		}
 		if len(links) != 0 && bytes.Contains(c.post.body, []byte("#steal")) {
 			var (
-				from         = links[len(links)-1].ID
-				img          *common.Image
-				sourceThread uint64
+				from = links[len(links)-1].ID
+				img  *common.Image
 			)
-			img, sourceThread, err = db.TransferImage(from, c.post.id)
+			img, err = db.TransferImage(from, c.post.id, c.post.op)
 			if err != nil {
 				return
 			}
@@ -204,7 +202,7 @@ func (c *Client) closePost() (err error) {
 				if err != nil {
 					return
 				}
-				feeds.SendTo(sourceThread, msg)
+				c.feed.Send(msg)
 
 				msg, err = common.EncodeMessage(
 					common.MessageStoleImageTo,
