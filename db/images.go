@@ -208,6 +208,7 @@ func TransferImage(fromPost, toPost, thread uint64) (
 				where
 					p.id = $1
 					and p.op = $2
+					and p.id != p.op
 				for update of p`,
 				fromPost,
 				thread,
