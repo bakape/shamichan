@@ -19,7 +19,7 @@ var (
 )
 
 type threadFilters struct {
-	filters map[string]filter
+	filters []filter
 	sync.RWMutex
 }
 
@@ -64,9 +64,7 @@ outer:
 		filtersMu.Lock()
 		f := filters[thread]
 		if f == nil {
-			f = &threadFilters{
-				filters: make(map[string]filter),
-			}
+			f = new(threadFilters)
 			filters[thread] = f
 		}
 		filtersMu.Unlock()
@@ -82,10 +80,15 @@ outer:
 		re := regexp.MustCompile(fmt.Sprintf(`(?i)\b%s\b`, from))
 
 		f.Lock()
-		f.filters[string(from)] = filter{
+		f.filters = append(f.filters, filter{
 			re:             re,
 			to:             to,
 			toFirstCapital: firstCapital,
+		})
+		if len(f.filters) == 11 {
+			new := make([]filter, 10)
+			copy(new, f.filters[1:])
+			f.filters = new
 		}
 		f.Unlock()
 
