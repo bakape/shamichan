@@ -177,12 +177,7 @@ func (c *Client) closePost() (err error) {
 		com   []common.Command
 	)
 	if c.post.len != 0 {
-		filter := true
-		if c.post.isStaffTitled &&
-			parser.RegisterFilter(c.post.op, c.post.body) {
-			filter = false
-		}
-		if filter {
+		if !parser.RegisterFilter(c.post.op, c.post.body) {
 			oldLen := len(c.post.body)
 			if parser.ApplyFilters(c.post.op, &c.post.body) {
 				var (
