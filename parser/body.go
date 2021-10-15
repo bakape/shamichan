@@ -2,7 +2,10 @@
 package parser
 
 import (
+	"bytes"
+	"fmt"
 	"regexp"
+	"sync"
 	"unicode"
 
 	"github.com/bakape/meguca/common"
@@ -11,12 +14,116 @@ import (
 )
 
 var (
+	filters   = make(map[uint64]*threadFilters)
+	filtersMu sync.Mutex
+)
+
+type threadFilters struct {
+	filters map[string]filter
+	sync.RWMutex
+}
+
+type filter struct {
+	re                 *regexp.Regexp
+	to, toFirstCapital []byte
+}
+
+var (
 	linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
+	filterRe   = regexp.MustCompile(`^#filter ([\w\s]+) -> ([\w\s\d#\(\)]+)$`)
 )
 
 // Needed to avoid cyclic imports for the 'db' package
 func init() {
 	common.ParseBody = ParseBody
+}
+
+func registerFilter(thread uint64, body []byte) {
+outer:
+	for _, l := range bytes.Split(body, []byte("\n")) {
+		m := filterRe.FindSubmatch(l)
+		if m == nil {
+			continue
+		}
+		if m == nil {
+			continue
+		}
+
+		from := bytes.ToLower(bytes.TrimSpace(m[1]))
+		to := bytes.ToLower(bytes.TrimSpace(m[2]))
+		for _, w := range [...][]byte{from, to} {
+			if len(w) < 2 || len(w) > 20 {
+				continue outer
+			}
+		}
+
+		filtersMu.Lock()
+		f := filters[thread]
+		if f == nil {
+			f = &threadFilters{
+				filters: make(map[string]filter),
+			}
+			filters[thread] = f
+		}
+		filtersMu.Unlock()
+
+		var firstCapital []byte
+		if to[0] >= 'a' && to[0] <= 'z' {
+			firstCapital = append(firstCapital, to...)
+			firstCapital[0] -= 'a' - 'A'
+		} else {
+			firstCapital = to
+		}
+
+		re := regexp.MustCompile(fmt.Sprintf(`(?i)\b%s\b`, from))
+
+		f.Lock()
+		f.filters[string(from)] = filter{
+			re:             re,
+			to:             to,
+			toFirstCapital: firstCapital,
+		}
+		f.Unlock()
+
+		break
+	}
+}
+
+func ApplyFilters(thread uint64, body *[]byte) (applied bool) {
+	filtersMu.Lock()
+	f := filters[thread]
+	filtersMu.Unlock()
+
+	if f == nil {
+		return
+	}
+	f.RLock()
+	defer f.RUnlock()
+
+	for _, p := range f.filters {
+		*body = p.re.ReplaceAllFunc(*body, func(b []byte) []byte {
+			applied = true
+
+			// Minor capitalization support
+			if b[0] >= 'A' && b[0] <= 'Z' {
+				return p.toFirstCapital
+			} else {
+				return p.to
+			}
+		})
+	}
+
+	if applied {
+		*body = bytes.ReplaceAll(
+			*body,
+			[]byte("#autobahn"),
+			[]byte(`@@^rthere ain't no rest for the wicked^r@@`),
+		)
+	}
+	if len(*body) > 2000 {
+		*body = (*body)[:2000]
+	}
+	return
 }
 
 // ParseBody parses the entire post text body for commands and links.
@@ -120,6 +227,8 @@ func ParseBody(
 			lineStart = i + 1
 		}
 	}
+
+	registerFilter(thread, body)
 
 	return
 }
