@@ -8,23 +8,24 @@ import (
 
 // Data of a post currently being written to by a Client
 type openPost struct {
-	isSpoilered bool
-	len, lines  int
-	id, op      uint64
-	time        int64
-	body        []byte
-	board       string
+	isSpoilered, isStaffTitled bool
+	len, lines                 int
+	id, op                     uint64
+	time                       int64
+	body                       []byte
+	board                      string
 }
 
 // Initialize a new open post from a post struct
 func (o *openPost) init(p common.StandalonePost) {
 	*o = openPost{
-		id:    p.ID,
-		op:    p.OP,
-		time:  p.Time,
-		board: p.Board,
-		len:   utf8.RuneCountInString(p.Body),
-		body:  append(make([]byte, 0, 1<<10), p.Body...),
+		id:            p.ID,
+		op:            p.OP,
+		time:          p.Time,
+		board:         p.Board,
+		len:           utf8.RuneCountInString(p.Body),
+		body:          append(make([]byte, 0, 1<<10), p.Body...),
+		isStaffTitled: p.Auth >= common.Janitor,
 	}
 	o.countLines()
 	if p.Image != nil {
