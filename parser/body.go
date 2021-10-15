@@ -30,7 +30,7 @@ type filter struct {
 
 var (
 	linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
-	filterRe   = regexp.MustCompile(`^#filter ([\w\s]+) -> ([\w\s\d#\(\)]+)$`)
+	filterRe   = regexp.MustCompile(`^#filter ([\w\s]+) -> ([\w\s\d#\(\)>]+)$`)
 )
 
 // Needed to avoid cyclic imports for the 'db' package
@@ -38,7 +38,7 @@ func init() {
 	common.ParseBody = ParseBody
 }
 
-func registerFilter(thread uint64, body []byte) {
+func RegisterFilter(thread uint64, body []byte) {
 outer:
 	for _, l := range bytes.Split(body, []byte("\n")) {
 		m := filterRe.FindSubmatch(l)
@@ -50,6 +50,10 @@ outer:
 		}
 
 		from := bytes.ToLower(bytes.TrimSpace(m[1]))
+		if bytes.Contains(from, []byte("filter")) {
+			continue
+		}
+
 		to := bytes.ToLower(bytes.TrimSpace(m[2]))
 		for _, w := range [...][]byte{from, to} {
 			if len(w) < 2 || len(w) > 20 {
@@ -227,8 +231,6 @@ func ParseBody(
 			lineStart = i + 1
 		}
 	}
-
-	registerFilter(thread, body)
 
 	return
 }

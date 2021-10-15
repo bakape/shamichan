@@ -177,6 +177,8 @@ func (c *Client) closePost() (err error) {
 		com   []common.Command
 	)
 	if c.post.len != 0 {
+		parser.RegisterFilter(c.post.op, c.post.body)
+
 		oldLen := len(c.post.body)
 		if parser.ApplyFilters(c.post.op, &c.post.body) {
 			var (
