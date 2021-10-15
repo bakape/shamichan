@@ -177,31 +177,31 @@ func (c *Client) closePost() (err error) {
 		com   []common.Command
 	)
 	if c.post.len != 0 {
-		parser.RegisterFilter(c.post.op, c.post.body)
-
-		oldLen := len(c.post.body)
-		if parser.ApplyFilters(c.post.op, &c.post.body) {
-			var (
-				bodyStr = string(c.post.body)
-				msg     []byte
-			)
-			msg, err = common.EncodeMessage(
-				common.MessageSplice,
-				spliceMessage{
-					ID: c.post.id,
-					spliceRequestString: spliceRequestString{
-						spliceCoords: spliceCoords{
-							Start: 0,
-							Len:   uint(oldLen),
+		if !parser.RegisterFilter(c.post.op, c.post.body) {
+			oldLen := len(c.post.body)
+			if parser.ApplyFilters(c.post.op, &c.post.body) {
+				var (
+					bodyStr = string(c.post.body)
+					msg     []byte
+				)
+				msg, err = common.EncodeMessage(
+					common.MessageSplice,
+					spliceMessage{
+						ID: c.post.id,
+						spliceRequestString: spliceRequestString{
+							spliceCoords: spliceCoords{
+								Start: 0,
+								Len:   uint(oldLen),
+							},
+							Text: bodyStr,
 						},
-						Text: bodyStr,
 					},
-				},
-			)
-			if err != nil {
-				return
+				)
+				if err != nil {
+					return
+				}
+				c.feed.SetOpenBody(c.post.id, bodyStr, msg)
 			}
-			c.feed.SetOpenBody(c.post.id, bodyStr, msg)
 		}
 
 		links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
