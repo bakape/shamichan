@@ -136,6 +136,9 @@ export default () => {
 			m.closePost()
 
 			if (m.body.indexOf('#slap') !== -1) {
+				if (!m.links) {
+					return
+				}
 				for (let { id } of m.links) {
 					const target = posts.get(id);
 					if (!target || !target.view || !target.view.el) {
@@ -151,16 +154,14 @@ export default () => {
 					s += random(1) + ","
 				}
 				s += random(30) + "deg)"
-					+ " scale(" + (random(0.3) + 1) + "," + (random(0.3) + 1) + ") !important;"
-					+ " !important; transition-duration: " + Math.abs(random(0.1) + 0.1) + "s !important;;"
-				s += " !important; translate3d("
-				for (var i = 0; i < 3; i++) {
-					s += random(30) + "%"
-					if (i != 2) {
-						s += ","
-					}
+					+ " scale(" + (random(0.3) + 1) + "," + (random(0.3) + 1) + ")"
+				s += " translate3d("
+				for (var i = 0; i < 2; i++) {
+					s += random(30) + "%, "
 				}
+				s += random(30) + "px"	// z-axis can't be %
 				s += ") !important;"
+					+ " transition-duration: " + Math.abs(random(0.1) + 0.1) + "s !important;"
 				el.setAttribute("style", s)
 
 				function random(max: number): number {
