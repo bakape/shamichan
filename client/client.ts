@@ -150,12 +150,12 @@ export default () => {
 				for (var i = 0; i < 3; i++) {
 					s += random(1) + ","
 				}
-				s += random(360) + "deg)"
-					+ " scale(" + (Math.abs(random(1.5)) + 0.5) + "," + (Math.abs(random(1.5)) + 0.5) + ") !important;"
+				s += random(30) + "deg)"
+					+ " scale(" + (random(0.3) + 1) + "," + (random(0.3) + 1) + ") !important;"
 					+ " !important; transition-duration: " + Math.abs(random(0.1) + 0.1) + "s !important;;"
 				s += " !important; translate3d("
 				for (var i = 0; i < 3; i++) {
-					s += random(100) + "%"
+					s += random(30) + "%"
 					if (i != 2) {
 						s += ","
 					}
