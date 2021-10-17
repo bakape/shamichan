@@ -145,6 +145,7 @@ export default () => {
 						continue;
 					}
 					slap(target.view.el)
+					break;
 				}
 			}
 
