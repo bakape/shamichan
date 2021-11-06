@@ -245,3 +245,25 @@ func GetIP(id uint64) (string, error) {
 		Scan(&ip)
 	return ip.String, err
 }
+
+func HasPostsOlderThan5Min(ip string) (has bool, err error) {
+	if common.IsTest {
+		return true, nil
+	}
+
+	err = db.
+		QueryRow(
+			`select exists (
+				select
+				from posts
+				where
+					ip = $1
+					and time <= extract(
+						epoch from now() - interval '5 min'
+					)
+			);`,
+			ip,
+		).
+		Scan(&has)
+	return
+}

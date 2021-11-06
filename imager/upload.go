@@ -125,6 +125,14 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
+	has, err := db.HasPostsOlderThan5Min(ip)
+	if err != nil {
+		return
+	}
+	if !has {
+		return common.StatusError{errors.New("too new to post images"), 403}
+	}
+
 	_, err = db.IsBanned("all", ip)
 	if err != nil {
 		return
