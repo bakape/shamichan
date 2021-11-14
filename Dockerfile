@@ -1,4 +1,4 @@
-FROM golang:buster
+FROM golang
 
 EXPOSE 8000
 
@@ -23,7 +23,7 @@ RUN apt-get install -y \
 RUN apt-get dist-upgrade -y
 
 # Install Node.js
-RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
+RUN wget -q -O- https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 
 # Cache dependency downloads, if possible
@@ -32,13 +32,15 @@ COPY go.sum .
 RUN go mod download
 COPY package.json .
 COPY package-lock.json .
-RUN npm install --dev
+RUN npm install --include=dev
 
 # Copy and build meguca
 COPY . .
+
 COPY docs/config.json .
 RUN sed -i 's/localhost:5432/postgres:5432/' config.json
 RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
 RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
 
-RUN make
+RUN make server
+RUN make client

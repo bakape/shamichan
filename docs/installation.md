@@ -28,7 +28,7 @@ source /etc/profile
 
 # Install Node.js
 wget -qO- https://deb.nodesource.com/setup_10.x | bash -
-apt-get install -y nodejs
+apt-get install -y nodejs npm
 
 # Clone meguca
 git clone -b v6 https://github.com/bakape/meguca.git meguca

@@ -11,10 +11,7 @@ client: client_vendor
 	$(gulp)
 
 client_deps:
-	npm install --dev --progress false --depth 0
-
-watch:
-	$(gulp) -w
+	npm install --include=dev --progress false --depth 0
 
 client_vendor: client_deps
 	mkdir -p www/js/vendor

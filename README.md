@@ -75,7 +75,7 @@ A reference list of commands can be found in `./docs/installation.md`
 * make
 * pkg-config
 * pthread
-* ffmpeg 3.2+ libraries (libavcodec, libavutil, libavformat, libswscale)
+* ffmpeg >=3.2 libraries (libavcodec, libavutil, libavformat, libswscale)
 compiled with:
     * libvpx
     * libvorbis
@@ -83,7 +83,7 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* OpenCV >= 2
+* OpenCV >=4
 * libgeoip
 * git
 
@@ -134,8 +134,6 @@ the password "password"
 
 * See `./docs` for more documentation
 * `make server` and `make client` build the server and client separately
-* `make watch` watches the file system for changes and incrementally rebuilds
-the client
 * `make clean` removes files from the previous compilation
 * `make {test,test_no_race,test_docker}` run regular, without data race
 detection and Dockerized test suites, respectively
