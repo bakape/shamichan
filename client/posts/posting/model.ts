@@ -29,6 +29,7 @@ let suffixes = [
 	"de geso~",
 	" XD",
 	"bruh",
+	"tehe pero~",
 ];
 if (location.pathname.includes("/tragsguca/")) {
 	suffixes.push("waggle~");
