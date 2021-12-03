@@ -12,7 +12,7 @@
 		"redirectIP": "POSTER WARPED TO \"%s\" BY '%s'",
 		"redirectThread": "THREAD WARPED TO \"%s\" BY '%s'",
 		"shadowBinned": "SENT TO THE BIN BY '%s' FOR %s FOR \"%s\"",
-		"threadLockToggled": "THREAD %s BY '%s'",
+		"threadLockToggled": "THREAD LOCKED %s BY '%s'",
 		"unbanned": "RAISED AS A SKELETON BY '%s'",
 		"viewedSameIP": "PANTSU INSPECTED BY '%s'"
 	},
@@ -43,7 +43,7 @@
 		]
 	},
 	"posts": {
-		"admin": "Lonely Latvian",
+		"admin": "Top slut",
 		"ago": "ago",
 		"anon": "Onee-sama",
 		"contract": "Contract",
