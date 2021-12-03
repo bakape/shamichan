@@ -120,7 +120,7 @@ export abstract class AccountForm extends FormView {
 			alert(lang.ui["sessionExpired"]);
 			deleteCookie("loginID");
 			deleteCookie("session");
-			location.reload(true);
+			location.reload();
 		}
 	}
 }

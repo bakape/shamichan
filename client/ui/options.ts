@@ -64,8 +64,10 @@ export default class OptionsPanel extends TabbedModal {
 				el.checked = val as boolean
 				break
 			case optionType.number:
-			case optionType.menu:
 			case optionType.range:
+				el.valueAsNumber = val as number
+				break
+			case optionType.menu:
 			case optionType.textarea:
 				el.value = val as string || ""
 				break

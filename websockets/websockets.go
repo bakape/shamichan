@@ -106,7 +106,7 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 
 	// Prevents connection spam
-	err = db.IsBanned("all", ip)
+	_, err = db.IsBanned("all", ip)
 	if err != nil {
 		return
 	}

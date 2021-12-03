@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,6 +11,11 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 )
+
+type reportEvent struct {
+	Post   uint64
+	Reason string
+}
 
 // Report a post for rule violations
 func report(w http.ResponseWriter, r *http.Request) {
@@ -68,10 +74,28 @@ func report(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.Report(target, board, reason, ip, f.Get("illegal") == "on")
+	illegal := (f.Get("illegal") == "on")
+	err = db.Report(target, board, reason, ip, illegal)
 	if err != nil {
 		httpError(w, r, err)
 		return
+	}
+
+	data, err := json.Marshal(reportEvent{Post: target, Reason: reason})
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	var dst string
+	if illegal {
+		dst = "all"
+	} else {
+		dst = board
+	}
+	SSEBroker.Event <- ServerEvent{
+		Destination: "/html/reports/" + dst,
+		Data:        data,
 	}
 }
 

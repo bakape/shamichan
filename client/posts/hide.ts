@@ -1,6 +1,6 @@
 // Hide posts you don't like
 
-import { storeHidden, hidden, posts, mine } from "../state"
+import { storeHidden, hidden, posts, mine, page } from "../state"
 import { Post } from "./model"
 import { clearStore } from "../db"
 import { trigger } from "../util"
@@ -20,6 +20,14 @@ export function clearHidden() {
 	clearStore("hidden")
 	for (let p of posts) {
 		p.unhide()
+		if (p.id == p.op) {
+			if (page.catalog) {
+				document.getElementById(`p${p.id}`).classList.remove("hidden")
+			} else {
+				// Unhide thread from board index
+				document.querySelector(`section[data-id="${p.id}"]`).classList.remove("hidden")
+			}
+		}
 	}
 }
 
@@ -38,15 +46,6 @@ export function hideRecursively(post: Post) {
 		for (let id in post.backlinks) {
 			const p = posts.get(parseInt(id))
 			if (p) {
-				hideRecursively(p)
-			}
-		}
-	}
-
-	// Also hide all replies, if OP hidden
-	if (post.id === post.op) {
-		for (let p of posts) {
-			if (p.op === post.id) {
 				hideRecursively(p)
 			}
 		}

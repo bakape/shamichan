@@ -300,7 +300,12 @@ export default class PostView extends ImageHandler {
                         // Hide own deletes from user
                         continue;
                     }
-                    s = this.format('deleted', by);
+                    // Shadow bins require a reason
+                    if (data) {
+                        s = this.format("deletedReason", by, data);
+                    } else {
+                        s = this.format("deleted", by);
+                    }
                     break;
                 case ModerationAction.deleteImage:
                     s = this.format('imageDeleted', by);
@@ -321,6 +326,12 @@ export default class PostView extends ImageHandler {
                     break;
                 case ModerationAction.unbanPost:
                     s = this.format('unbanned', by);
+                    break;
+                case ModerationAction.redirectIP:
+                    s = this.format("redirectIP", data, by);
+                    break;
+                case ModerationAction.redirectThread:
+                    s = this.format("redirectThread", data, by);
                     break;
                 default:
                     continue;

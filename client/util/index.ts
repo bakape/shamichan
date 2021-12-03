@@ -172,11 +172,13 @@ export function inputElement(
 	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement
 }
 
+type SameSiteValue = "none" | "lax" | "strict"
+
 // Set a global cookie, that expires after `days`
-export function setCookie(key: string, val: string, days: number) {
+export function setCookie(key: string, val: string, days: number, samesite: SameSiteValue = "strict") {
 	let date = new Date()
 	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
-	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/;`;
+	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/; samesite=${samesite}`
 }
 
 // Get a cookie value by name. Returns empty string, if none.

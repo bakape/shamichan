@@ -20,6 +20,8 @@ const (
 	MeidoVision
 	PurgePost
 	ShadowBinPost
+	RedirectIP
+	RedirectThread
 )
 
 // Contains fields of a post moderation log entry

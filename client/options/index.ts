@@ -10,11 +10,8 @@ import { bgVideos } from "../state"
 export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
 export * from "./specs"
-export { posterName } from "./nowPlaying"
+export { getPostName } from "./nowPlaying"
 export { persistMessages } from "./meguTV"
-
-// Delete legacy options localStorage entry, if any
-localStorage.removeItem("options")
 
 interface Options extends ChangeEmitter {
 	hideThumbs: boolean
@@ -28,10 +25,10 @@ interface Options extends ChangeEmitter {
 	postInlineExpand: boolean
 	relativeTime: boolean
 	meguTV: boolean
-	nowPlaying: number
+	horizontalNowPlaying: boolean
 	radio: boolean
 	eden: boolean
-	shami: boolean
+	shamiradio: boolean
 	bgVideo: string
 	bgMute: boolean
 	horizontalPosting: boolean
@@ -105,9 +102,6 @@ class OptionModel {
 
 	// Retrieve option value from storage and parse result. If none, return
 	public get(): any {
-		if (this.spec.getfn) {
-			return this.spec.getfn();
-		}
 		const stored = this.read()
 		if (!stored) {
 			return this.spec.default
@@ -141,7 +135,7 @@ class OptionModel {
 
 	// Write value to localStorage, if needed
 	public set(val: any) {
-		if (this.id === "meguTV" || this.spec.getfn) {
+		if (this.id === "meguTV") {
 			return;
 		}
 		if (val !== this.spec.default || this.read()) {
@@ -151,7 +145,44 @@ class OptionModel {
 	}
 }
 
+function migrateOption(key: string, fn: (value: string) => void) {
+	const value = localStorage.getItem(key)
+	if (value !== null) {
+		fn(value)
+		localStorage.removeItem(key)
+	}
+}
+
 export function initOptions() {
+	// Delete legacy options localStorage entry, if any
+	localStorage.removeItem("options")
+
+	// Migrate old options
+	migrateOption("nowPlaying", value => {
+		switch (value) {
+			case "true":
+			case "r/a/dio":
+				localStorage.setItem("radio", "true")
+				break
+			case "eden":
+				localStorage.setItem("eden", "true")
+				break
+			case "both":
+				localStorage.setItem("radio", "true")
+				localStorage.setItem("eden", "true")
+				break
+			default:
+				const flags = parseInt(value, 10)
+				for (const [i, key] of ["radio", "eden", "shamiradio"].entries()) {
+					if (flags & 1 << i) {
+						localStorage.setItem(key, "true")
+					}
+				}
+		}
+	})
+	migrateOption("whatAnime", value => localStorage.setItem("tracemoe", value))
+	migrateOption("desustorage", value => localStorage.setItem("desuarchive", value))
+
 	// Populate option model collection and central model
 	for (let id in specs) {
 		new OptionModel(id, specs[id])
@@ -169,10 +200,7 @@ export function initOptions() {
 	}
 
 	// Conditionally load and execute optional modules
-	for (let opt of [
-		"userBG", "nowPlaying", "bgVideo", "mascot", "customCSSToggle",
-		"meguTV",
-	]) {
+	for (let opt of ["userBG", "bgVideo", "mascot", "customCSSToggle", "meguTV"]) {
 		if (options[opt]) {
 			models[opt].execute(true)
 		}

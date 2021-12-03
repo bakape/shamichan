@@ -14,6 +14,7 @@ import initThreads from "./threads"
 import { renderCaptchaForm, captchaLoaded } from "../../ui/captcha";
 import * as page from "../../page";
 import options from "../../options";
+import { initUpload } from "./upload"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -406,4 +407,5 @@ export default () => {
 	initImageErr()
 	initThreads()
 	initIdentity()
+	initUpload()
 }

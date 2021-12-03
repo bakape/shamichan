@@ -243,6 +243,7 @@ export default class FormView extends PostView {
     public insertImage() {
         this.renderImage(false);
         this.resizeInput();
+        this.upload.hideMaskToggle();
         this.upload.hideButton();
 
         if (postSM.state !== postState.alloc) {

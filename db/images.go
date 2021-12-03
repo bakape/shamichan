@@ -56,7 +56,7 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 }
 
 // NewImageToken inserts a new image allocation token into the DB and returns
-// it's ID
+// its ID
 func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 	expires := time.Now().Add(tokenTimeout).UTC()
 
@@ -148,7 +148,7 @@ func HasImage(id uint64) (has bool, err error) {
 	return
 }
 
-// InsertImage insert and image into and existing open post and return image
+// InsertImage insert an image into an existing open post and return image
 // JSON
 func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
 ) (

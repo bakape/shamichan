@@ -81,7 +81,7 @@ async function logout(url: string) {
 	switch (res.status) {
 		case 200:
 		case 403: // Does not really matter, if the session already expired
-			location.reload(true)
+			location.reload()
 			break
 		default:
 			alert(await res.text())
@@ -110,7 +110,7 @@ class LoginForm extends FormView {
 		const res = await postJSON(this.url, req)
 		switch (res.status) {
 			case 200:
-				location.reload(true)
+				location.reload()
 			default:
 				this.renderFormResponse(await res.text())
 		}

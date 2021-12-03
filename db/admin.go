@@ -22,6 +22,21 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 	return
 }
 
+// Write redirects to db. /all/ seems like a good place for admin-only actions
+func Redirect(id uint64, act common.ModerationAction, url string) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		return logModeration(tx, auth.ModLogEntry{
+			Board: "all",
+			ID:    id,
+			ModerationEntry: common.ModerationEntry{
+				Type: act,
+				By:   "admin",
+				Data: url,
+			},
+		})
+	})
+}
+
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
 	post, err := GetPost(id)
@@ -309,13 +324,30 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
 	err = queryAll(
-		sq.Select("type", "post_id", "by", "created", "length", "data").
-			From("mod_log").
-			Where("board = ?", board).
-			OrderBy("created desc"),
+		sq.
+			Select(
+				"ml.type",
+				"ml.post_id",
+				"ml.by",
+				"ml.created",
+				"ml.length",
+				"ml.data",
+				"coalesce(p.ip::text, '')",
+			).
+			From("mod_log as ml").
+			LeftJoin("posts p on p.id = ml.post_id").
+			Where("ml.board = ?", board).
+			OrderBy("ml.created desc"),
 		func(r *sql.Rows) (err error) {
-			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
-				&e.Data)
+			err = r.Scan(
+				&e.Type,
+				&e.ID,
+				&e.By,
+				&e.Created,
+				&e.Length,
+				&e.Data,
+				&e.IP,
+			)
 			if err != nil {
 				return
 			}

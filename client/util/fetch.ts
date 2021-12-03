@@ -1,13 +1,18 @@
 // Helper functions for communicating with the server's JSON API
 
-// Fetches and decodes a JSON response from the API. Returns a tuple of the
+// Fetches and decodes a JSON response from an API. Returns a tuple of the
 // fetched resource and error, if any
 export async function fetchJSON<T>(url: string): Promise<[T, string]> {
-	const res = await fetch(url)
-	if (res.status !== 200) {
-		return [null, await res.text()]
+	try {
+		const res = await fetch(url)
+		if (res.status !== 200) {
+			return [null, await res.text()]
+		}
+		return [await res.json(), ""]
 	}
-	return [await res.json(), ""]
+	catch (e) {
+		return [null, e]
+	}
 }
 
 // Send a POST request with a JSON body to the server

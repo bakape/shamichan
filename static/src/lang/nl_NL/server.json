@@ -6,7 +6,7 @@
 		],
 		"JPEGThumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"meguca uses WebP thumbnails by default. Enable this if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"NSFW": [
 			"Niet veilig voor werk",
@@ -33,8 +33,8 @@
 			"Mute de achtergrond video"
 		],
 		"bgVideo": [
-			"Achtergrond Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Background Video",
+			"Admin-specified memes piped straight into your monitor"
 		],
 		"boardExpiry": [
 			"Board vervaldatum",
@@ -80,9 +80,9 @@
 			"Standaard taal",
 			"Taal pakket by standaard laden"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org afbeelding zoeken"
+		"desuarchive": [
+			"Desuarchive",
+			"desuarchive.org afbeelding zoeken"
 		],
 		"disableRobots": [
 			"Crawlers voorkomen",
@@ -97,8 +97,8 @@
 			"Open bericht sluiten"
 		],
 		"eden": [
-			"eden",
-			""
+			"Eden Radio",
+			"Eden Radio now playing banner"
 		],
 		"eightball": [
 			"#8ball antwoorden",
@@ -125,12 +125,12 @@
 			"Fout email server subdomain."
 		],
 		"exhentai": [
-			"Exhentai",
+			"ExHentai",
 			"exhentai.org afbeelding zoeken"
 		],
 		"expandAll": [
 			"Alle afbeeldingen uitbreiden",
-			"Alle afbeeldingen uitbreiden. Webm, PDF en MP3 en je eigen bericht worden niet beïnvloed. Nieuwe bericht afbeeldingen worden ook uitgebreid."
+			"Alle afbeeldingen uitbreiden. WebM, PDF, MP3 en je eigen bericht worden niet beïnvloed. Nieuwe bericht afbeeldingen worden ook uitgebreid."
 		],
 		"export": [
 			"Exporteren",
@@ -180,6 +180,10 @@
 			"Thumbnails verbergen",
 			"Geef een [Show] knop weer in plaats van thumbnails"
 		],
+		"horizontalNowPlaying": [
+			"Horizontal now playing banners",
+			"Display now playing banners inline rather than stacked"
+		],
 		"horizontalPosting": [
 			"Horizontaal Posting",
 			"38chan nostalgia"
@@ -215,10 +219,6 @@
 		"janitors": [
 			"Janitors",
 			"Janitor account IDs. Janitors kunnen bericht alleen verwijderen."
-		],
-		"lang": [
-			"Taal",
-			"Verander interface taal"
 		],
 		"links": [
 			"Externe links",
@@ -280,10 +280,6 @@
 			"Desktop Notificaties",
 			"Ontvang bureaubladmeldingen wanneer deze worden geciteerd of een syncwatch gaat beginnen"
 		],
-		"nowPlaying": [
-			"Nu banner aan het spelen",
-			"Momenteel speelt het nummer op r / a / dio of eden en andere streaminformatie in de bovenste balk."
-		],
 		"oldPassword": [
 			"Oud wachtwoord",
 			""
@@ -321,8 +317,12 @@
 			"Vraag niet"
 		],
 		"radio": [
-			"r/a/dio",
-			""
+			"R/a/dio",
+			"R/a/dio now playing banner"
+		],
+		"randomNameHours": [
+			"Random name hours",
+			"Randomly once every 12 assign a name to a poster in a thread"
 		],
 		"rbText": [
 			"Red/Blue Text",
@@ -365,16 +365,16 @@
 			"Salt voor veilige tripcode en mnemonic generatie. Aanbevolen om minimaal 40 tekens lang te zijn."
 		],
 		"saucenao": [
-			"SauceNao",
+			"SauceNAO",
 			"saucenao.com afbeelding zoeken"
 		],
 		"sessionExpiry": [
 			"Account sessie verstrijken",
 			"Tijd in dagen totdat gebruikersaccounts automatisch worden afgemeld"
 		],
-		"shami": [
-			"shamiradio",
-			""
+		"shamiradio": [
+			"Shamiradio",
+			"Shamiradio now playing banner"
 		],
 		"spoilers": [
 			"Afbeelding Spoilers",
@@ -408,6 +408,10 @@
 			"Afbeelding Spoiler",
 			"Toggle spoiler in de opening van een bericht"
 		],
+		"tracemoe": [
+			"trace.moe",
+			"trace.moe anime screenshot zoeken"
+		],
 		"userBG": [
 			"Eigen Achtergrond",
 			"Toggle eigen pagina achtergrond"
@@ -423,10 +427,6 @@
 		"webmHover": [
 			"WebM Hover uitbreiding",
 			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
-		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot zoeken"
 		],
 		"workMode": [
 			"Work mode",
@@ -471,10 +471,9 @@
 		"FAQ": "Informatie",
 		"account": "Account en board management",
 		"add": "Toevoegen",
-		"apply": "Toepassen",
 		"assignStaff": "staff toewijzen",
 		"ban": "Verbannen",
-		"bannerSpecs": "Accepteert maximaal 20 JPEG-, PNG-, GIF- of WEBM-bestanden met maximale afmetingen van 300x100, maximale bestandsgrootte van 100 kB en geen geluid.",
+		"bannerSpecs": "Accepteert maximaal 100 JPEG-, PNG-, GIF- of WebM-bestanden met maximale afmetingen van 300x100, maximale bestandsgrootte van 300 KB en geen geluid.",
 		"by": "Door",
 		"captcha": "Captcha",
 		"changePassword": "Verander wachtwoord",
@@ -497,7 +496,7 @@
 		"identity": "Identiteit",
 		"illegal": "Illegaal inhoud",
 		"loadCaptcha": "Click om captcha te laden",
-		"loadingSpecs": "Accepteert een GIF- of WEBM-bestand met maximale afmetingen van 300x300, maximale bestandsgrootte van 100 kB en geen geluid.",
+		"loadingSpecs": "Accepteert een GIF- of WebM-bestand met maximale afmetingen van 400x400, maximale bestandsgrootte van 300 KB en geen geluid.",
 		"logout": "Uitloggen",
 		"logoutAll": "uitloggen van alle apparaten",
 		"notification": "Notificatie",
@@ -505,7 +504,9 @@
 		"ownNoBoards": "Je bezit geen boards",
 		"post": "Post",
 		"purgePost": "post/afbeelding uitwissen",
-		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"redirectIP": "Redirect by IP",
+		"redirectThread": "Redirect by thread",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts regular expressions.",
 		"setBanners": "Zet banners",
 		"setLoading": "Zet ladende animatie",
 		"shadow": "shadow",

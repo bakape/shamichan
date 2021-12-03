@@ -50,9 +50,21 @@ func GetConfigs() (c config.Configs, err error) {
 
 func getBoardConfigs() squirrel.SelectBuilder {
 	return sq.Select(
-		"readOnly", "textOnly", "forcedAnon", "disableRobots", "flags", "NSFW",
-		"rbText", "pyu", "id", "defaultCSS", "title", "notice",
-		"rules", "eightball",
+		"readOnly",
+		"textOnly",
+		"forcedAnon",
+		"disableRobots",
+		"flags",
+		"NSFW",
+		"rbText",
+		"pyu",
+		"id",
+		"defaultCSS",
+		"title",
+		"notice",
+		"rules",
+		"eightball",
+		"randomNameHours",
 	).
 		From("boards")
 }
@@ -76,9 +88,21 @@ func loadBoardConfigs() (err error) {
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	var eightball pq.StringArray
 	err = r.Scan(
-		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
-		&c.NSFW, &c.RbText, &c.Pyu,
-		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
+		&c.ReadOnly,
+		&c.TextOnly,
+		&c.ForcedAnon,
+		&c.DisableRobots,
+		&c.Flags,
+		&c.NSFW,
+		&c.RbText,
+		&c.Pyu,
+		&c.ID,
+		&c.DefaultCSS,
+		&c.Title,
+		&c.Notice,
+		&c.Rules,
+		&eightball,
+		&c.RandomNameHours,
 	)
 	c.Eightball = []string(eightball)
 	return
@@ -88,16 +112,40 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 	_, err := sq.Insert("boards").
 		Columns(
-			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-			"flags", "NSFW",
-			"rbText", "pyu", "created", "defaultCSS", "title",
-			"notice", "rules", "eightball",
+			"id",
+			"readOnly",
+			"textOnly",
+			"forcedAnon",
+			"disableRobots",
+			"flags",
+			"NSFW",
+			"rbText",
+			"pyu",
+			"created",
+			"defaultCSS",
+			"title",
+			"notice",
+			"rules",
+			"eightball",
+			"randomNameHours",
 		).
 		Values(
-			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-			c.Flags, c.NSFW, c.RbText, c.Pyu,
-			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+			c.ID,
+			c.ReadOnly,
+			c.TextOnly,
+			c.ForcedAnon,
+			c.DisableRobots,
+			c.Flags,
+			c.NSFW,
+			c.RbText,
+			c.Pyu,
+			c.Created,
+			c.DefaultCSS,
+			c.Title,
+			c.Notice,
+			c.Rules,
 			pq.StringArray(c.Eightball),
+			c.RandomNameHours,
 		).
 		RunWith(tx).
 		Exec()
@@ -108,19 +156,20 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 func UpdateBoard(c config.BoardConfigs) (err error) {
 	_, err = sq.Update("boards").
 		SetMap(map[string]interface{}{
-			"readOnly":      c.ReadOnly,
-			"textOnly":      c.TextOnly,
-			"forcedAnon":    c.ForcedAnon,
-			"disableRobots": c.DisableRobots,
-			"flags":         c.Flags,
-			"NSFW":          c.NSFW,
-			"rbText":        c.RbText,
-			"pyu":           c.Pyu,
-			"defaultCSS":    c.DefaultCSS,
-			"title":         c.Title,
-			"notice":        c.Notice,
-			"rules":         c.Rules,
-			"eightball":     pq.StringArray(c.Eightball),
+			"readOnly":        c.ReadOnly,
+			"textOnly":        c.TextOnly,
+			"forcedAnon":      c.ForcedAnon,
+			"disableRobots":   c.DisableRobots,
+			"flags":           c.Flags,
+			"NSFW":            c.NSFW,
+			"rbText":          c.RbText,
+			"pyu":             c.Pyu,
+			"defaultCSS":      c.DefaultCSS,
+			"title":           c.Title,
+			"notice":          c.Notice,
+			"rules":           c.Rules,
+			"eightball":       pq.StringArray(c.Eightball),
+			"randomNameHours": c.RandomNameHours,
 		}).
 		Where("id = ?", c.ID).
 		Exec()

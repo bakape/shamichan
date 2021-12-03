@@ -6,7 +6,7 @@ import { Post, FormModel, PostView, lightenThread } from './posts'
 import { PostLink, Command, PostData, ImageData, ModerationEntry } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
-import { posterName } from "./options"
+import { getPostName } from "./options"
 import { OverlayNotification } from "./ui"
 import { setCookie } from './util';
 
@@ -48,9 +48,10 @@ function handle(id: number, fn: (m: Post) => void) {
 
 // Insert a post into the models and DOM
 export function insertPost(data: PostData) {
-	// R/a/dio song name override
-	if (posterName()) {
-		data.name = posterName()
+	// Now playing post name override
+	const postName = getPostName()
+	if (postName !== undefined) {
+		data.name = postName
 	}
 
 	const existing = posts.get(data.id)
@@ -140,8 +141,12 @@ export default () => {
 		handle(msg.id, m =>
 			m.applyModeration(msg))
 
-	handlers[message.redirect] = (url: string) =>
-		location.href = url.replace(/shamik\.ooo|megu\.ca/, location.hostname) || url
+	handlers[message.redirect] = (msg: string) => {
+		const url = new URL(msg, location.origin)
+		if (/https?:/.test(url.protocol)) {
+			location.href = url.href
+		}
+	}
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)

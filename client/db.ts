@@ -45,7 +45,7 @@ export function open(): Promise<void> {
 			db.onversionchange = () => {
 				db.close();
 				if (location.reload) {
-					location.reload(true); // Browser page
+					location.reload(); // Browser page
 				} else if (self && self.close) {
 					self.close(); // Service worker
 				}
@@ -243,7 +243,7 @@ export async function forEach<T>(store: string, fn: (data: T) => void) {
 }
 
 // Asynchronously insert a new expiring post id object into a postStore
-export function storeID(store: string, expiry: number, ...items: {id: number; op: number}[]) {
+export function storeID(store: string, expiry: number, ...items: { id: number; op: number }[]) {
 	if (hasErred) {
 		return;
 	}
@@ -297,7 +297,7 @@ export function putObj(store: string, obj: any, key: any = undefined,
 	})
 }
 
-export function putAll(store: string, toAdd: {obj: any, key?: any}[]): Promise<void> {
+export function putAll(store: string, toAdd: { obj: any, key?: any }[]): Promise<void> {
 	if (hasErred) {
 		return Promise.resolve(undefined)
 	}
@@ -305,7 +305,7 @@ export function putAll(store: string, toAdd: {obj: any, key?: any}[]): Promise<v
 	return new Promise<void>((resolve, reject) => {
 		const objStore = newTransaction(store, true), transaction = objStore.transaction;
 
-		for (const {obj, key} of toAdd) {
+		for (const { obj, key } of toAdd) {
 			objStore.put(obj, key);
 		}
 

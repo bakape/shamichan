@@ -28,25 +28,6 @@ async function start() {
 		await loadFromDB(page.thread)
 	}
 
-	// Check for legacy options and remap
-	const oldNowPlaying = localStorage.getItem("nowPlaying")
-	switch (oldNowPlaying) {
-	case "false":
-	case "none":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 0));
-		break;
-	case "true":
-	case "r/a/dio":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 1));
-		break;
-	case "eden":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 2));
-		break;
-	case "both":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 1 ^ 2));
-		break;
-	}
-
 	initOptions()
 
 	if (page.thread) {
@@ -85,7 +66,7 @@ async function start() {
 			const id = parseInt(addMine);
 			storeMine(id, id);
 			storeSeenPost(id, id);
-			watchThread(id, 1, 0, page.board, thread.subject);
+			await watchThread(id, 1, 0, page.board, thread.subject);
 			deleteCookie("addMine");
 		}
 	} else {

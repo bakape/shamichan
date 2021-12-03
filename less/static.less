@@ -1,0 +1,130 @@
+article {
+	display         : flex;
+	flex-direction  : column;
+	position        : fixed;
+	z-index         : 320;
+	padding         : 4px 10px;
+	margin          : 1px;
+	max-width       : 95vw;
+	align-items     : flex-start;
+	word-break      : break-word;
+	word-wrap       : break-word;
+	background-color: white;
+	border          : 1px solid black;
+
+	&:not(.deleted)>.deleted-toggle {
+		display: none;
+	}
+}
+
+.post-container {
+	width   : 100%;
+	overflow: hidden; // Prevents vertical zalgo
+}
+
+blockquote {
+	min-width: 25em;
+}
+
+.hash-link {
+	display: none;
+}
+
+figcaption {
+	margin: 2px 0;
+}
+
+figure {
+	float  : left;
+	margin : 3px 20px 0 0;
+	padding: 0.3em;
+
+	a {
+		display    : block;
+		line-height: 0px;
+	}
+
+	img {
+		border: 0;
+	}
+}
+
+header {
+	margin-left : -14px;
+	padding-left: 14px;
+
+	nav {
+		display: initial;
+	}
+
+	code {
+		font-family: inherit;
+		font-weight: normal;
+	}
+}
+
+.post-moderation {
+	font-size: 110%;
+}
+
+.deleted-toggle {
+	-webkit-appearance: none;
+	-moz-appearance   : none;
+	appearance        : none;
+	margin            : 0;
+	background-image  : url(/assets/css/ui/deleted.svg);
+	width             : 1.1em;
+	height            : 1.1em;
+	background-repeat : no-repeat;
+	background-size   : contain;
+}
+
+a {
+	text-decoration: none !important;
+}
+
+.hidden {
+	display: none;
+}
+
+.spaced {
+	&>*:before {
+		content: ' ';
+	}
+}
+
+.flag {
+	height     : .8em;
+	margin-left: .3em;
+	border     : 1px solid black;
+}
+
+.fileinfo {
+	margin-left: 1ex;
+
+	&::before {
+		content: "(";
+	}
+
+	&::after {
+		content: ")";
+	}
+
+	&>span::empty {
+		display: none;
+	}
+
+	&>span:not(:empty):not([hidden])~span::before {
+		content: ", ";
+	}
+
+	&>span.media-artist:not(:empty)+span.media-title::before {
+		content: "\00a0-\00a0";
+	}
+}
+
+table,
+th,
+td {
+	border: 1px solid black;
+}

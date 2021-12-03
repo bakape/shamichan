@@ -100,16 +100,18 @@ func TestIsLoggedIn(t *testing.T) {
 func setLoginCookies(r *http.Request, creds auth.SessionCreds) {
 	expires := time.Now().Add(time.Hour)
 	r.AddCookie(&http.Cookie{
-		Name:    "loginID",
-		Value:   creds.UserID,
-		Path:    "/",
-		Expires: expires,
+		Name:     "loginID",
+		Value:    creds.UserID,
+		Path:     "/",
+		Expires:  expires,
+		SameSite: http.SameSiteStrictMode,
 	})
 	r.AddCookie(&http.Cookie{
-		Name:    "session",
-		Value:   creds.Session,
-		Path:    "/",
-		Expires: expires,
+		Name:     "session",
+		Value:    creds.Session,
+		Path:     "/",
+		Expires:  expires,
+		SameSite: http.SameSiteStrictMode,
 	})
 }
 
