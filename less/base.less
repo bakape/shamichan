@@ -118,7 +118,7 @@ h3 {
 }
 
 .margin-spaced>*+* {
-	margin-left: 0.1em;
+	margin-left: 0.3em;
 }
 
 hr {
@@ -150,7 +150,7 @@ hr {
 	}
 
 	&+& {
-		margin-left: 0.1em;
+		margin-left: 0.3em;
 	}
 }
 
@@ -204,10 +204,11 @@ td {
 	padding: 0;
 }
 
-.aside-container {
+.tool-panel {
 	display    : flex;
 	flex-wrap  : wrap;
-	align-items: flex-end;
+	align-items: center;
+	max-width  : fit-content;
 }
 
 .captcha-container {
@@ -296,6 +297,11 @@ td {
 	}
 }
 
+article.pinned {
+	position: fixed;
+	z-index : 10;
+}
+
 .overlay-container {
 	width         : 100%;
 	height        : 100%;
@@ -343,6 +349,8 @@ td {
 		object-fit: contain;
 	}
 }
+
+
 
 .popup-menu {
 	padding    : 5px;
@@ -511,7 +519,7 @@ form {
 }
 
 .draggable {
-	cursor     : grab;
+	cursor     : move;
 	user-select: none;
 
 	& nav {

@@ -1,5 +1,5 @@
 use crate::{
-	buttons::AsideButton,
+	buttons::SpanButton,
 	connection,
 	post::posting,
 	state::{self, FeedID, Focus, Location},
@@ -10,7 +10,7 @@ use yew::{
 	html, Component, ComponentLink, Html, InputData, NodeRef, Properties,
 };
 
-pub struct AsideRow {
+pub struct Panel {
 	link: ComponentLink<Self>,
 	props: Props,
 	app_state: state::StateBridge,
@@ -22,7 +22,7 @@ pub struct Props {
 	pub is_top: bool,
 }
 
-impl Component for AsideRow {
+impl Component for Panel {
 	comp_prop_change! {Props}
 	type Message = bool;
 
@@ -51,7 +51,6 @@ impl Component for AsideRow {
 			("top", Focus::Top)
 		};
 
-		#[rustfmt::skip]
 		macro_rules! navi_button {
 			($pat:pat, $label:expr, $loc:expr) => {
 				if !matches!(loc.feed, $pat) {
@@ -63,8 +62,8 @@ impl Component for AsideRow {
 		}
 
 		html! {
-			<span
-				class="aside-container"
+			<aside
+				class="tool-panel glass margin-spaced"
 				style={
 					if self.props.is_top {
 						"margin-top: 1.5em;"
@@ -103,28 +102,24 @@ impl Component for AsideRow {
 				{
 					match &loc.feed {
 						FeedID::Thread { id, .. } => html! {
-							<aside class="glass">
-								<crate::page_selector::PageSelector
-									thread=*id
-								/>
-							</aside>
+							<crate::page_selector::PageSelector thread=*id />
 						},
 						_ => html! {},
 					}
 				}
-			</span>
+			</aside>
 		}
 	}
 }
 
-impl AsideRow {
+impl Panel {
 	fn render_navigation_button(
 		&self,
 		label: &'static str,
 		loc: Location,
 	) -> Html {
 		html! {
-			<AsideButton
+			<SpanButton
 				text=label
 				on_click=self.link.callback(move |_| {
 					state::navigate_to(loc.clone());
@@ -298,7 +293,7 @@ impl Component for NewThreadForm {
 
 	fn view(&self) -> Html {
 		html! {
-			<aside id="thread-form-container">
+			<span id="thread-form-container">
 				<span class={if !self.expanded { "act" } else { "" }}>
 					{
 						if self.expanded {
@@ -318,7 +313,7 @@ impl Component for NewThreadForm {
 						}
 					}
 				</span>
-			</aside>
+			</span>
 		}
 	}
 }

@@ -106,8 +106,18 @@ impl PostComponent for Inner {
 	}
 
 	#[inline]
-	fn should_ops_not_render_borders() -> bool {
+	fn render_op_borders() -> bool {
 		false
+	}
+
+	#[inline]
+	fn pinned_posts_id<'c>(_: u64) -> u64 {
+		0
+	}
+
+	#[inline]
+	fn subscribe_to() -> Option<state::Change> {
+		Some(state::Change::Post(0))
 	}
 
 	fn update_extra<'c>(

@@ -84,7 +84,7 @@ macro_rules! comp_static {
 /// Parameters passed to Inner method calls
 pub struct Ctx<I>
 where
-	I: Inner + 'static,
+	I: HookedComponentInner + 'static,
 {
 	props: I::Properties,
 	link: yew::ComponentLink<HookedComponent<I>>,
@@ -93,7 +93,7 @@ where
 
 impl<I> Ctx<I>
 where
-	I: Inner + 'static,
+	I: HookedComponentInner + 'static,
 {
 	/// Get reference to component's properties
 	#[inline]
@@ -134,8 +134,8 @@ where
 	}
 }
 
-/// Inner logic for HookedComponent
-pub trait Inner: Default {
+/// Customizable logic for HookedComponent
+pub trait HookedComponentInner: Default {
 	type Properties: yew::Properties + Eq + std::fmt::Debug;
 	type Message: 'static;
 
@@ -144,8 +144,8 @@ pub trait Inner: Default {
 	#[inline]
 	fn init(&mut self, c: &mut Ctx<Self>) {}
 
-	/// Return Self::Message to pass to HookedInner to signal global state has
-	/// updated
+	/// Return Self::Message to pass to HookedComponentInner to signal global
+	// state has updated
 	fn update_message() -> Self::Message;
 
 	/// Vector of global state changes to subscribe to
@@ -163,13 +163,14 @@ pub trait Inner: Default {
 
 	/// Called each time after the component is rendered
 	#[allow(unused_variables)]
+	#[inline]
 	fn rendered(&mut self, c: &mut Ctx<Self>, first_render: bool) {}
 }
 
 /// Component that is hooked into global state updates
 pub struct HookedComponent<I>
 where
-	I: Inner + 'static,
+	I: HookedComponentInner + 'static,
 {
 	inner: RefCell<I>,
 	ctx: Ctx<I>,
@@ -177,7 +178,7 @@ where
 
 impl<I> yew::Component for HookedComponent<I>
 where
-	I: Inner + 'static,
+	I: HookedComponentInner + 'static,
 {
 	type Properties = I::Properties;
 	type Message = I::Message;

@@ -669,6 +669,9 @@ impl Connection {
 	}
 
 	/// Asynchronously generate and send a handshake request message
+	//
+	// TODO: to this in response to the handshake request from the server with
+	// the server's provided nonce to protect against replay attacks.
 	#[cold]
 	fn send_handshake_req(key_pair: KeyPair) {
 		use common::payloads::Authorization;

@@ -18,11 +18,14 @@ mod state;
 mod thread;
 mod thread_index;
 mod time;
+mod tool_panel;
 mod user_bg;
-mod widgets;
 
 use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
+
+// TODO: infinite scrolling with some floating widget to enable page jumping;
+// put the OP in there too; transition it into the widget with an animation 
 
 struct App {
 	dragging: bool,
@@ -94,11 +97,11 @@ impl Component for App {
 					</div>
 				</div>
 				<section id="main">
-					<widgets::AsideRow is_top=true />
+					<tool_panel::Panel is_top=true />
 					<hr />
 					<thread_index::Threads />
 					<hr />
-					<widgets::AsideRow />
+					<tool_panel::Panel />
 				</section>
 			</section>
 		}

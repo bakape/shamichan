@@ -1,16 +1,15 @@
-use crate::{comp_util, state};
-use serde::{Deserialize, Serialize};
-use yew::{html, Html, Properties};
+use crate::{
+	comp_util,
+	state::{self, navigate_to, FeedID, Focus, Location},
+};
+use yew::{html, ChangeData, Html, Properties};
 
 // TODO: rewrite to a simpler `<a>1</a> <b>2<b> <a>3</a>` page selector with
 // only 3 pages displayed at a time and a <select> at the end to navigate to
 // a specific page
 
 #[derive(Default)]
-pub struct Inner {
-	offset: u32,
-	page_count: u32,
-}
+pub struct Inner;
 
 /// Used to select a certain page of a thread
 pub type PageSelector = comp_util::HookedComponent<Inner>;
@@ -20,141 +19,72 @@ pub struct Props {
 	pub thread: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub enum Message {
-	Scroll { left: bool, to_end: bool },
-	SelectPage(u32),
-	ThreadUpdate,
-	NOP,
-}
-
-impl comp_util::Inner for Inner {
-	type Message = Message;
+impl comp_util::HookedComponentInner for Inner {
+	type Message = ();
 	type Properties = Props;
 
 	#[inline]
-	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
-		self.fetch_page_count(c);
-	}
-
-	#[inline]
 	fn update_message() -> Self::Message {
-		Message::ThreadUpdate
+		()
 	}
 
 	#[inline]
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
-		vec![state::Change::Thread(props.thread)]
+		use state::Change::*;
+
+		vec![Thread(props.thread), Location]
 	}
 
+	#[inline]
 	fn update(
 		&mut self,
-		c: &mut comp_util::Ctx<Self>,
-		msg: Self::Message,
+		_: &mut comp_util::Ctx<Self>,
+		_: Self::Message,
 	) -> bool {
-		use Message::*;
-
-		match msg {
-			Scroll { left, to_end } => {
-				let old = self.offset;
-				let max = if self.page_count > 5 {
-					self.page_count - 5
-				} else {
-					0
-				};
-
-				if to_end {
-					self.offset = if left { 0 } else { max };
-				} else {
-					if left {
-						if self.offset > 0 {
-							self.page_count -= 1;
-						}
-					} else {
-						if self.offset < max {
-							self.offset += 1;
-						}
-					}
-				}
-
-				self.offset != old
-			}
-			SelectPage(_) => todo!("page navigation"),
-			ThreadUpdate => {
-				let old = self.page_count;
-				self.fetch_page_count(c);
-				old != self.page_count
-			}
-			NOP => false,
-		}
+		true
 	}
 
 	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
+		let current = match &c.app_state().location.feed {
+			FeedID::Thread { id, page } if id == &c.props().thread => {
+				*page as u32
+			}
+			_ => 0,
+		};
+		let page_count = c.app_state().page_count(&c.props().thread);
+		let thread = c.props().thread;
+
 		html! {
-			<span class="spaced mono no-select">
-				{self.render_scroll_button(&c, "<<", Message::Scroll{
-					left: true,
-					to_end: true,
-				})}
-				{
-					if self.page_count > 5 {
-						self.render_scroll_button(&c, "<", Message::Scroll{
-							left: true,
-							to_end: false,
-						})
-					} else {
-						html! {}
+			<select
+				onchange=c.link().callback(move |ch: ChangeData| match ch {
+					ChangeData::Select(el) => {
+						if let Ok(page) = el.value().parse::<u32>() {
+							navigate_to(
+								Location{
+									feed: FeedID::Thread{
+										id: thread,
+										page: page as i32,
+									},
+									focus: if page == 0 {
+										Some(Focus::Top)
+									} else if page == page_count - 1 {
+										Some(Focus::Bottom)
+									} else {
+										None
+									},
+								}
+							);
+						}
 					}
-				}
+					_ => ()
+				})
+			>
 				{
-					for (self.offset..self.page_count).map(|i| html! {
-						<a
-							onclick=c.link().callback(move |_|
-								Message::SelectPage(i)
-							)
-						>
-							{i}
-						</a>
+					for (0..page_count).map(|i| html! {
+						<option value=i selected=i == current>{i}</option>
 					})
 				}
-				{
-					if self.page_count > 5 {
-						self.render_scroll_button(&c, ">", Message::Scroll{
-							left: false,
-							to_end: false,
-						})
-					} else {
-						html! {}
-					}
-				}
-				{self.render_scroll_button(&c, ">>", Message::Scroll{
-					left: false,
-					to_end: true,
-				})}
-			</span>
+			</select>
 		}
-	}
-}
-
-impl Inner {
-	fn render_scroll_button(
-		&self,
-		c: &comp_util::Ctx<Self>,
-		text: &str,
-		msg: Message,
-	) -> Html {
-		html! {
-			<a onclick=c.link().callback(move |_| msg.clone())>{text}</a>
-		}
-	}
-
-	/// Fetch and set new page count value for thread from global state
-	fn fetch_page_count(&mut self, c: &mut comp_util::Ctx<Self>) {
-		self.page_count = c
-			.app_state()
-			.threads
-			.get(&c.props().thread)
-			.map(|t| t.page_count)
-			.unwrap_or(1);
 	}
 }

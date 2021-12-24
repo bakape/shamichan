@@ -69,14 +69,9 @@ impl KeyPair {
 	fn algo_dict() -> util::Result<js_sys::Object> {
 		let algo = js_sys::Object::new();
 
-		#[rustfmt::skip]
 		macro_rules! set {
 			($k:expr, $v:expr) => {
-				js_sys::Reflect::set(
-					&algo,
-					&$k.into(),
-					&$v.into(),
-				)?;
+				js_sys::Reflect::set(&algo, &$k.into(), &$v.into())?;
 			};
 		}
 

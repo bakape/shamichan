@@ -1,12 +1,14 @@
 use crate::{
 	buttons::SpanButton,
-	comp_util,
+	comp_util::{self, HookedComponentInner},
 	mouse::Coordinates,
 	state::{self, FeedID, Focus, Location, State},
 	util,
 };
 use common::payloads::{FileType, Image, Post};
-use yew::{html, ComponentLink, Html, NodeRef, Properties};
+use yew::{
+	agent::Bridged, html, ComponentLink, Dispatched, Html, NodeRef, Properties,
+};
 
 #[derive(Clone, Properties, PartialEq, Eq, Debug)]
 pub struct Props {
@@ -82,10 +84,22 @@ pub trait PostComponent: Default {
 	#[inline]
 	fn rendered<'c>(&mut self, c: &mut Ctx<'c, Self>, first_render: bool) {}
 
-	/// Should borders not be rendered, if this is an OP post?
+	/// Should borders be rendered, if this is an OP post?
 	#[inline]
-	fn should_ops_not_render_borders() -> bool {
+	fn render_op_borders() -> bool {
 		true
+	}
+
+	/// ID to use for determining, if the post is pinned to the screen
+	#[inline]
+	fn pinned_posts_id<'c>(post_id: u64) -> u64 {
+		post_id
+	}
+
+	/// Extra global state change to subscribe to
+	#[inline]
+	fn subscribe_to() -> Option<state::Change> {
+		None
 	}
 }
 
@@ -118,10 +132,10 @@ where
 {
 	/// Post data of target post.
 	///
-	/// Uses raw pointers to allow both mutably and immutably reference the parent
-	/// context at the same times as this post. The post is not actually
+	/// Uses raw pointers to allow both mutable and immutable referencing of the
+	/// parent  context at the same times as this post. The post is not actually
 	/// contained by the parent context, but should not outlive the context
-	/// anyway
+	/// anyway.
 	post: *const Post,
 
 	/// comp_util::Ctx passed from upstream
@@ -196,7 +210,7 @@ where
 	#[inline]
 	pub fn props(
 		&self,
-	) -> &<PostCommonInner<PC> as comp_util::Inner>::Properties {
+	) -> &<PostCommonInner<PC> as HookedComponentInner>::Properties {
 		self.parent.as_ref().props()
 	}
 
@@ -204,7 +218,7 @@ where
 	#[inline]
 	pub fn set_props(
 		&mut self,
-		props: <PostCommonInner<PC> as comp_util::Inner>::Properties,
+		props: <PostCommonInner<PC> as HookedComponentInner>::Properties,
 	) -> bool {
 		match &mut self.parent {
 			ParentCtxRef::Mut(c) => c.set_props(props),
@@ -271,6 +285,7 @@ pub type PostCommon<PC> = comp_util::HookedComponent<PostCommonInner<PC>>;
 struct TextSpoilerState {
 	/// A text spoiler has been clicked on to toggle revealing them
 	toggled: bool,
+
 	/// A text spoiler is currently being hovered over
 	hovered_over: bool,
 }
@@ -291,7 +306,6 @@ where
 	/// None, if not currently dragging
 	drag_agent: Option<Box<dyn yew::agent::Bridge<crate::mouse::Agent>>>,
 	last_mouse_coordinates: Coordinates,
-	translation: Coordinates,
 
 	image_download_button: NodeRef,
 	media_el: NodeRef,
@@ -323,7 +337,7 @@ pub enum Message<E> {
 	Extra(E),
 }
 
-impl<PC> comp_util::Inner for PostCommonInner<PC>
+impl<PC> HookedComponentInner for PostCommonInner<PC>
 where
 	PC: PostComponent + 'static,
 {
@@ -344,7 +358,10 @@ where
 	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
 		use state::Change::*;
 
-		vec![Configs, Options, Location, Post(props.id), OpenPostID]
+		let mut ch =
+			vec![Configs, Options, Location, Post(props.id), OpenPostID];
+		ch.extend(PC::subscribe_to());
+		ch
 	}
 
 	fn rendered(&mut self, c: &mut comp_util::Ctx<Self>, first_render: bool) {
@@ -430,15 +447,19 @@ where
 				});
 				false
 			}
-			DragStart(coords) => {
+			DragStart(mouse_coords) => {
 				use crate::mouse;
-				use yew::agent::Bridged;
 
 				if !self.is_draggable(c) {
 					return false;
 				}
 
-				self.last_mouse_coordinates = coords;
+				let el_coords = match self.el.cast::<web_sys::HtmlElement>() {
+					Some(el) => Coordinates::from(&el),
+					None => return false,
+				};
+
+				self.last_mouse_coordinates = mouse_coords;
 				let mut b =
 					mouse::Agent::bridge(c.link().callback(|msg| match msg {
 						mouse::Response::Coordinates(c) => {
@@ -449,11 +470,17 @@ where
 				b.send(mouse::Request::StartDragging);
 				self.drag_agent = Some(b);
 
+				state::Agent::dispatcher().send(
+					state::Request::SetPostPinCoords {
+						post: PC::pinned_posts_id(c.props().id),
+						change: state::PostPinChange::Set(el_coords),
+					},
+				);
+
 				true
 			}
 			QuoteSelf => {
 				use super::posting::{Agent, Request};
-				use yew::agent::Dispatched;
 
 				if let Some(el) = self.el.cast::<web_sys::Node>() {
 					Agent::dispatcher().send(Request::QuotePost {
@@ -464,11 +491,18 @@ where
 				false
 			}
 			MouseMove(coords) => {
+				use crate::state::{Agent, PostPinChange, Request};
+
 				if self.drag_agent.is_none() || !self.is_draggable(c) {
 					return false;
 				}
 
-				self.translation += coords - self.last_mouse_coordinates;
+				Agent::dispatcher().send(Request::SetPostPinCoords {
+					post: PC::pinned_posts_id(c.props().id),
+					change: PostPinChange::Increment(
+						coords - self.last_mouse_coordinates,
+					),
+				});
 				self.last_mouse_coordinates = coords;
 				true
 			}
@@ -499,16 +533,23 @@ where
 			_ => (),
 		}
 
-		let mut style = String::new();
-		if !self.translation.is_zero() {
-			style = format!(
-				"transform: translate({}px, {}px);",
-				self.translation.x, self.translation.y
-			);
-			cls.push("translated");
-		} else if PC::should_ops_not_render_borders() && p.id == p.thread {
-			// Moved OPs need to not blend into the background
-			cls.push("no-border");
+		let mut style = None;
+		match c
+			.app_state()
+			.pinned_posts
+			.get(&PC::pinned_posts_id(c.props().id))
+		{
+			Some(coords) => {
+				style = format!("left: {}px; top: {}px;", coords.x, coords.y)
+					.into();
+				cls.push("pinned");
+			}
+			None => {
+				if PC::render_op_borders() && p.id == p.thread {
+					// Moved OPs need to not blend into the background
+					cls.push("no-border");
+				}
+			}
 		}
 
 		#[rustfmt::skip]
@@ -527,7 +568,7 @@ where
 				id?=self.inner.id_attribute(c)
 				key=c.props().id
 				ref=self.el.clone()
-				style=style
+				style?=style
 			>
 				{self.render_header(&c)}
 				{with_image!(render_figcaption)}
@@ -645,8 +686,8 @@ where
 				}
 				{
 					if thread.is_some()
-					&& !PC::is_preview()
-					&& !c.app_state().location.is_thread()
+						&& !PC::is_preview()
+						&& !c.app_state().location.is_thread()
 					{
 						html! {
 							<>
@@ -675,6 +716,9 @@ where
 										});
 										Message::NOP
 									})
+								/>
+								<crate::page_selector::PageSelector
+									thread=p.thread
 								/>
 							</>
 						}
@@ -756,7 +800,6 @@ where
 	fn render_figcaption<'c>(&self, c: &Ctx<'c, PC>, img: &Image) -> Html {
 		let mut file_info = Vec::<String>::new();
 
-		#[rustfmt::skip]
 		macro_rules! push_if {
 			($cond:expr, $value:expr) => {
 				if $cond {

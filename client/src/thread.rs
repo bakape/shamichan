@@ -15,7 +15,7 @@ pub enum PostSet {
 	Last5Posts,
 
 	/// Display OP + selected pages
-	Pages(HashSet<u32>),
+	Pages(Vec<u32>),
 }
 
 impl Default for PostSet {
@@ -31,7 +31,7 @@ pub struct Props {
 	pub pages: PostSet,
 }
 
-impl comp_util::Inner for Inner {
+impl comp_util::HookedComponentInner for Inner {
 	type Message = ();
 	type Properties = Props;
 
@@ -67,22 +67,36 @@ impl comp_util::Inner for Inner {
 					.get(&c.props().id)
 					.map(|t| t.page_count)
 					.unwrap_or(1);
-				self.read_page_posts(c, &mut v, page_count - 1);
+				self.read_page_posts(c, &mut v, page_count - 1, true);
 				if v.len() < 5 && page_count > 1 {
-					self.read_page_posts(c, &mut v, page_count - 2);
+					self.read_page_posts(c, &mut v, page_count - 2, true);
 				}
+
 				v.sort_unstable();
 				if v.len() > 5 {
-					v[v.len() - 5..].iter().copied().collect()
-				} else {
-					v
+					v = v[v.len() - 5..].iter().copied().collect();
 				}
+
+				// Always display OP
+				v.insert(0, c.props().id);
+
+				v
 			}
 			Pages(pages) => {
-				let mut v = Vec::with_capacity(300);
+				let mut s = HashSet::<u64>::with_capacity(300);
 				for p in pages.iter() {
-					self.read_page_posts(c, &mut v, *p);
+					self.read_page_posts(c, &mut s, *p, false);
 				}
+
+				// Render pinned posts from any page
+				s.extend(
+					c.app_state()
+						.pinned_posts
+						.keys()
+						.filter(|id| id != &&c.props().id),
+				);
+
+				let mut v: Vec<u64> = s.into_iter().collect();
 				v.sort_unstable();
 				v
 			}
@@ -90,7 +104,6 @@ impl comp_util::Inner for Inner {
 
 		html! {
 			<section class="thread-container" key=c.props().id>
-				<ThreadPost id=c.props().id />
 				{
 					for posts.into_iter().map(|id| {
 						html! {
@@ -109,15 +122,22 @@ impl Inner {
 	fn read_page_posts(
 		&self,
 		c: &comp_util::Ctx<Self>,
-		dst: &mut Vec<u64>,
+		dst: &mut impl Extend<u64>,
 		page: u32,
+		exclude_op: bool,
 	) {
 		if let Some(posts) = c
 			.app_state()
 			.posts_by_thread_page
 			.get_by_key(&(c.props().id, page))
 		{
-			dst.extend(posts.iter().filter(|id| **id != c.props().id));
+			if exclude_op {
+				dst.extend(
+					posts.iter().filter(|id| **id != c.props().id).copied(),
+				);
+			} else {
+				dst.extend(posts.iter().copied());
+			}
 		}
 	}
 }

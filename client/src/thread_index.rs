@@ -68,16 +68,17 @@ impl Component for Threads {
 				if page < &0 {
 					html! {}
 				} else {
+					let page = *page as u32;
+					let mut pages = vec![page];
+					if page > 0 {
+						pages.insert(0, page - 1);
+					}
+					if page < self.app_state.get().page_count(id) - 1 {
+						pages.push(page + 1);
+					}
+
 					html! {
-						<view::Thread
-							id=id
-							pages=view::PostSet::Pages(
-								[*page as u32]
-								.iter()
-								.copied()
-								.collect(),
-							)
-						/>
+						<view::Thread id=id pages=view::PostSet::Pages(pages) />
 					}
 				}
 			}

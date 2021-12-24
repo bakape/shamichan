@@ -5,6 +5,7 @@ use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew_services::interval::{IntervalService, IntervalTask};
 
 // TODO: apply correction from server clock
+// TODO: switch to the unrolled linked lists used in PDB
 
 /// Unit division/multiplication array for computing a time unit from seconds
 static UNITS: [(Unit, u8); 5] = [

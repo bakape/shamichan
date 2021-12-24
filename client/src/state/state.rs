@@ -1,8 +1,8 @@
 use super::{KeyPair, Location, Options};
-use crate::util;
+use crate::{mouse::Coordinates, util};
 use common::{
 	payloads::{Post, Thread},
-	util::DoubleSetMap,
+	util::BidirectionalSetMap,
 };
 use std::{
 	cell::{Ref, RefCell, RefMut},
@@ -64,7 +64,7 @@ pub struct State {
 
 	/// Map for quick lookup of post IDs by a (thread, page) tuple and vice
 	/// versa
-	pub posts_by_thread_page: DoubleSetMap<(u64, u32), u64>,
+	pub posts_by_thread_page: BidirectionalSetMap<(u64, u32), u64>,
 
 	/// Pages loaded for the current thread
 	pub loaded_pages: HashSet<u32>,
@@ -95,6 +95,12 @@ pub struct State {
 	/// Time correction between the server and client.
 	/// Add to client-generated unix timestamps to correct them.
 	pub time_correction: i32,
+
+	/// Posts currently being repositioned and pinned to the screen and their
+	/// coordinates
+	//
+	// TODO: update pins on screen resize
+	pub pinned_posts: HashMap<u64, Coordinates>,
 }
 
 impl State {
@@ -111,6 +117,12 @@ impl State {
 			.get(id)
 			.ok_or("no meta for synced thread")
 			.unwrap()
+	}
+
+	/// Shorthand for getting the page count of a thread.
+	/// Defaults to `1`, if thread not found.
+	pub fn page_count(&self, id: &u64) -> u32 {
+		self.threads.get(id).map(|t| t.page_count).unwrap_or(1)
 	}
 }
 

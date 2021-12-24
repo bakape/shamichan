@@ -1,4 +1,8 @@
 /// Simple min-queue with ability to remove arbitrary nodes by a unique key
+
+// TODO: port to linked list + hashmap from PDB. Move that to a separate
+// library.
+
 pub struct Queue<T: PartialOrd> {
 	head: Option<Box<Node<T>>>,
 }

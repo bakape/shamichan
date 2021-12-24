@@ -5,7 +5,8 @@ pub mod options;
 pub mod state;
 
 pub use agent::{
-	hook, navigate_to, Agent, Change, Link, Message, Request, StateBridge,
+	hook, navigate_to, Agent, Change, Link, Message, PostPinChange, Request,
+	StateBridge,
 };
 pub use key_pair::KeyPair;
 pub use location::{FeedID, Focus, Location};

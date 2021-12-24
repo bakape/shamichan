@@ -1,8 +1,8 @@
 use super::{state, FeedID, Focus, Location, State};
-use crate::{connection::send, util};
+use crate::{connection::send, mouse::Coordinates, util};
 use common::{
 	payloads::{Post, Thread, ThreadWithPosts},
-	util::DoubleSetMap,
+	util::BidirectionalSetMap,
 	MessageType,
 };
 use indexmap::IndexSet;
@@ -22,9 +22,6 @@ use yew_services::render::{RenderService, RenderTask};
 // to prevent duplicate messages. This can be done via a boolean on all post
 // update messages (implement a trait that sets a boolean for these messages to
 // be called inside write_post_message).
-
-// TODO: there is technically a data race, if the sure rapidly switches between
-// 2 feeds. Need to figure a way to address it.
 
 /// Push new location to history
 const PUSH_STATE: u8 = 1;
@@ -95,6 +92,16 @@ pub enum Request {
 
 	/// Set configs received from the server
 	SetConfigs(common::config::Public),
+
+	/// Mark a post as pinned or not pinned to the screen and set it's
+	// coordinates
+	SetPostPinCoords {
+		/// Post ID
+		post: u64,
+
+		/// Change to apply to a post's pin status
+		change: PostPinChange,
+	},
 }
 
 /// Selective changes of global state to be notified on
@@ -130,6 +137,19 @@ pub enum Change {
 
 	/// Change of the open allocated post ID
 	OpenPostID,
+}
+
+/// Change to apply to a post's pin status
+#[derive(Debug)]
+pub enum PostPinChange {
+	/// Set coordinates of post
+	Set(Coordinates),
+
+	/// Increment the current value of the coordinates
+	Increment(Coordinates),
+
+	/// Unmark the post as pinned
+	Remove,
 }
 
 /// Abstraction over AgentLink and ComponentLink
@@ -253,7 +273,7 @@ pub struct Agent {
 	link: AgentLink<Self>,
 
 	/// Clients hooked into change notifications
-	hooks: DoubleSetMap<Change, HandlerId>,
+	hooks: BidirectionalSetMap<Change, HandlerId>,
 
 	/// Change notifications pending flushing to clients.
 	queued_triggers: IndexSet<HandlerId>,
@@ -282,7 +302,7 @@ impl yew::agent::Agent for Agent {
 
 		Self {
 			link,
-			hooks: DoubleSetMap::default(),
+			hooks: BidirectionalSetMap::default(),
 			render_task: None,
 			feed_sync_state: FeedSyncState::NotRequested,
 			queued_triggers: Default::default(),
@@ -392,6 +412,24 @@ impl yew::agent::Agent for Agent {
 				state::get_mut().configs = c;
 				self.trigger(&Change::Configs);
 			}
+			SetPostPinCoords { post, change } => {
+				match (change, state::get_mut().pinned_posts.entry(post)) {
+					(PostPinChange::Set(c), Entry::Vacant(e)) => {
+						e.insert(c);
+					}
+					(PostPinChange::Set(c), Entry::Occupied(mut e)) => {
+						*e.get_mut() = c;
+					}
+					(PostPinChange::Increment(c), Entry::Occupied(mut e)) => {
+						*e.get_mut() += c;
+					}
+					(PostPinChange::Remove, Entry::Occupied(e)) => {
+						e.remove();
+					}
+					_ => (),
+				};
+				self.trigger(&Change::Post(post));
+			}
 		};
 
 		self.flush_triggers();
@@ -430,6 +468,11 @@ impl Agent {
 
 	/// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
+		// TODO: when navigating between the pages of the same thread,
+		// intelligently preserve scroll position, if the new page is adjacent
+		// to the old one from - both before and after. Needs to account for
+		// locking to bottom.
+
 		let mut s = state::get_mut();
 		let old = s.location.clone();
 		if old == new {
@@ -533,22 +576,8 @@ impl Agent {
 		use util::document;
 		use web_sys::HtmlElement;
 
-		fn banner_height() -> f64 {
-			document()
-				.get_element_by_id("banner")
-				.map(|el| {
-					el.dyn_into::<HtmlElement>().ok().map(|el| {
-						// Add an extra 5px offset for some margin between the
-						// focused element and the banner
-						el.offset_height() + 5
-					})
-				})
-				.flatten()
-				.unwrap_or_default() as f64
-		}
-
 		let y = match f {
-			Top => banner_height(),
+			Top => 0.0,
 			Bottom => document()
 				.document_element()
 				.map(|el| el.scroll_height())
@@ -559,7 +588,20 @@ impl Agent {
 					el.dyn_into::<HtmlElement>().ok().map(|el| {
 						el.get_bounding_client_rect().top() as f64
 							+ util::window().scroll_y().unwrap()
-							- banner_height()
+							- document()
+								.get_element_by_id("banner")
+								.map(|el| {
+									el.dyn_into::<HtmlElement>().ok().map(
+										|el| {
+											// Add an extra 5px offset for some
+											// margin between the focused
+											// element and the banner
+											el.offset_height() + 5
+										},
+									)
+								})
+								.flatten()
+								.unwrap_or_default() as f64
 					})
 				})
 				.flatten()

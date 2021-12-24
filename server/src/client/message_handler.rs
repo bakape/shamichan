@@ -83,6 +83,9 @@ struct OpenPost {
 	feed: MTAddr<ThreadFeed>,
 }
 
+// TODO: to protect against replay again attacks, the nonce for the handshake
+// has to be supplied by the server to verify a already registered public key
+
 /// Client connection state
 #[derive(Debug)]
 enum ConnState {
@@ -199,7 +202,6 @@ impl MessageHandler {
 					use ConnState::*;
 					use MessageType::*;
 
-					#[rustfmt::skip]
 					macro_rules! expect {
 						($type:tt) => {
 							if t != $type {

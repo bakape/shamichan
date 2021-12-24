@@ -7,13 +7,6 @@ pub struct Coordinates {
 	pub y: i32,
 }
 
-impl Coordinates {
-	#[inline]
-	pub fn is_zero(&self) -> bool {
-		self.x == 0 && self.y == 0
-	}
-}
-
 impl std::ops::Add for Coordinates {
 	type Output = Self;
 
@@ -44,11 +37,20 @@ impl std::ops::AddAssign for Coordinates {
 }
 
 impl From<&web_sys::MouseEvent> for Coordinates {
-	#[inline]
 	fn from(e: &web_sys::MouseEvent) -> Self {
 		Self {
 			x: e.client_x(),
 			y: e.client_y(),
+		}
+	}
+}
+
+impl From<&web_sys::HtmlElement> for Coordinates {
+	fn from(el: &web_sys::HtmlElement) -> Self {
+		let r = el.get_bounding_client_rect();
+		Self {
+			x: r.left() as i32,
+			y: r.top() as i32,
 		}
 	}
 }

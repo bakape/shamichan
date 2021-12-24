@@ -13,7 +13,7 @@ pub enum Message {
 	ToggleExpand,
 }
 
-impl comp_util::Inner for Inner {
+impl comp_util::HookedComponentInner for Inner {
 	type Properties = super::common::Props;
 	type Message = Message;
 

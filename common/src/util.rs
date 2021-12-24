@@ -87,9 +87,9 @@ where
 	}
 }
 
-/// Maps of K to sets of V and V to sets of K simultaneously
+/// Maps K to sets of V and V to sets of K simultaneously
 #[derive(Debug)]
-pub struct DoubleSetMap<K, V>
+pub struct BidirectionalSetMap<K, V>
 where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone,
@@ -98,7 +98,7 @@ where
 	by_value: SetMap<V, K>,
 }
 
-impl<K, V> Default for DoubleSetMap<K, V>
+impl<K, V> Default for BidirectionalSetMap<K, V>
 where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone,
@@ -112,7 +112,7 @@ where
 	}
 }
 
-impl<K, V> DoubleSetMap<K, V>
+impl<K, V> BidirectionalSetMap<K, V>
 where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone,

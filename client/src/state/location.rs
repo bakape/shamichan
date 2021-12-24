@@ -90,14 +90,13 @@ impl Location {
 				.map(|h| match h.as_str() {
 					"#top" => Some(Focus::Top),
 					"#bottom" => Some(Focus::Bottom),
-					_ => match h.get(..3) {
-						Some("#p-") => h
-							.get(3..)
-							.map(|s| s.parse().ok())
-							.flatten()
-							.map(|id| Focus::Post(id)),
-						_ => None,
-					},
+					_ => {
+						if h.starts_with("#p-") {
+							h[3..].parse().ok().map(|id| Focus::Post(id))
+						} else {
+							None
+						}
+					}
 				})
 				.flatten(),
 		}
