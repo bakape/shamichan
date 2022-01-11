@@ -128,7 +128,7 @@ export default class ImageHandler extends View<Post> {
 
 			const left = Math.floor(Math.random() * (thumbWidth - 37)) + 37;
 			const down = Math.floor(Math.random() * (thumbHeight - 30));
-			foe.style.transform = `translate(-${left}px, -${down}px)`;
+			foe.style.transform = `translate(-${left}px, ${down}px)`;
 
 			el.append(foe);
 		}
