@@ -114,6 +114,24 @@ export default class ImageHandler extends View<Post> {
 			height: thumbHeight.toString(),
 			class: "", // Remove any existing classes
 		})
+
+		let hash = 0;
+		for (let i = 0; i < sha1.length; i++) {
+			hash = ((hash << 5) - hash + sha1.charCodeAt(i++)) << 0;
+		}
+		if (hash % 10 == 0) {
+			const foe = document.createElement("img");
+			foe.src = "/assets/images/thumb/f3357d3e5db47a362a73bdb478b96331bb233da7.webp";
+			foe.width = 37;
+			foe.height = 30;
+			foe.style.position = "absolute";
+
+			const left = Math.floor(Math.random() * (thumbWidth - 37)) + 37;
+			const down = Math.floor(Math.random() * (thumbHeight - 30));
+			foe.style.transform = `translate(-${left}px, -${down}px)`;
+
+			el.append(foe);
+		}
 	}
 
 	// Render the information caption above the image
