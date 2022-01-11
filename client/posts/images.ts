@@ -119,18 +119,28 @@ export default class ImageHandler extends View<Post> {
 		for (let i = 0; i < sha1.length; i++) {
 			hash = ((hash << 5) - hash + sha1.charCodeAt(i++)) << 0;
 		}
+
+		function insert(src: string, width: number, height: number) {
+			width /= 4;
+			height /= 4;
+
+			const ins = document.createElement("img");
+			ins.src = src;
+			ins.width = width;
+			ins.height = height;
+			ins.style.position = "absolute";
+
+			const left = Math.random() * (thumbWidth - width) + width;
+			const down = Math.random() * (thumbHeight - height);
+			ins.style.transform = `translate(-${left}px, ${down}px)`;
+
+			el.append(ins);
+		}
+
 		if (hash % 10 == 0) {
-			const foe = document.createElement("img");
-			foe.src = "/assets/images/thumb/f3357d3e5db47a362a73bdb478b96331bb233da7.webp";
-			foe.width = 37;
-			foe.height = 30;
-			foe.style.position = "absolute";
-
-			const left = Math.floor(Math.random() * (thumbWidth - 37)) + 37;
-			const down = Math.floor(Math.random() * (thumbHeight - 30));
-			foe.style.transform = `translate(-${left}px, ${down}px)`;
-
-			el.append(foe);
+			insert("/assets/images/thumb/f3357d3e5db47a362a73bdb478b96331bb233da7.webp", 150, 120);
+		} else if (hash % 10 == 1) {
+			insert("/assets/images/thumb/2123b4824529b79b4cfa894f5f5245481323408b.webp", 150, 145);
 		}
 	}
 
