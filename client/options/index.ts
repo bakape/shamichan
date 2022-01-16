@@ -183,6 +183,11 @@ export function initOptions() {
 	migrateOption("whatAnime", value => localStorage.setItem("tracemoe", value))
 	migrateOption("desustorage", value => localStorage.setItem("desuarchive", value))
 
+	if (localStorage.getItem("migrated_bin_hiding") !== "true") {
+		localStorage.setItem("hideBinned", "true");
+		localStorage.setItem("migrated_bin_hiding", "true");
+	}
+
 	// Populate option model collection and central model
 	for (let id in specs) {
 		new OptionModel(id, specs[id])

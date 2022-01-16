@@ -85,7 +85,9 @@ export const specs: { [id: string]: OptionSpec } = {
 	// Anonymise all poster names
 	anonymise: {},
 	// Hide all deleted posts
-	hideBinned: {},
+	hideBinned: {
+		default: true,
+	},
 	// Hide posts that linked to a hidden post
 	hideRecursively: {},
 	// Expand post links inline
