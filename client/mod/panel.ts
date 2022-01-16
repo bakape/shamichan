@@ -18,6 +18,7 @@ export default class ModPanel extends View<null> {
 		new BanForm()
 		new NotificationForm()
 		new PostPurgeForm();
+		new SpamHandlerForm();
 
 		this.el.querySelector("form").addEventListener("submit", e =>
 			this.onSubmit(e))
@@ -109,6 +110,15 @@ export default class ModPanel extends View<null> {
 			case "purgePost":
 				await sendIDRequests("purgePost", "/api/purge-post");
 				break;
+			case "handleSpam":
+				for (let p of this.getChecked().map(getModel)) {
+					await postJSON("/api/delete-posts/by-ip", {
+						id: p.id,
+						duration: 60 * 24 * 30, // 30 days
+						reason: "spam",
+					});
+				}
+				break;
 			case "notification":
 				const f = HidableForm.forms["notification"]
 				await this.postJSON("/api/notification", f.vals())
@@ -124,13 +134,13 @@ export default class ModPanel extends View<null> {
 	// Get selected post checkboxes
 	private getChecked(): HTMLInputElement[] {
 		const query = document.querySelectorAll(".mod-checkbox:checked")
-		var el = new Array(query.length)
+		var els = new Array(query.length)
 
 		for (let i = 0; i < query.length; i++) {
-			el[i] = query[i]
+			els[i] = query[i]
 		}
 
-		return el
+		return els
 	}
 
 	// Return current action mode
@@ -242,6 +252,17 @@ class NotificationForm extends HidableForm {
 
 	public vals(): string {
 		return this.inputElement("notification").value
+	}
+}
+
+// Shorthand to handle spam
+class SpamHandlerForm extends HidableForm {
+	constructor() {
+		super("handlesSpam")
+	}
+
+	public vals(): string {
+		return null;
 	}
 }
 

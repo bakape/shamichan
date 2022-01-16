@@ -375,6 +375,7 @@
 									<br>
 								</div>
 							{% endif %}
+							<div id="handlesSpam-form" class="hidden"></div>
 							<input type="checkbox" name="showCheckboxes">
 							<select name="action">
 								{% code ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage") %}
@@ -384,6 +385,9 @@
 								{% if pos == common.Admin %}
 									{% code ids = append(ids, "purgePost", "notification") %}
 								{% endif %}
+								<option value="handleSpam">
+									{%s= ln.UI["handleSpam"] %}
+								</option>
 								{% for _, id := range ids %}
 									<option value="{%s= id %}">
 										{%s= ln.UI[id] %}

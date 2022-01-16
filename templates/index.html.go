@@ -492,99 +492,105 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:377
 		}
 //line index.html:377
-		qw422016.N().S(`<input type="checkbox" name="showCheckboxes"><select name="action">`)
-//line index.html:380
+		qw422016.N().S(`<div id="handlesSpam-form" class="hidden"></div><input type="checkbox" name="showCheckboxes"><select name="action">`)
+//line index.html:381
 		ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage")
 
-//line index.html:381
-		if pos >= common.Moderator {
 //line index.html:382
+		if pos >= common.Moderator {
+//line index.html:383
 			ids = append(ids, "ban")
 
-//line index.html:383
-		}
 //line index.html:384
-		if pos == common.Admin {
+		}
 //line index.html:385
+		if pos == common.Admin {
+//line index.html:386
 			ids = append(ids, "purgePost", "notification")
 
-//line index.html:386
+//line index.html:387
 		}
 //line index.html:387
+		qw422016.N().S(`<option value="handleSpam">`)
+//line index.html:389
+		qw422016.N().S(ln.UI["handleSpam"])
+//line index.html:389
+		qw422016.N().S(`</option>`)
+//line index.html:391
 		for _, id := range ids {
-//line index.html:387
+//line index.html:391
 			qw422016.N().S(`<option value="`)
-//line index.html:388
+//line index.html:392
 			qw422016.N().S(id)
-//line index.html:388
+//line index.html:392
 			qw422016.N().S(`">`)
-//line index.html:389
+//line index.html:393
 			qw422016.N().S(ln.UI[id])
-//line index.html:389
+//line index.html:393
 			qw422016.N().S(`</option>`)
-//line index.html:391
+//line index.html:395
 		}
-//line index.html:391
+//line index.html:395
 		qw422016.N().S(`</select><input type="button" value="`)
-//line index.html:393
+//line index.html:397
 		qw422016.N().S(ln.UI["clear"])
-//line index.html:393
+//line index.html:397
 		qw422016.N().S(`" name="clear">`)
-//line index.html:394
+//line index.html:398
 		streamsubmit(qw422016, false)
-//line index.html:394
+//line index.html:398
 		qw422016.N().S(`</form></div>`)
-//line index.html:397
+//line index.html:401
 	}
-//line index.html:397
+//line index.html:401
 	qw422016.N().S(`</div></div>`)
-//line index.html:402
+//line index.html:406
 	qw422016.N().S(`<div class="overlay top-overlay" id="hover-overlay"></div><div id="captcha-overlay" class="overlay top-overlay"></div>`)
-//line index.html:408
-	qw422016.N().S(`<section id="threads">`)
 //line index.html:412
+	qw422016.N().S(`<section id="threads">`)
+//line index.html:416
 	qw422016.N().S(`$$$</section>`)
-//line index.html:417
+//line index.html:421
 	qw422016.N().S(`<script src="/assets/js/vendor/almond.js"></script><script id="lang-data" type="application/json">`)
-//line index.html:420
+//line index.html:424
 	buf, _ := json.Marshal(ln.Common)
 
-//line index.html:421
+//line index.html:425
 	qw422016.N().Z(buf)
-//line index.html:421
+//line index.html:425
 	qw422016.N().S(`</script><script id="board-title-data" type="application/json">`)
-//line index.html:424
+//line index.html:428
 	buf, _ = json.Marshal(config.GetBoardTitles())
 
-//line index.html:425
+//line index.html:429
 	qw422016.N().Z(buf)
-//line index.html:425
+//line index.html:429
 	qw422016.N().S(`</script><script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.html:429
+//line index.html:433
 }
 
-//line index.html:429
+//line index.html:433
 func writerenderIndex(qq422016 qtio422016.Writer, pos common.ModerationLevel) {
-//line index.html:429
+//line index.html:433
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line index.html:429
+//line index.html:433
 	streamrenderIndex(qw422016, pos)
-//line index.html:429
+//line index.html:433
 	qt422016.ReleaseWriter(qw422016)
-//line index.html:429
+//line index.html:433
 }
 
-//line index.html:429
+//line index.html:433
 func renderIndex(pos common.ModerationLevel) string {
-//line index.html:429
+//line index.html:433
 	qb422016 := qt422016.AcquireByteBuffer()
-//line index.html:429
+//line index.html:433
 	writerenderIndex(qb422016, pos)
-//line index.html:429
+//line index.html:433
 	qs422016 := string(qb422016.B)
-//line index.html:429
+//line index.html:433
 	qt422016.ReleaseByteBuffer(qb422016)
-//line index.html:429
+//line index.html:433
 	return qs422016
-//line index.html:429
+//line index.html:433
 }
