@@ -291,7 +291,7 @@ func streampostClass(qw422016 *qt422016.Writer, p common.Post, op uint64) {
 //line util.html:64
 		qw422016.N().S(` `)
 //line util.html:64
-		qw422016.N().S(`deleted`)
+		qw422016.N().S(`deleted unloaded`)
 //line util.html:65
 	}
 //line util.html:66

@@ -111,10 +111,10 @@ function toggleHideBinned() {
 		return;
 	}
 	loopPosts(
-		( post ) => {
+		(post) => {
 			return post.isDeleted();
 		},
-		( post ) => {
+		(post) => {
 			hideRecursively(post);
 		}
 	)

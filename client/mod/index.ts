@@ -125,4 +125,10 @@ export default () => {
 		registrationForm = new LoginForm("registration-form", "register")
 		validatePasswordMatch(registrationForm.el, "password", "repeat")
 	}
+
+	// Render deleted posts only after the application is loaded to prevent
+	// deleted content flashes
+	for (let el of document.querySelectorAll(".unloaded")) {
+		el.classList.remove("unloaded");
+	}
 }
