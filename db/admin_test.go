@@ -3,10 +3,8 @@ package db
 import (
 	"database/sql"
 	"testing"
-	"time"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )
 
@@ -52,7 +50,9 @@ func TestDeleteImages(t *testing.T) {
 		t.Fatal("no image")
 	}
 
-	err = DeleteImages([]uint64{1}, "admin")
+	err = InTransaction(false, func(tx *sql.Tx) error {
+		return DeleteImages(tx, 1, "admin", false)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,9 @@ func TestSpoilerImages(t *testing.T) {
 		t.Fatal("has spoiler")
 	}
 
-	err = ModSpoilerImages([]uint64{1}, "admin")
+	err = InTransaction(false, func(tx *sql.Tx) error {
+		return ModSpoilerImages(tx, 1, "admin", false)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,200 +93,12 @@ func TestSpoilerImages(t *testing.T) {
 	}
 }
 
-func TestDeletePostsByIP(t *testing.T) {
-	assertTableClear(t, "accounts", "bans", "mod_log", "boards")
-
-	writeSampleBoard(t)
-	writeSampleThread(t)
-	writeAllBoard(t)
-	writeAdminAccount(t)
-
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = RegisterAccount(tx, "user1", samplePasswordHash)
-		if err != nil {
-			return
-		}
-		err = WriteStaff(tx, "a", map[common.ModerationLevel][]string{
-			common.BoardOwner: {"user1"},
-		})
-		if err != nil {
-			return
-		}
-
-		return RegisterAccount(tx, "user2", samplePasswordHash)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = InTransaction(false, func(tx *sql.Tx) error {
-		return WriteBoard(tx, BoardConfigs{
-			BoardConfigs: config.BoardConfigs{
-				ID:        "b",
-				Eightball: []string{},
-			},
-		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = WriteThread(
-		Thread{
-			ID:    2,
-			Board: "b",
-		},
-		Post{
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					ID:   2,
-					Time: time.Now().Unix(),
-				},
-				OP:    2,
-				Board: "b",
-			},
-			IP: "::1",
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// To prevent ID clash
-	err = SetPostCounter(100)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var shouldDelete, shouldSkip uint64
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		post := Post{
-			StandalonePost: common.StandalonePost{
-				OP:    1,
-				Board: "a",
-			},
-			IP: "::1",
-		}
-
-		err = InsertPost(tx, &post)
-		if err != nil {
-			return
-		}
-		shouldDelete = post.ID
-
-		post.ID = 0
-		post.IP = "195.77.83.249"
-		err = InsertPost(tx, &post)
-		if err != nil {
-			return
-		}
-		shouldSkip = post.ID
-
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = DeletePostsByIP(1, "user1", time.Hour, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assertDeleted := func(t *testing.T, id uint64, std bool) {
-		var deleted bool
-		err := db.QueryRow(
-			`select exists (select 1
-							from post_moderation
-							where post_id = $1 and type = $2)`,
-			id, common.DeletePost).
-			Scan(&deleted)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if deleted != std {
-			t.Error(deleted)
-		}
-	}
-
-	// Assert deletion of next created post on same board
-	t.Run("delete next insert", func(t *testing.T) {
-		post := Post{
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					Time: time.Now().Unix(),
-				},
-				OP:    1,
-				Board: "a",
-			},
-			IP: "::1",
-		}
-		err = InTransaction(false, func(tx *sql.Tx) (err error) {
-			return InsertPost(tx, &post)
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertDeleted(t, post.ID, true)
-		if !post.Moderated {
-			t.Error("not marked as moderated")
-		}
-		if len(post.Moderation) == 0 {
-			t.Error("no post moderation entries")
-		}
-	})
-
-	cases := [...]struct {
-		name    string
-		id      uint64
-		deleted bool
-	}{
-		{"target", 1, true},
-		{"same board and ip", shouldDelete, true},
-		{"same board, different ip", shouldSkip, false},
-		{"different board, same ip", 2, false},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			assertDeleted(t, c.id, c.deleted)
-		})
-	}
-
-	t.Run("permissions", func(t *testing.T) {
-		t.Parallel()
-
-		cases := [...]struct {
-			name, account string
-			succeed       bool
-		}{
-			{"has rights", "user1", true},
-			{"no rights", "user2", false},
-			{"has global rights", "admin", true},
-		}
-
-		for i := range cases {
-			c := cases[i]
-			t.Run(c.account, func(t *testing.T) {
-				t.Parallel()
-
-				err := DeletePostsByIP(1, c.account, 0, "")
-				if c.succeed {
-					if err != nil {
-						t.Fatal(err)
-					}
-				} else if err != common.ErrNoPermissions {
-					t.Fatal(err)
-				}
-			})
-		}
-	})
-}
-
 func TestPurgePost(t *testing.T) {
 	prepareForModeration(t)
 
-	err := PurgePost(1, "admin", "test")
+	err := InTransaction(false, func(tx *sql.Tx) error {
+		return PurgePost(tx, 1, "admin", "test", false)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -417,7 +231,7 @@ func TestCanPerform(t *testing.T) {
 		{"can't mod anything", sampleUserID, "all", common.Moderator, false},
 		{"can mod own level", sampleUserID, "a", common.Moderator, true},
 		{"can mod lower level", sampleUserID, "a", common.Janitor, true},
-		{"can't mod higher level", sampleUserID, "a", common.Janitor, true},
+		{"can't mod higher level", sampleUserID, "a", common.BoardOwner, false},
 	}
 
 	for i := range cases {

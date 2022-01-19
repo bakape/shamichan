@@ -51,7 +51,7 @@ class AccountPanel extends TabbedModal {
 		})
 
 		if (position > ModerationLevel.notStaff) {
-			new ModPanel()
+			new ModPanel(position)
 		}
 	}
 

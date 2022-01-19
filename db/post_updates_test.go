@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -60,7 +61,9 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 			name: "moderate post",
 			bump: true,
 			fn: func(t *testing.T) {
-				err := DeletePosts([]uint64{p.ID}, "admin")
+				err := InTransaction(false, func(tx *sql.Tx) error {
+					return DeletePosts(tx, p.ID, "admin", false)
+				})
 				if err != nil {
 					t.Fatal(err)
 				}

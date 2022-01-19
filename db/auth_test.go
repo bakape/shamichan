@@ -162,7 +162,9 @@ func TestGetBanRecords(t *testing.T) {
 		Expires: time.Now().Add(length).UTC(),
 	}
 
-	err := Ban(std.Board, std.Reason, std.By, length, std.ForPost)
+	err := InTransaction(false, func(tx *sql.Tx) error {
+		return Ban(tx, std.Board, std.Reason, std.By, length, std.ForPost, common.BanPost)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

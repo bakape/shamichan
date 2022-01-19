@@ -6,8 +6,7 @@ import { FormView } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { position } from "../mod"
-import CollectionView from "./collectionView"
-import { PostData, ModerationLevel } from "../common"
+import { ModerationLevel } from "../common"
 import ReportForm from "./report"
 
 interface ControlButton extends Element {
@@ -57,7 +56,7 @@ class RedirectForm extends MenuForm {
 		super(parent, parentID,
 			HTML`
 			<br>
-			<input type=text name=url>`);
+			<input type=text name=url placeholder="${lang.ui["location"]}">`);
 		this.apiPath = apiPath;
 	}
 
@@ -68,48 +67,6 @@ class RedirectForm extends MenuForm {
 		await postJSON(`/api/redirect/${this.apiPath}`, {
 			id: this.parentID,
 			url,
-		});
-		this.closeMenu();
-		this.remove();
-	}
-}
-
-class DeleteByIPForm extends MenuForm {
-	constructor(parent: Element, parentID: number) {
-		let s = HTML`
-		<hr>
-		<span>${lang.ui["keepDeletingFor"]}</span>
-		<br>
-		<br>`;
-		for (let id of ["day", "hour", "minute"]) {
-			let label = lang.plurals[id][1];
-			label = label[0].toUpperCase() + label.slice(1);
-			s += HTML`
-			<input type="number" name="${id}" min="0" placeholder="${label}">
-			<br>`;
-		}
-		s += HTML`
-		<input type="text" name="reason" class="full-width" placeholder="${lang.ui["reason"]}">
-		<hr>`;
-		super(parent, parentID, s);
-		this.el.style.padding = "0.5em";
-
-		// Reason is required, if duration set
-		this.on("change", () => {
-			const r = this.inputElement("reason");
-			if (this.extractDuration() === 0) {
-				r.removeAttribute("required");
-			} else {
-				r.setAttribute("required", "");
-			}
-		});
-	}
-
-	protected async send() {
-		await postJSON("/api/delete-posts/by-ip", {
-			id: this.parentID,
-			duration: this.extractDuration(),
-			reason: this.inputElement("reason").value,
 		});
 		this.closeMenu();
 		this.remove();
@@ -132,21 +89,6 @@ const actions: { [key: string]: ItemSpec } = {
 		},
 		handler(m) {
 			new ReportForm(m.id)
-		},
-	},
-	viewSameIP: {
-		text: lang.posts["viewBySameIP"],
-		shouldRender: canModerateIP,
-		async handler(m) {
-			new CollectionView(await getSameIPPosts(m))
-		},
-	},
-	deleteSameIP: {
-		text: lang.posts["deleteBySameIP"],
-		shouldRender: canModerateIP,
-		keepOpen: true,
-		handler(m, el) {
-			new DeleteByIPForm(el, m.id);
 		},
 	},
 	toggleSticky: {
@@ -184,16 +126,6 @@ const actions: { [key: string]: ItemSpec } = {
 			m.view.renderLocked()
 		},
 	},
-	redirectByIP: {
-		text: lang.ui["redirectByIP"],
-		keepOpen: true,
-		shouldRender(m) {
-			return position >= ModerationLevel.admin && likelyHasIP(m)
-		},
-		handler(m, el) {
-			new RedirectForm(el, m.id, "by-ip")
-		},
-	},
 	redirectByThread: {
 		text: lang.ui["redirectByThread"],
 		keepOpen: true,
@@ -204,17 +136,6 @@ const actions: { [key: string]: ItemSpec } = {
 			new RedirectForm(el, m.id, "by-thread")
 		},
 	},
-}
-
-// Returns, if the post still likely has an IP attached and the client is
-// logged in
-function canModerateIP(m: Post): boolean {
-	return position >= ModerationLevel.janitor && likelyHasIP(m)
-}
-
-// Return, if post is fresh enough to likely not have its IP deleted yet
-function likelyHasIP(m: Post): boolean {
-	return m.time > Date.now() / 1000 - 24 * 7 * 3600
 }
 
 // Post header drop down menu
@@ -280,18 +201,6 @@ function openMenu(e: Event) {
 	if (model) {
 		new MenuView(parent, model)
 	}
-}
-
-// Fetch posts with the same IP on this board
-async function getSameIPPosts(m: Post): Promise<PostData[]> {
-	const res = await postJSON(`/api/same-IP/${m.id}`, null)
-
-	if (res.status !== 200) {
-		alert(await res.text())
-		return
-	}
-
-	return await res.json()
 }
 
 export default () =>

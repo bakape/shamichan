@@ -94,7 +94,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:58
 	streamdeletedToggle(qw422016)
 //line index.html:58
-	qw422016.N().S(`<header class="spaced"><input type="checkbox" class="mod-checkbox hidden"><h3 hidden></h3><b class="name spaced"></b><img class="flag" hidden><time></time><nav><a>No.</a><a class="quote"></a></nav>`)
+	qw422016.N().S(`<header class="spaced"><input type="radio" class="mod-checkbox hidden" name="mod-checkbox"><h3 hidden></h3><b class="name spaced"></b><img class="flag" hidden><time></time><nav><a>No.</a><a class="quote"></a></nav>`)
 //line index.html:71
 	streamcontrolLink(qw422016)
 //line index.html:71
@@ -338,7 +338,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:291
 		}
 //line index.html:292
-		if pos == common.Admin {
+		if pos >= common.ActionPrivilege[common.ConfigureServer] {
 //line index.html:292
 			qw422016.N().S(`<a id="configureServer">`)
 //line index.html:294
@@ -435,162 +435,207 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 	qw422016.N().S(ln.Common.UI["unwatch"])
 //line index.html:342
 	qw422016.N().S(`</th></tr></thead><tbody></tbody></table></div>`)
-//line index.html:349
+//line index.html:352
 	if pos > common.NotStaff {
-//line index.html:349
-		qw422016.N().S(`<div id="moderation-panel" class="modal glass"><form>`)
 //line index.html:352
-		if pos >= common.Moderator {
-//line index.html:352
-			qw422016.N().S(`<div id="ban-form" class="hidden">`)
+		qw422016.N().S(`<div id="moderation-panel" class="modal glass"><span title="`)
 //line index.html:354
-			for _, id := range [...]string{"day", "hour", "minute"} {
+		qw422016.N().S(ln.Common.UI["meidovisionTT"])
 //line index.html:354
-				qw422016.N().S(`<input type="number" name="`)
+		qw422016.N().S(`">`)
 //line index.html:355
-				qw422016.N().S(id)
+		qw422016.N().S(ln.Common.UI["meidoVisionPost"] + ": ")
 //line index.html:355
-				qw422016.N().S(`" min="0" placeholder="`)
-//line index.html:355
-				qw422016.N().S(strings.Title(ln.Common.Plurals[id][1]))
-//line index.html:355
-				qw422016.N().S(`">`)
+		qw422016.N().S(`<input type="button" id="meidovision" value="`)
 //line index.html:356
-			}
+		qw422016.N().S(ln.Common.UI["submit"])
 //line index.html:356
-			qw422016.N().S(`<br><input type="text" name="reason" required class="full-width" placeholder="`)
-//line index.html:358
-			qw422016.N().S(ln.Common.UI["reason"])
-//line index.html:358
-			qw422016.N().S(`" disabled><br>`)
+		qw422016.N().S(`"></span><hr>`)
+//line index.html:359
+		if pos >= common.ActionPrivilege[common.RedirectIP] {
+//line index.html:359
+			qw422016.N().S(`<span  title="`)
 //line index.html:360
-			if pos == common.Admin {
+			qw422016.N().S(ln.Common.UI["redirectTT"])
 //line index.html:360
-				qw422016.N().S(`<label><input type="checkbox" name="global">`)
-//line index.html:363
-				qw422016.N().S(ln.UI["global"])
-//line index.html:363
-				qw422016.N().S(`</label>`)
+			qw422016.N().S(`">`)
+//line index.html:361
+			qw422016.N().S(ln.Common.UI["redirectPoster"] + ": ")
+//line index.html:361
+			qw422016.N().S(`<input type="button" id="redirect-ip" value="`)
+//line index.html:362
+			qw422016.N().S(ln.Common.UI["submit"])
+//line index.html:362
+			qw422016.N().S(`"></span><br><input type="text" id="redirect-location" class="full-width" placeholder="`)
 //line index.html:365
-			}
+			qw422016.N().S(ln.Common.UI["location"])
 //line index.html:365
-			qw422016.N().S(`</div>`)
+			qw422016.N().S(`"><hr>`)
 //line index.html:367
 		}
 //line index.html:368
-		if pos == common.Admin {
+		if pos >= common.ActionPrivilege[common.AdminNotification] {
 //line index.html:368
-			qw422016.N().S(`<div id="purgePost-form" class="hidden"><input type="text" name="purge-reason" required class="full-width" placeholder="`)
+			qw422016.N().S(`<span title="`)
+//line index.html:369
+			qw422016.N().S(ln.UI["notificationTT"])
+//line index.html:369
+			qw422016.N().S(`">`)
 //line index.html:370
-			qw422016.N().S(ln.Common.UI["reason"])
+			qw422016.N().S(ln.UI["notification"] + ": ")
 //line index.html:370
-			qw422016.N().S(`" disabled><br></div><div id="notification-form" class="hidden"><input type="text" name="notification" required class="full-width" placeholder="`)
+			qw422016.N().S(`<input type="button" id="notification" value="`)
+//line index.html:371
+			qw422016.N().S(ln.Common.UI["submit"])
+//line index.html:371
+			qw422016.N().S(`"></span><br><input type="text" id="notification-text" class="full-width" placeholder="`)
 //line index.html:374
 			qw422016.N().S(ln.UI["text"])
 //line index.html:374
-			qw422016.N().S(`" style="min-width: 20em;" disabled><br></div>`)
-//line index.html:377
+			qw422016.N().S(`"><hr>`)
+//line index.html:376
 		}
-//line index.html:377
-		qw422016.N().S(`<div id="handlesSpam-form" class="hidden"></div><input type="checkbox" name="showCheckboxes"><select name="action">`)
+//line index.html:376
+		qw422016.N().S(`<form>`)
+//line index.html:378
+		if pos >= common.ActionPrivilege[common.BanPost] {
+//line index.html:378
+			qw422016.N().S(`<label><input type="checkbox" name="ban-poster">`)
+//line index.html:379
+			qw422016.N().S(ln.UI["ban"])
+//line index.html:379
+			qw422016.N().S(`</label><br>`)
 //line index.html:381
-		ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage")
-
+			for _, id := range [...]string{"day", "hour", "minute"} {
+//line index.html:381
+				qw422016.N().S(`<input type="number" name="`)
 //line index.html:382
-		if pos >= common.Moderator {
+				qw422016.N().S(id)
+//line index.html:382
+				qw422016.N().S(`" min="0" placeholder="`)
+//line index.html:382
+				qw422016.N().S(strings.Title(ln.Common.Plurals[id][1]))
+//line index.html:382
+				qw422016.N().S(`">`)
 //line index.html:383
-			ids = append(ids, "ban")
-
-//line index.html:384
-		}
+			}
+//line index.html:383
+			qw422016.N().S(`<br><input type="text" name="ban-reason" class="full-width" placeholder="`)
 //line index.html:385
-		if pos == common.Admin {
-//line index.html:386
-			ids = append(ids, "purgePost", "notification")
-
+			qw422016.N().S(ln.Common.UI["reason"])
+//line index.html:385
+			qw422016.N().S(`"><br><label><input type="checkbox" name="shadow">`)
 //line index.html:387
-		}
+			qw422016.N().S(ln.UI["shadow"])
 //line index.html:387
-		qw422016.N().S(`<option value="handleSpam">`)
-//line index.html:389
-		qw422016.N().S(ln.UI["handleSpam"])
-//line index.html:389
-		qw422016.N().S(`</option>`)
+			qw422016.N().S(`</label>`)
+//line index.html:388
+			if pos == common.Admin {
+//line index.html:388
+				qw422016.N().S(`<label><input type="checkbox" name="global">`)
 //line index.html:391
-		for _, id := range ids {
+				qw422016.N().S(ln.UI["global"])
 //line index.html:391
-			qw422016.N().S(`<option value="`)
-//line index.html:392
-			qw422016.N().S(id)
-//line index.html:392
-			qw422016.N().S(`">`)
+				qw422016.N().S(`</label>`)
 //line index.html:393
-			qw422016.N().S(ln.UI[id])
+			}
 //line index.html:393
-			qw422016.N().S(`</option>`)
+			qw422016.N().S(`<hr>`)
 //line index.html:395
 		}
 //line index.html:395
-		qw422016.N().S(`</select><input type="button" value="`)
-//line index.html:397
+		qw422016.N().S(`<label><input type="checkbox" name="delete-post">`)
+//line index.html:396
+		qw422016.N().S(ln.UI["deletePost"])
+//line index.html:396
+		qw422016.N().S(`</label><br><label><input type="checkbox" name="spoiler-image">`)
+//line index.html:398
+		qw422016.N().S(ln.UI["spoilerImage"])
+//line index.html:398
+		qw422016.N().S(`</label><br><label><input type="checkbox" name="delete-image">`)
+//line index.html:400
+		qw422016.N().S(ln.UI["deleteImage"])
+//line index.html:400
+		qw422016.N().S(`</label><br>`)
+//line index.html:402
+		if pos >= common.ActionPrivilege[common.PurgePost] {
+//line index.html:402
+			qw422016.N().S(`<label><input type="checkbox" name="purge-post">`)
+//line index.html:403
+			qw422016.N().S(ln.UI["purgePost"])
+//line index.html:403
+			qw422016.N().S(`</label><br><input type="text" name="purge-reason" class="full-width" placeholder="`)
+//line index.html:405
+			qw422016.N().S(ln.Common.UI["purgeReason"])
+//line index.html:405
+			qw422016.N().S(`"><br>`)
+//line index.html:407
+		}
+//line index.html:407
+		qw422016.N().S(`<label><input type="checkbox" name="all">`)
+//line index.html:408
+		qw422016.N().S(ln.Common.UI["applyAll"])
+//line index.html:408
+		qw422016.N().S(`</label><hr><input type="checkbox" name="showCheckboxes"><input type="button" value="`)
+//line index.html:411
 		qw422016.N().S(ln.UI["clear"])
-//line index.html:397
+//line index.html:411
 		qw422016.N().S(`" name="clear">`)
-//line index.html:398
-		streamsubmit(qw422016, false)
-//line index.html:398
-		qw422016.N().S(`</form></div>`)
-//line index.html:401
-	}
-//line index.html:401
-	qw422016.N().S(`</div></div>`)
-//line index.html:406
-	qw422016.N().S(`<div class="overlay top-overlay" id="hover-overlay"></div><div id="captcha-overlay" class="overlay top-overlay"></div>`)
 //line index.html:412
+		streamsubmit(qw422016, false)
+//line index.html:412
+		qw422016.N().S(`</form></div>`)
+//line index.html:415
+	}
+//line index.html:415
+	qw422016.N().S(`</div></div>`)
+//line index.html:420
+	qw422016.N().S(`<div class="overlay top-overlay" id="hover-overlay"></div><div id="captcha-overlay" class="overlay top-overlay"></div>`)
+//line index.html:426
 	qw422016.N().S(`<section id="threads">`)
-//line index.html:416
+//line index.html:430
 	qw422016.N().S(`$$$</section>`)
-//line index.html:421
+//line index.html:435
 	qw422016.N().S(`<script src="/assets/js/vendor/almond.js"></script><script id="lang-data" type="application/json">`)
-//line index.html:424
+//line index.html:438
 	buf, _ := json.Marshal(ln.Common)
 
-//line index.html:425
+//line index.html:439
 	qw422016.N().Z(buf)
-//line index.html:425
+//line index.html:439
 	qw422016.N().S(`</script><script id="board-title-data" type="application/json">`)
-//line index.html:428
+//line index.html:442
 	buf, _ = json.Marshal(config.GetBoardTitles())
 
-//line index.html:429
+//line index.html:443
 	qw422016.N().Z(buf)
-//line index.html:429
+//line index.html:443
 	qw422016.N().S(`</script><script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.html:433
+//line index.html:447
 }
 
-//line index.html:433
+//line index.html:447
 func writerenderIndex(qq422016 qtio422016.Writer, pos common.ModerationLevel) {
-//line index.html:433
+//line index.html:447
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line index.html:433
+//line index.html:447
 	streamrenderIndex(qw422016, pos)
-//line index.html:433
+//line index.html:447
 	qt422016.ReleaseWriter(qw422016)
-//line index.html:433
+//line index.html:447
 }
 
-//line index.html:433
+//line index.html:447
 func renderIndex(pos common.ModerationLevel) string {
-//line index.html:433
+//line index.html:447
 	qb422016 := qt422016.AcquireByteBuffer()
-//line index.html:433
+//line index.html:447
 	writerenderIndex(qb422016, pos)
-//line index.html:433
+//line index.html:447
 	qs422016 := string(qb422016.B)
-//line index.html:433
+//line index.html:447
 	qt422016.ReleaseByteBuffer(qb422016)
-//line index.html:433
+//line index.html:447
 	return qs422016
-//line index.html:433
+//line index.html:447
 }

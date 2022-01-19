@@ -103,8 +103,9 @@ func parseCommand(
 
 					if !*isSlut {
 						*isSlut = true
-						err = db.Ban(board, "stop being such a slut", "system",
-							time.Hour, id)
+						err = db.SystemBan(
+							ip, board, "stop being such a slut", time.Hour,
+						)
 					}
 
 					if err != nil {
@@ -151,7 +152,9 @@ func parseCommand(
 		com.Type = common.Autobahn
 		if !*isDead {
 			*isDead = true
-			err = db.Ban(board, "brum brum", "system", time.Hour, id)
+			err = db.SystemBan(
+				ip, board, "brum brum", time.Hour,
+			)
 		}
 
 	default:

@@ -15,12 +15,17 @@ var (
 	// board: IP: IsBanned
 	banCache = map[string]map[string]bool{}
 	bansMu   sync.RWMutex
+	banTypes = map[common.ModerationAction]string{
+		common.BanPost:       "classic",
+		common.ShadowBinPost: "shadow",
+	}
 )
 
 func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 	_, err = sq.Insert("bans").
-		Columns("ip", "board", "forPost", "reason", "by", "expires").
+		Columns("ip", "board", "forPost", "reason", "by", "type", "expires").
 		Values(ip, entry.Board, entry.ID, entry.Data, entry.By,
+			banTypes[entry.Type],
 			time.Now().UTC().Add(time.Second*time.Duration(entry.Length))).
 		RunWith(tx).
 		Exec()
@@ -32,8 +37,8 @@ func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
-func propagateBans(board string, ip string) (err error) {
-	_, err = db.Exec(`notify bans_updated`)
+func propagateBans(tx *sql.Tx, board string, ip string) (err error) {
+	_, err = tx.Exec(`notify bans_updated`)
 	if err != nil {
 		return
 	}
@@ -44,13 +49,13 @@ func propagateBans(board string, ip string) (err error) {
 }
 
 // Automatically bans an IP
-func SystemBan(ip, reason string, length time.Duration) (err error) {
+func SystemBan(ip, board, reason string, length time.Duration) (err error) {
 	return InTransaction(false, func(tx *sql.Tx) error {
-		return systemBanTx(tx, ip, reason, length)
+		return systemBanTx(tx, ip, board, reason, length)
 	})
 }
 
-func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
+func systemBanTx(tx *sql.Tx, ip, board, reason string, length time.Duration,
 ) (
 	err error,
 ) {
@@ -61,19 +66,22 @@ func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
 			By:     "system",
 			Length: uint64(length / time.Second),
 		},
-		Board: "all",
+		Board: board,
 	})
 	if err != nil {
 		return
 	}
-	err = propagateBans("all", ip)
+	err = propagateBans(tx, board, ip)
 	return
 }
 
-// Ban IPs from accessing a specific board. Need to target posts. Returns all
-// banned IPs.
-func Ban(board, reason, by string, length time.Duration, id uint64,
-) (err error) {
+// Ban IP from accessing a specific board. Need to target a post.
+func Ban(
+	tx *sql.Tx, board, reason, by string, length time.Duration,
+	id uint64, banType common.ModerationAction,
+) (
+	err error,
+) {
 	ip, err := GetIP(id)
 	switch err {
 	case nil:
@@ -87,23 +95,24 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 	}
 
 	// Write ban messages to posts and ban table
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		return writeBan(tx, ip, auth.ModLogEntry{
-			ModerationEntry: common.ModerationEntry{
-				Type:   common.BanPost,
-				Length: uint64(length / time.Second),
-				By:     by,
-				Data:   reason,
-			},
-			Board: board,
-			ID:    id,
-		})
+	writeBan(tx, ip, auth.ModLogEntry{
+		ModerationEntry: common.ModerationEntry{
+			Type:   banType,
+			Length: uint64(length / time.Second),
+			By:     by,
+			Data:   reason,
+		},
+		Board: board,
+		ID:    id,
 	})
 	if err != nil {
 		return
 	}
 
-	return propagateBans(board, ip)
+	if banType == common.BanPost {
+		return propagateBans(tx, board, ip)
+	}
+	return
 }
 
 // Unban lifts a ban from a specific post on a specific board

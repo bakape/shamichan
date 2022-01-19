@@ -470,14 +470,26 @@ func TestDeletePost(t *testing.T) {
 	writeSampleBoardOwner(t)
 	writeExtraSampleBoard(t)
 
-	data := []uint64{2, 4}
-	const url = "/api/delete-posts"
+	data := moderateRequest{
+		ID:  2,
+		Ban: banRequest{},
+		Censor: censorRequest{
+			DelPost: true,
+		},
+	}
+	const url = "/api/moderate"
 	rec, req := newJSONPair(t, url, data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 
-	data = []uint64{3}
+	data = moderateRequest{
+		ID:  3,
+		Ban: banRequest{},
+		Censor: censorRequest{
+			DelPost: true,
+		},
+	}
 	rec, req = newJSONPair(t, url, data)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 403)
@@ -488,7 +500,6 @@ func TestDeletePost(t *testing.T) {
 		deleted bool
 	}{
 		{"from target board", 2, true},
-		{"from target board", 4, true},
 		{"different board", 3, false},
 	}
 
@@ -506,7 +517,7 @@ func TestDeletePost(t *testing.T) {
 	}
 }
 
-func TestBanPosts(t *testing.T) {
+func TestBanPost(t *testing.T) {
 	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -516,18 +527,24 @@ func TestBanPosts(t *testing.T) {
 	writeAllBoard(t)
 	writeExtraSampleBoard(t)
 
-	data := banRequest{
-		Duration: 100,
-		Reason:   "test",
-		IDs:      []uint64{2, 4},
+	data := moderateRequest{
+		ID: 2,
+		Ban: banRequest{
+			IsSet:    true,
+			Global:   false,
+			Shadow:   false,
+			Duration: 100,
+			Reason:   "test",
+		},
+		Censor: censorRequest{},
 	}
-	const url = "/api/ban"
+	const url = "/api/moderate"
 	rec, req := newJSONPair(t, url, data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 
-	data.IDs = []uint64{3}
+	data.ID = 3
 	rec, req = newJSONPair(t, url, data)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 403)
@@ -547,7 +564,6 @@ func TestBanPosts(t *testing.T) {
 		banned bool
 	}{
 		{"from target board", 2, true},
-		{"from target board", 4, true},
 		{"different board", 3, false},
 	}
 
@@ -564,7 +580,7 @@ func TestBanPosts(t *testing.T) {
 
 	t.Run("global", func(t *testing.T) {
 		data := data
-		data.Global = true
+		data.Ban.Global = true
 		rec, req := newJSONPair(t, url, data)
 		setLoginCookies(req, adminLoginCreds)
 		router.ServeHTTP(rec, req)

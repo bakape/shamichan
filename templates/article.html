@@ -12,7 +12,7 @@
 	<article id="p{%s= id %}" {% space %} {%= postClass(p, c.op) %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
-			<input type="checkbox" class="mod-checkbox hidden">
+			<input type="radio" name="mod-checkbox" class="mod-checkbox hidden">
 			{%= renderSticky(c.sticky) %}
 			{%= renderLocked(c.locked) %}
 			{% if c.subject != "" %}

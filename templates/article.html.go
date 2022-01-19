@@ -61,7 +61,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:13
 	streamdeletedToggle(qw422016)
 //line article.html:13
-	qw422016.N().S(`<header class="spaced"><input type="checkbox" class="mod-checkbox hidden">`)
+	qw422016.N().S(`<header class="spaced"><input type="radio" name="mod-checkbox" class="mod-checkbox hidden">`)
 //line article.html:16
 	streamrenderSticky(qw422016, c.sticky)
 //line article.html:17

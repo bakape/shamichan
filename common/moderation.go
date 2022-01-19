@@ -22,6 +22,12 @@ const (
 	ShadowBinPost
 	RedirectIP
 	RedirectThread
+	ToggleSticky
+	ConfigureBoard
+	AssignStaff
+	BoardAssets
+	ConfigureServer
+	AdminNotification
 )
 
 // Contains fields of a post moderation log entry
@@ -53,3 +59,24 @@ const (
 	BoardOwner
 	Admin
 )
+
+// Pseudo-dictionary of moderation privilege level required to perform action
+var ActionPrivilege = [...]ModerationLevel{
+	BanPost:           Moderator,
+	UnbanPost:         Moderator,
+	DeletePost:        Janitor,
+	DeleteImage:       Janitor,
+	SpoilerImage:      Janitor,
+	LockThread:        Moderator,
+	DeleteBoard:       BoardOwner,
+	MeidoVision:       Janitor,
+	PurgePost:         Admin,
+	ShadowBinPost:     Moderator,
+	RedirectIP:        Admin,
+	RedirectThread:    Admin,
+	ToggleSticky:      Moderator,
+	ConfigureBoard:    BoardOwner,
+	AssignStaff:       BoardOwner,
+	ConfigureServer:   Admin,
+	AdminNotification: Admin,
+}

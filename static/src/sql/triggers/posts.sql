@@ -13,9 +13,10 @@ begin
 	select b.by, b.reason into to_delete_by, to_delete_reason
 		from bans b
 		-- Can't use post_board(), because not inserted yet
-		where board = (select t.board
+		where (board = (select t.board
 						from threads t
 						where t.id = new.op)
+			or board = 'all')
 			and b.ip = new.ip
 			and b.type = 'shadow'
 			and b.expires > now() at time zone 'UTC';
