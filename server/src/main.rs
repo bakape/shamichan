@@ -11,7 +11,7 @@ mod util;
 use actix::prelude::*;
 use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use actix_web_actors::ws;
-use askama_actix::Template;
+use askama::Template;
 use cfg_if::cfg_if;
 use dotenv;
 use feeds::IndexFeed;
@@ -41,7 +41,7 @@ async fn connect(
 	let ip = if config::SERVER.reverse_proxied {
 		ci.realip_remote_addr()
 	} else {
-		ci.remote_addr()
+		ci.peer_addr()
 	}
 	.map(|s| s.parse::<std::net::SocketAddr>().ok())
 	.flatten()
@@ -111,7 +111,7 @@ async fn main() -> Result<(), std::io::Error> {
 
 		// Spawn registry on it's own thread to reduce contention
 		let registry =
-			Registry::start_in_arbiter(&Arbiter::new(), move |ctx| {
+			Registry::start_in_arbiter(&Arbiter::new().handle(), move |ctx| {
 				Registry::new(ctx, threads)
 			});
 		let index_feed = registry.send(registry::GetIndexFeed).await?;
@@ -119,7 +119,7 @@ async fn main() -> Result<(), std::io::Error> {
 		let s = HttpServer::new(move || {
 			use actix_files::Files;
 			use actix_web::middleware::{
-				normalize::TrailingSlash, Compress, Logger, NormalizePath,
+				Compress, Logger, NormalizePath, TrailingSlash,
 			};
 
 			cfg_if! {
@@ -127,8 +127,7 @@ async fn main() -> Result<(), std::io::Error> {
 					let app = App::new().wrap_fn(|req, srv| {
 						use actix_service::Service;
 						use actix_web::http::{
-							header::CACHE_CONTROL,
-							HeaderValue,
+							header::{CACHE_CONTROL, HeaderValue},
 						};
 
 						let fut = srv.call(req);
@@ -149,15 +148,19 @@ async fn main() -> Result<(), std::io::Error> {
 				.wrap(Logger::default())
 				.wrap(NormalizePath::new(TrailingSlash::Trim))
 				.wrap(Compress::default())
-				.data(registry.clone())
-				.data(index_feed.clone())
+				.app_data(registry.clone())
+				.app_data(index_feed.clone())
 				.service(connect)
 				.service(Files::new("/assets", "./www"));
 
 			for p in &["/", "/catalog", "/threads/{thread:\\d+}/{page:\\d+}"] {
 				app = app.service(web::resource(*p).to(|| async {
-					Index {
+					let i = Index {
 						config: config::get().public.clone(),
+					};
+					match i.render() {
+						Ok(s) => s,
+						Err(e) => e.to_string(),
 					}
 				}));
 			}

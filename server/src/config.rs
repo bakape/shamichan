@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 
@@ -13,7 +13,7 @@ lazy_static::lazy_static! {
 }
 
 /// Configurations for this specific application server
-#[derive(Clap)]
+#[derive(Parser)]
 pub struct Server {
 	/// Database address to connect to
 	#[clap(short, long, env = "DATABASE_URL")]

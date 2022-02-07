@@ -5,7 +5,7 @@ use crate::{
 	mt_context::{run, MTAddr},
 	util::{self, SnapshotSource, WakeUp},
 };
-use actix::dev::{MessageResponse, ResponseChannel};
+use actix::dev::MessageResponse;
 use actix::prelude::*;
 use common::{
 	payloads::{Thread, ThreadWithPosts},
@@ -317,13 +317,15 @@ impl Message for InsertThread {
 
 // Implemented here because it's not derivable
 impl MessageResponse<Registry, InsertThread> for MTAddr<ThreadFeed> {
-	fn handle<R: ResponseChannel<InsertThread>>(
+	#[inline]
+	fn handle(
 		self,
 		_: &mut <Registry as Actor>::Context,
-		tx: Option<R>,
+		tx: Option<dev::OneshotSender<<InsertThread as Message>::Result>>,
 	) {
 		if let Some(tx) = tx {
-			tx.send(self);
+			// If the registry is not receiving messages, a crash is deserved
+			tx.send(self).unwrap();
 		}
 	}
 }
@@ -365,13 +367,14 @@ impl Message for SnapshotClients {
 // Implemented here because it's not derivable
 impl MessageResponse<Registry, SnapshotClients> for feeds::Clients {
 	#[inline]
-	fn handle<R: ResponseChannel<SnapshotClients>>(
+	fn handle(
 		self,
 		_: &mut <Registry as Actor>::Context,
-		tx: Option<R>,
+		tx: Option<dev::OneshotSender<<SnapshotClients as Message>::Result>>,
 	) {
 		if let Some(tx) = tx {
-			tx.send(self);
+			// If the registry is not receiving messages, a crash is deserved
+			tx.send(self).unwrap();
 		}
 	}
 }
@@ -401,13 +404,14 @@ impl Message for GetIndexFeed {
 // Implemented here because it's not derivable
 impl MessageResponse<Registry, GetIndexFeed> for MTAddr<IndexFeed> {
 	#[inline]
-	fn handle<R: ResponseChannel<GetIndexFeed>>(
+	fn handle(
 		self,
 		_: &mut <Registry as Actor>::Context,
-		tx: Option<R>,
+		tx: Option<dev::OneshotSender<<GetIndexFeed as Message>::Result>>,
 	) {
 		if let Some(tx) = tx {
-			tx.send(self);
+			// If the registry is not receiving messages, a crash is deserved
+			tx.send(self).unwrap();
 		}
 	}
 }
