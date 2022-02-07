@@ -5,44 +5,44 @@ name = "shamichan"
 version = "0.1.0"
 
 [dependencies]
-actix = "0.10.0"
-actix-files = "0.5.0"
-actix-rt = "2.2.0"
-actix-service = "1.0.6"
-actix-web = "3.3.2"
-actix-web-actors = "3.0.0"
-askama_actix = "0.11.1"
-async-recursion = "0.3.2"
-async-trait = "0.1.50"
-backtrace = "0.3.59"
+actix = "0.12.0"
+actix-files = "0.6.0-beta.16"
+actix-rt = "2.6.0"
+actix-service = "2.0.2"
+actix-web = "4.0.0-rc.1"
+actix-web-actors = "4.0.0-beta.11"
+async-recursion = "1.0.0"
+async-trait = "0.1.52"
+backtrace = "0.3.64"
 cfg-if = "1.0.0"
 cfg-match = "0.2.1"
 common = {path = "../common"}
 dotenv = "0.15.0"
-futures = {version = "0.3.15", features = ["std", "alloc"]}
+futures = {version = "0.3.21", features = ["std", "alloc"]}
 htmlescape = "0.3.1"
-include_dir = "0.6.0"
+include_dir = "0.7.2"
 lazy_static = "1.4.0"
-libc = "0.2.94"
+libc = "0.2.117"
 log = {version = "0.4.14", features = ["release_max_level_warn"]}
+maud = {version = "0.23.0", features = ["actix-web"]}
 memmap = "0.7.0"
-openssl = {version = "0.10.34", features = ["vendored"]}
-paste = "1.0.5"
+openssl = {version = "0.10.38", features = ["vendored"]}
+paste = "1.0.6"
 proctitle = "0.1.1"
-rand = "0.8.3"
+rand = "0.8.4"
 rayon = "1.5.1"
 regex = "1.5.4"
-serde = {version = "1.0.126", features = ["derive"]}
-serde_json = "1.0.64"
+serde = {version = "1.0.136", features = ["derive"]}
+serde_json = "1.0.78"
 stderrlog = "0.5.1"
-syntect = "4.5.0"
+syntect = "4.6.0"
 tripcode = "0.2.1"
 url = "2.2.2"
 uuid = "0.8.2"
 
 [dependencies.clap]
-features = ["suggestions", "color", "wrap_help"]
-version = "3.0.0-beta.2"
+features = ["suggestions", "color", "wrap_help", "derive", "env"]
+version = "3.0.14"
 
 [dependencies.sqlx]
 features = [
@@ -55,16 +55,16 @@ features = [
   "migrate",
   "offline",
 ]
-version = "0.5.3"
+version = "0.5.10"
 
 [dependencies.askama]
-features = ["with-actix-web", "serde-json"]
-version = "0.10.5"
+features = ["serde-json"]
+version = "0.11.0"
 
 [dependencies.futures-channel]
 default-features = false
-version = "0.3.15"
+version = "0.3.21"
 
 [dependencies.tokio]
 features = ["rt-multi-thread", "time", "test-util", "sync"]
-version = "1.6.0"
+version = "1.16.1"

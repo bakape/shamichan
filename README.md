@@ -23,7 +23,7 @@ container.
 Simply run
 
 ```
-docker run --restart unless-stopped -d --network host --mount type=bind,source=$image_dir,destination=/shamichan/images bakape/shamichan -d $DB
+docker run --restart unless-stopped -d --network host --mount type=bind,source=$image_dir,destination=/shamichan/images ghcr.io/bakape/shamichan -d $DB
 ```
 
 where:

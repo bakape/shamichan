@@ -176,7 +176,7 @@ impl Decoder {
 
 		macro_rules! error {
 			($kind:ident, $msg:expr) => {
-				return Err(Error::new(ErrorKind::$kind, $msg));
+				return Err(Error::new(ErrorKind::$kind, $msg))
 			};
 		}
 

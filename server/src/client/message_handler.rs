@@ -24,7 +24,7 @@ use std::sync::Arc;
 /// Return with invalid length error
 macro_rules! err_invalid_length {
 	($val:expr, $len:expr) => {
-		str_err!("invalid {} length: {}", stringify!($val), $len);
+		str_err!("invalid {} length: {}", stringify!($val), $len)
 	};
 }
 
@@ -82,6 +82,9 @@ struct OpenPost {
 	body: Vec<char>,
 	feed: MTAddr<ThreadFeed>,
 }
+
+// TODO: to protect against replay again attacks, the nonce for the handshake
+// has to be supplied by the server to verify a already registered public key
 
 /// Client connection state
 #[derive(Debug)]
@@ -199,7 +202,6 @@ impl MessageHandler {
 					use ConnState::*;
 					use MessageType::*;
 
-					#[rustfmt::skip]
 					macro_rules! expect {
 						($type:tt) => {
 							if t != $type {

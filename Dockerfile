@@ -38,7 +38,7 @@ RUN cargo install wasm-pack
 
 # Install Go
 RUN wget -O- \
-	"https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz" \
+	"https://dl.google.com/go/$(curl https://go.dev/VERSION?m=text).linux-amd64.tar.gz" \
 	| tar xpz -C /usr/local
 ENV PATH=$PATH:/usr/local/go/bin
 
@@ -47,7 +47,7 @@ RUN go get -u github.com/valyala/quicktemplate \
 	github.com/rakyll/statik \
 	github.com/valyala/quicktemplate/qtc
 
-# Download Go deps
+# Download go deps
 COPY go.mod go.sum ./
 RUN go mod download
 

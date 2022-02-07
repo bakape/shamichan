@@ -34,7 +34,7 @@ pub type DynResult<T = ()> = Result<T, Err>;
 #[macro_export]
 macro_rules! str_err {
 	($msg:expr) => {
-		return Err($msg.to_owned().into());
+		return Err($msg.to_owned().into())
 	};
 	($fmt:expr, $( $args:tt )* ) => {
 		str_err!(format!($fmt, $($args)*))

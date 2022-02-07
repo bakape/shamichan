@@ -61,9 +61,10 @@ where
 	}
 
 	// Fighting the Actor API limitations
-	MTAddr::new(Scheduler::start_in_arbiter(&SCHEDULER_ARBITER, move |_| {
-		Scheduler::new(actor)
-	}))
+	MTAddr::new(Scheduler::start_in_arbiter(
+		&SCHEDULER_ARBITER.handle(),
+		move |_| Scheduler::new(actor),
+	))
 }
 
 /// Able to handle a message asynchronously

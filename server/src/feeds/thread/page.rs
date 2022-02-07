@@ -128,7 +128,7 @@ impl PageRecord {
 				m.clone_from_slice(&buf);
 				Ok(m.make_read_only()?)
 			})
-			.await?,
+			.await??,
 		);
 
 		// XXX: This leaks virtual memory, if the thread is deleted.
