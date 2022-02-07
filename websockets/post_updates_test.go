@@ -624,19 +624,6 @@ func TestCloseOldOpenPost(t *testing.T) {
 	assertPostClosed(t, 2)
 }
 
-func TestInsertImageIntoPostWithImage(t *testing.T) {
-	t.Parallel()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	cl.post = openPost{
-		id:   1,
-		time: time.Now().Unix(),
-	}
-	AssertEquals(t, cl.insertImage(nil), nil)
-}
-
 func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 	setBoardConfigs(t, true)
 
