@@ -22,7 +22,7 @@ jobs:
           REF=${{ github.ref }}
           BRANCH=`echo ${REF#refs/heads/} | tr '/' '-'`
           COMMAND="docker build -f Dockerfile.dev --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $REPO --cache-from $REPO:$BRANCH -t $REPO:${{ github.sha }} -t $REPO:$BRANCH"
-          if [ ${{ github.ref }} == refs/heads/dev ]; then
+          if [ ${{ github.ref }} == refs/heads/master ]; then
             COMMAND+=" -t $REPO:latest"
           fi
           COMMAND+=" ."
@@ -105,7 +105,7 @@ jobs:
           REF=${{ github.ref }}
           BRANCH=`echo ${REF#refs/heads/} | tr '/' '-'`
           COMMAND="docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $REPO --cache-from $REPO:$BRANCH --cache-from $REPO_DEV --cache-from $REPO_DEV:$BRANCH -t $REPO:${{ github.sha }} -t $REPO:$BRANCH"
-          if [ ${{ github.ref }} == refs/heads/dev ]; then
+          if [ ${{ github.ref }} == refs/heads/master ]; then
             COMMAND+=" -t $REPO:latest"
           fi
           COMMAND+=" ."
