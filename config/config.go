@@ -70,7 +70,9 @@ var (
 			ThreadExpiryMin: 7,
 			ThreadExpiryMax: 14,
 			MaxSize:         5,
-			Links:           map[string]string{"4chan": "http://www.4chan.org/"},
+			Links: map[string]string{
+				"4chan": "http://www.4chan.org/",
+			},
 		},
 	}
 
@@ -98,7 +100,8 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball
-#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter`
+#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter
+#steal - steal the image of the first post linked; does not work on OPs`
 
 // Generate /all/ board configs
 func init() {
