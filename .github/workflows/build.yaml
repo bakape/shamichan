@@ -14,7 +14,7 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: bakape/meguca-dev
+          images: bakape/shamichan-dev
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -30,7 +30,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           pull: true
           push: true
-          cache-from: type=registry,ref=bakape/meguca-dev
+          cache-from: type=registry,ref=bakape/shamichan-dev
           cache-to: type=inline
           file: Dockerfile.dev
   test:
@@ -57,12 +57,12 @@ jobs:
         run: >
           psql
           postgres://postgres:postgres@localhost:5432/postgres
-          -c "create database meguca;"
+          -c "create database shamichan;"
       - name: Build dev image
         run: >
           DOCKER_BUILDKIT=1 docker build
-          --cache-from bakape/meguca-dev
-          -t meguca
+          --cache-from bakape/shamichan-dev
+          -t shamichan
           -f Dockerfile.dev
           .
       - name: Run Rust tests
@@ -71,9 +71,9 @@ jobs:
           --rm
           --network host
           -e CI=true
-          -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
+          -e TEST_DB="postgres://postgres:postgres@localhost:5432/shamichan"
           --entrypoint=""
-          meguca
+          shamichan
           cargo test
       # TODO: move to imager workflow
       # - name: Run Go tests
@@ -82,9 +82,9 @@ jobs:
       #       --rm \
       #       --network host \
       #       -e CI=true \
-      #       -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" \
+      #       -e TEST_DB="postgres://postgres:postgres@localhost:5432/shamichan" \
       #       --entrypoint="" \
-      #       meguca \
+      #       shamichan \
       #       go test --race ./..
   build-prod-image:
     name: Build and push prod image
@@ -102,7 +102,7 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: bakape/meguca
+          images: bakape/shamichan
           tags: |
             master
             latest
@@ -119,6 +119,6 @@ jobs:
           pull: true
           push: true
           cache-from: |
-            type=registry,ref=bakape/meguca-dev
-            type=registry,ref=bakape/meguca
+            type=registry,ref=bakape/shamichan-dev
+            type=registry,ref=bakape/shamichan
           file: Dockerfile

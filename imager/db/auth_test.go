@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/bakape/meguca/imager/test"
+	"github.com/bakape/shamichan/imager/test"
 	uuid "github.com/satori/go.uuid"
 )
 

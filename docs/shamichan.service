@@ -1,5 +1,5 @@
 [Unit]
-Description=meguca imageboard server
+Description=shamichan imageboard server
 Requires=postgresql.service
 After=postgresql.service
 
@@ -9,11 +9,11 @@ Restart=always
 RestartSec=5
 StartLimitInterval=6s
 StartLimitBurst=1
-User=meguca
-Group=meguca
-WorkingDirectory=/home/meguca/server
-ExecStart=/home/meguca/server/meguca
-PIDFile=/home/meguca/server/.pid
+User=shamichan
+Group=shamichan
+WorkingDirectory=/home/shamichan/server
+ExecStart=/home/shamichan/server/shamichan
+PIDFile=/home/shamichan/server/.pid
 ExecReload=/bin/kill -USR2 $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 

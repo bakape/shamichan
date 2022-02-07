@@ -1,4 +1,4 @@
-module github.com/bakape/meguca
+module github.com/bakape/shamichan
 
 go 1.13
 

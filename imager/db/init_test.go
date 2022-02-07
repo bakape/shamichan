@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bakape/meguca/imager/config"
+	"github.com/bakape/shamichan/imager/config"
 	"github.com/jessevdk/go-flags"
 )
 

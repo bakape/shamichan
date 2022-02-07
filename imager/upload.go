@@ -22,9 +22,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/imager/common"
-	"github.com/bakape/meguca/imager/config"
-	"github.com/bakape/meguca/imager/db"
+	"github.com/bakape/shamichan/imager/common"
+	"github.com/bakape/shamichan/imager/config"
+	"github.com/bakape/shamichan/imager/db"
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
@@ -429,7 +429,10 @@ func handleError(w http.ResponseWriter, r *http.Request, f func() error) {
 
 // Create a new thumbnail, commit its resources to the DB and filesystem,
 // insert it into an open post and send insertion even to listening clients
-func insertNewThumbnail(req thumbnailingRequest, id common.SHA1Hash) (err error) {
+func insertNewThumbnail(
+	req thumbnailingRequest,
+	id common.SHA1Hash,
+) (err error) {
 	var img common.ImageCommon
 	img.SHA1 = id
 

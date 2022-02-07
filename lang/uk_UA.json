@@ -1,6 +1,6 @@
 {
 	"format_strings": {
-		"info_header": "meguca is licensed under the GNU Affero General Public License\nSource code repository: github.com/bakape/meguca<hr>Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, RAR, CBZ, CBR.\nUploads up to {max_upload_size} and {max_width}x{max_height} pixels are supported.<hr>Encase text in:\n  ** for spoilers\n  @@ for bold\n  ~~ for italics\n  `` for programing code highlighting<hr>Hash commands:\n#d100 #2d100 - Roll dice\n#flip - Coin flip\n#8ball - An 8ball\n#countdown(N) - Start countdown timer for N seconds\n#autobahn(N) - ban self for N hours<hr>{thread_expiry}",
+		"info_header": "shamichan is licensed under the GNU Affero General Public License\nSource code repository: github.com/bakape/shamichan<hr>Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, RAR, CBZ, CBR.\nUploads up to {max_upload_size} and {max_width}x{max_height} pixels are supported.<hr>Encase text in:\n  ** for spoilers\n  @@ for bold\n  ~~ for italics\n  `` for programing code highlighting<hr>Hash commands:\n#d100 #2d100 - Roll dice\n#flip - Coin flip\n#8ball - An 8ball\n#countdown(N) - Start countdown timer for N seconds\n#autobahn(N) - ban self for N hours<hr>{thread_expiry}",
 		"thread_expiry": "Threads that have not been bumped in {days} day(s) are automatically deleted",
 		"time_ago": "{number} {unit} ago",
 		"time_in": "in {number} {unit}"
@@ -168,7 +168,7 @@
 		],
 		"image_root_override": [
 			"Image root override",
-			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.shamichan.org'"
 		],
 		"image_score": [
 			"Image spam score",
@@ -188,7 +188,7 @@
 		],
 		"jpeg_thumbnails": [
 			"JPEG thumbnails",
-			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+			"shamichan uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
 		"language": [
 			"Мова",

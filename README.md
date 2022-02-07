@@ -1,7 +1,7 @@
-[![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
-[![Build](https://github.com/bakape/meguca/workflows/Build/badge.svg?branch=master)](https://github.com/bakape/meguca/actions?query=workflow%3ABuild+branch%3Amaster)
+[![GoDoc](https://godoc.org/github.com/bakape/shamichan?status.svg)](https://godoc.org/github.com/bakape/shamichan)
+[![Build](https://github.com/bakape/shamichan/workflows/Build/badge.svg?branch=master)](https://github.com/bakape/shamichan/actions?query=workflow%3ABuild+branch%3Amaster)
 
-# meguca
+# shamichan
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
 Platforms: Linux, Docker
@@ -9,7 +9,7 @@ Platforms: Linux, Docker
 License: GNU GPLv3
 
 
-__The master branch is currently undergoing active breaking changes towards meguca v7. If you intend to deploy meguca, please use the v6 branch.__
+__The master branch is currently undergoing active breaking changes towards shamichan v7. If you intend to deploy shamichan, please use the v6 branch.__
 
 ## Runtime dependencies
 
@@ -17,13 +17,13 @@ __The master branch is currently undergoing active breaking changes towards megu
 
 ## Docker
 
-Meguca can be deployed in a self-contained [Docker](https://www.docker.com/)
+Shamichan can be deployed in a self-contained [Docker](https://www.docker.com/)
 container.
 
 Simply run
 
 ```
-docker run --restart unless-stopped -d --network host --mount type=bind,source=$image_dir,destination=/meguca/images bakape/meguca -d $DB
+docker run --restart unless-stopped -d --network host --mount type=bind,source=$image_dir,destination=/shamichan/images bakape/shamichan -d $DB
 ```
 
 where:
@@ -34,7 +34,7 @@ where:
 
 ### Native installation.
 
-For installing meguca directly onto a server follow the steps bellow.
+For installing shamichan directly onto a server follow the steps bellow.
 A reference list of commands can be found in `./docs/installation.md`
 
 #### Build dependencies
@@ -82,17 +82,17 @@ Run `make`
 
 <!-- TODO: update -->
 
-meguca can be started in debug mode simply with `./meguca`.
-Configurations are split between meguca instance configurations
+shamichan can be started in debug mode simply with `./shamichan`.
+Configurations are split between shamichan instance configurations
 and server instance configurations, which are required to start
 the server and connect to the database.
-The meguca instance configurations are stored in the database, but
+The shamichan instance configurations are stored in the database, but
 server instance configurations are optionally loaded from a `config.json`
 file on server start.
 A sample configuration file can be found under `docs/config.json`.
 Documentation for this file is available under `docs/config.jsonc`.
 
-It is recommended to serve meguca behind a reverse proxy like NGINX or Apache
+It is recommended to serve shamichan behind a reverse proxy like NGINX or Apache
 with properly configured TLS settings. A sample NGINX configuration file can be
 found in `docs/`.
 

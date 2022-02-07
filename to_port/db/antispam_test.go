@@ -5,10 +5,10 @@ package db
 // 	"testing"
 // 	"time"
 
-// 	"github.com/bakape/meguca/auth"
-// 	"github.com/bakape/meguca/common"
-// 	"github.com/bakape/meguca/config"
-// 	"github.com/bakape/meguca/test"
+// 	"github.com/bakape/shamichan/auth"
+// 	"github.com/bakape/shamichan/common"
+// 	"github.com/bakape/shamichan/config"
+// 	"github.com/bakape/shamichan/test"
 // )
 
 // func TestSpamScores(t *testing.T) {

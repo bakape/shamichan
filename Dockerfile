@@ -6,10 +6,10 @@ FROM ubuntu:focal
 
 EXPOSE 8000
 
-RUN mkdir -p /meguca/images /meguca/www/videos /src
-WORKDIR /meguca
+RUN mkdir -p /shamichan/images /shamichan/www/videos /src
+WORKDIR /shamichan
 CMD ["-a", ":8000"]
-ENTRYPOINT ["./meguca"]
+ENTRYPOINT ["./shamichan"]
 
 # Install OS dependencies
 ENV DEBIAN_FRONTEND=noninteractive
@@ -97,10 +97,10 @@ RUN NO_DEPS=1 make
 
 FROM ubuntu:focal
 
-RUN mkdir -p /meguca/images /meguca/www/videos
-WORKDIR /meguca
+RUN mkdir -p /shamichan/images /shamichan/www/videos
+WORKDIR /shamichan
 CMD ["-a", ":8000"]
-ENTRYPOINT ["./meguca"]
+ENTRYPOINT ["./shamichan"]
 
 # Install OS dependencies
 ENV DEBIAN_FRONTEND=noninteractive
@@ -113,5 +113,5 @@ RUN apt-get install -y \
 RUN apt-get dist-upgrade -y && apt-get clean
 
 # Copy compiled files from dev image
-COPY --from=0 /meguca/meguca /meguca/meguca
-COPY --from=0 /meguca/www /meguca/www
+COPY --from=0 /shamichan/shamichan /shamichan/shamichan
+COPY --from=0 /shamichan/www /shamichan/www

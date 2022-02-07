@@ -8,8 +8,8 @@
 .vscode
 *.dll
 node_modules
-/meguca
-/meguca.exe
+/shamichan
+/shamichan.exe
 scripts/*.local.sh
 www/css/*.css
 www/css/maps

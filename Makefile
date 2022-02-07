@@ -33,14 +33,14 @@ server:
 		--workspace \
 		--exclude client \
 		$(if $(filter 1,$(DEBUG)),,--release)
-	cp target/$(if $(filter 1,$(DEBUG)),debug,release)/meguca meguca
+	cp target/$(if $(filter 1,$(DEBUG)),debug,release)/shamichan shamichan
 
 server_debug:
 	SQLX_OFFLINE=true cargo build \
 		--workspace \
 		--exclude client
-	cp target/debug/meguca meguca
-	RUST_BACKTRACE=1 ./meguca
+	cp target/debug/shamichan shamichan
+	RUST_BACKTRACE=1 ./shamichan
 
 dockerfiles:
 	echo -e '# Built using `make dockerfiles`. DO NOT EDIT!\n' \
@@ -59,7 +59,7 @@ dockerfiles:
 	sed -i 's/FROM common//' Dockerfile
 
 clean:
-	rm -rf meguca www/client www/js target_tarpaulin
+	rm -rf shamichan www/client www/js target_tarpaulin
 	cargo clean
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean

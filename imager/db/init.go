@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bakape/meguca/imager/common"
-	"github.com/bakape/meguca/imager/config"
+	"github.com/bakape/shamichan/imager/common"
+	"github.com/bakape/shamichan/imager/config"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

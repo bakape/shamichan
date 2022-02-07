@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/bakape/meguca/imager/common"
+	"github.com/bakape/shamichan/imager/common"
 )
 
 // GetFilePaths generates file paths of the source file and its thumbnail

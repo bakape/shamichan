@@ -11,9 +11,9 @@ import (
 	"syscall"
 
 	"github.com/ErikDubbelboer/gspt"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/imager/config"
-	"github.com/bakape/meguca/imager/db"
+	"github.com/bakape/shamichan/imager/assets"
+	"github.com/bakape/shamichan/imager/config"
+	"github.com/bakape/shamichan/imager/db"
 	"github.com/jessevdk/go-flags"
 )
 

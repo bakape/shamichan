@@ -1,7 +1,7 @@
 {
-  "name": "meguca",
+  "name": "shamichan",
   "version": "1.0.0",
-  "description": "meguca CSS builder",
+  "description": "shamichan CSS builder",
   "main": "index.js",
   "directories": {},
   "dependencies": {
@@ -13,12 +13,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bakape/meguca.git"
+    "url": "git+https://github.com/bakape/shamichan.git"
   },
   "author": "bakape <bakape@gmail.com> (https://github.com/bakape)",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/bakape/meguca/issues"
+    "url": "https://github.com/bakape/shamichan/issues"
   },
-  "homepage": "https://github.com/bakape/meguca#readme"
+  "homepage": "https://github.com/bakape/shamichan#readme"
 }

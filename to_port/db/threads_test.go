@@ -9,7 +9,7 @@ package db
 // 	"testing"
 // 	"time"
 
-// 	"github.com/bakape/meguca/imager/test"
+// 	"github.com/bakape/shamichan/imager/test"
 // 	"github.com/jackc/pgtype"
 // 	"github.com/jackc/pgx/v4"
 // )

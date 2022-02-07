@@ -1,4 +1,4 @@
-List of installation and update commands to set up meguca on Debian buster.
+List of installation and update commands to set up shamichan on Debian buster.
 __Use as a reference. Copy paste at your own risk.__
 All commands assume to be run by the root user.
 
@@ -13,8 +13,8 @@ apt-get dist-upgrade -y
 # Create users and DBS
 service postgresql start
 su postgres
-psql -c "CREATE USER meguca WITH LOGIN PASSWORD 'meguca' CREATEDB"
-createdb -T template0 -E UTF8 -O meguca meguca
+psql -c "CREATE USER shamichan WITH LOGIN PASSWORD 'shamichan' CREATEDB"
+createdb -T template0 -E UTF8 -O shamichan shamichan
 exit
 
 # Install Go
@@ -29,23 +29,23 @@ apt-get install -y nodejs
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Clone and build meguca
-git clone https://github.com/bakape/meguca.git meguca
-cd meguca
+# Clone and build shamichan
+git clone https://github.com/bakape/shamichan.git shamichan
+cd shamichan
 make
 
 # Edit instance configs
 cp docs/config.json .
 nano config.json
 
-# Run meguca
-./meguca
+# Run shamichan
+./shamichan
 ```
 
 ## Update
 
 ```bash
-cd meguca
+cd shamichan
 
 # Pull changes
 git pull
@@ -53,9 +53,9 @@ git pull
 # Rebuild
 make
 
-# Restart running meguca instance.
-# This step depends on how your meguca instance is being managed.
+# Restart running shamichan instance.
+# This step depends on how your shamichan instance is being managed.
 #
-# A running meguca instance can be gracefully reloaded by sending it the USR2
+# A running shamichan instance can be gracefully reloaded by sending it the USR2
 # signal.
 ```

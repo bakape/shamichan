@@ -1,5 +1,5 @@
 # Replaced at compile time
 FROM common
 
-# Build meguca
+# Build shamichan
 RUN DEBUG=1 NO_DEPS=1 make

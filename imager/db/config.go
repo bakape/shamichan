@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/bakape/meguca/imager/config"
 	"github.com/bakape/pg_util"
+	"github.com/bakape/shamichan/imager/config"
 )
 
 // Load configurations from the database and continue loading any updates

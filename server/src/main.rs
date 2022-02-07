@@ -89,7 +89,7 @@ async fn main() -> Result<(), std::io::Error> {
 		// 12 char limit.
 		// Also prevents exposing DB connection string in args, if any.
 		proctitle::set_title(format!(
-			"meguca @ :{}",
+			"shamichan @ :{}",
 			config::SERVER
 				.address
 				.parse::<std::net::SocketAddr>()?
