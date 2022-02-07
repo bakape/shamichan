@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
@@ -38,23 +37,80 @@ func Redirect(id uint64, act common.ModerationAction, url string) (err error) {
 }
 
 // Clear post contents and remove any uploaded image from the server
-func PurgePost(id uint64, by, reason string) (err error) {
-	post, err := GetPost(id)
+func PurgePost(tx *sql.Tx, id uint64, by, reason string, by_ip bool) (
+	err error,
+) {
+	type Post struct {
+		ID    uint64
+		Image struct {
+			SHA1                sql.NullString
+			FileType, ThumbType sql.NullInt64
+		}
+	}
+	var posts []Post
+	var board string
+	var ip string
+
+	err = sq.Select("board", "ip").
+		From("posts").
+		Where("id = ?", id).
+		RunWith(tx).
+		QueryRow().
+		Scan(&board, &ip)
 	if err != nil {
 		return
 	}
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		if post.Image != nil {
-			img := post.Image
+
+	getPosts := sq.Select("p.id", "i.SHA1", "i.file_type", "i.thumb_type").
+		From("posts as p").
+		LeftJoin("images as i on p.SHA1 = i.SHA1").
+		RunWith(tx)
+
+	if by_ip {
+		getPosts = getPosts.Where("p.ip = ?", ip).
+			Where("post_board(p.id) = ?", board)
+	} else {
+		getPosts = getPosts.Where("id = ?", id)
+	}
+
+	// Get all posts
+	err = queryAll(
+		getPosts,
+		func(r *sql.Rows) (err error) {
+			var post Post
+			err = r.Scan(
+				&post.ID,
+				&post.Image.SHA1,
+				&post.Image.FileType,
+				&post.Image.ThumbType,
+			)
+			if err != nil {
+				return
+			}
+			posts = append(posts, post)
+			return
+		},
+	)
+	if err != nil {
+		return
+	}
+
+	for _, p := range posts {
+		if p.Image.SHA1.Valid {
+			img := p.Image
 			_, err = sq.
 				Delete("images").
-				Where("sha1 = ?", img.SHA1).
+				Where("sha1 = ?", img.SHA1.String).
 				RunWith(tx).
 				Exec()
 			if err != nil {
 				return
 			}
-			err = assets.Delete(img.SHA1, img.FileType, img.ThumbType)
+			err = assets.Delete(
+				img.SHA1.String,
+				uint8(img.FileType.Int64),
+				uint8(img.ThumbType.Int64),
+			)
 			if err != nil {
 				return
 			}
@@ -63,23 +119,28 @@ func PurgePost(id uint64, by, reason string) (err error) {
 		_, err = sq.
 			Update("posts").
 			Set("body", "").
-			Where("id = ?", post.ID).
+			Where("id = ?", p.ID).
 			RunWith(tx).
 			Exec()
 		if err != nil {
 			return
 		}
 
-		return logModeration(tx, auth.ModLogEntry{
-			Board: post.Board,
-			ID:    post.ID,
+		err = logModeration(tx, auth.ModLogEntry{
+			Board: board,
+			ID:    p.ID,
 			ModerationEntry: common.ModerationEntry{
 				Type: common.PurgePost,
 				By:   by,
 				Data: reason,
 			},
 		})
-	})
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // Apply post moderation, log and propagate to connected clients.
@@ -110,9 +171,10 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 }
 
 // DeleteImage permanently deletes an image from a post
-func DeleteImages(ids []uint64, by string) (err error) {
-	_, err = sqlDB.Exec("select delete_images($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+func DeleteImages(tx *sql.Tx, id uint64, by string, by_IP bool) (err error) {
+	_, err = tx.Exec("select delete_images($1::bigint, $2::text, $3::boolean)",
+		id, by, by_IP)
+
 	castPermissionError(&err)
 	return
 }
@@ -129,9 +191,14 @@ func DeleteBoard(board, by string) error {
 }
 
 // ModSpoilerImage spoilers image as a moderator
-func ModSpoilerImages(ids []uint64, by string) (err error) {
-	_, err = sqlDB.Exec("select spoiler_images($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+func ModSpoilerImages(tx *sql.Tx, id uint64, by string, by_IP bool) (
+	err error,
+) {
+	_, err = tx.Exec(
+		"select spoiler_images($1::bigint, $2::text, $3::boolean)",
+		id, by, by_IP,
+	)
+
 	castPermissionError(&err)
 	return
 }
@@ -266,22 +333,6 @@ func GetSameIPPosts(id uint64, board string, by string) (
 	return
 }
 
-// Delete posts of the same IP as target post on board and optionally keep
-// deleting posts by this IP
-func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
-	reason string,
-) (err error) {
-	seconds := 0
-	if keepDeleting != 0 {
-		seconds = int(keepDeleting / time.Second)
-	}
-	_, err = sqlDB.Exec(
-		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint, $4::text)",
-		id, account, seconds, reason)
-	castPermissionError(&err)
-	return
-}
-
 func castPermissionError(err *error) {
 	if extractException(*err) == "access denied" {
 		*err = common.ErrNoPermissions
@@ -289,9 +340,10 @@ func castPermissionError(err *error) {
 }
 
 // DeletePost marks the target post as deleted
-func DeletePosts(ids []uint64, by string) (err error) {
-	_, err = sqlDB.Exec("select delete_posts($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+func DeletePosts(tx *sql.Tx, id uint64, by string, by_IP bool) (err error) {
+	_, err = tx.Exec("select delete_posts($1::bigint, $2::text, $3::boolean)",
+		id, by, by_IP)
+
 	castPermissionError(&err)
 	return
 }

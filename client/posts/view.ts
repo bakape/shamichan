@@ -266,7 +266,6 @@ export default class PostView extends ImageHandler {
 
     // Render related mod-log status
     public renderModerationLog() {
-        this.uncheckModerationBox()
         if (page.catalog) {
             return;
         }

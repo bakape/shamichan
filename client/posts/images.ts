@@ -57,17 +57,6 @@ export default class ImageHandler extends View<Post> {
 		if (el) {
 			el.remove()
 		}
-		this.uncheckModerationBox()
-	}
-
-	// Uncheck moderation box, if any.
-	// This prevents staff from moderating posts, that have already been
-	// moderated. At least to some extent.
-	protected uncheckModerationBox() {
-		const el = this.el.querySelector(".mod-checkbox") as HTMLInputElement
-		if (el) {
-			el.checked = false
-		}
 	}
 
 	// Render the actual thumbnail image

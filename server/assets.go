@@ -167,7 +167,7 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
 	}
 
 	board = r.Form.Get("board")
-	_, err = canPerform(w, r, board, common.BoardOwner, true)
+	_, err = canPerform(w, r, board, common.ConfigureBoard, true)
 	return
 }
 

@@ -18,7 +18,7 @@ type rowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
-// InTransaction runs a function inside a transaction and handles comminting and rollback on error.
+// InTransaction runs a function inside a transaction and handles committing and rollback on error.
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
 //
 // TODO: Get rid off readOnly param, once reader ported to output JSON

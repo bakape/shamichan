@@ -57,7 +57,7 @@
 		<template name="article">
 			{%= deletedToggle() %}
 			<header class="spaced">
-				<input type="checkbox" class="mod-checkbox hidden">
+				<input type="radio" class="mod-checkbox hidden" name="mod-checkbox">
 				<h3 hidden></h3>
 				<b class="name spaced"></b>
 				<img class="flag" hidden>
@@ -289,7 +289,7 @@
 									<br>
 								</a>
 							{% endfor %}
-							{% if pos == common.Admin %}
+							{% if pos >= common.ActionPrivilege[common.ConfigureServer] %}
 								<a id="configureServer">
 									{%s= ln.UI["configureServer"] %}
 									<br>
@@ -346,54 +346,68 @@
 					</tbody>
 					</table>
 				</div>
+				{% comment %}
+					Moderation panel
+				{% endcomment %}
 				{% if pos > common.NotStaff %}
 					<div id="moderation-panel" class="modal glass">
+						<span title="{%s= ln.Common.UI["meidovisionTT"] %}">
+							{%s= ln.Common.UI["meidoVisionPost"] + ": " %}
+							<input type="button" id="meidovision" value="{%s= ln.Common.UI["submit"] %}">
+						</span>
+						<hr>
+						{% if pos >= common.ActionPrivilege[common.RedirectIP] %}
+							<span  title="{%s= ln.Common.UI["redirectTT"] %}">
+								{%s= ln.Common.UI["redirectPoster"] + ": " %}
+								<input type="button" id="redirect-ip" value="{%s= ln.Common.UI["submit"] %}">
+							</span>
+							<br>
+							<input type="text" id="redirect-location" class="full-width" placeholder="{%s= ln.Common.UI["location"] %}">
+							<hr>
+						{% endif %}
+						{% if pos >= common.ActionPrivilege[common.AdminNotification] %}
+							<span title="{%s= ln.UI["notificationTT"] %}">
+								{%s= ln.UI["notification"] + ": " %}
+								<input type="button" id="notification" value="{%s= ln.Common.UI["submit"] %}">
+							</span>
+							<br>
+							<input type="text" id="notification-text" class="full-width" placeholder="{%s= ln.UI["text"] %}">
+							<hr>
+						{% endif %}
 						<form>
-							{% if pos >= common.Moderator %}
-								<div id="ban-form" class="hidden">
-									{% for _, id  := range [...]string{"day", "hour", "minute"} %}
-										<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
-									{% endfor %}
-									<br>
-									<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.Common.UI["reason"] %}" disabled>
-									<br>
-									{% if pos == common.Admin %}
-										<label>
-											<input type="checkbox" name="global">
-											{%s= ln.UI["global"] %}
-										</label>
-									{% endif %}
-								</div>
-							{% endif %}
-							{% if pos == common.Admin %}
-								<div id="purgePost-form" class="hidden">
-									<input type="text" name="purge-reason" required class="full-width" placeholder="{%s= ln.Common.UI["reason"] %}" disabled>
-									<br>
-								</div>
-								<div id="notification-form" class="hidden">
-									<input type="text" name="notification" required class="full-width" placeholder="{%s= ln.UI["text"] %}" style="min-width: 20em;" disabled>
-									<br>
-								</div>
-							{% endif %}
-							<div id="handlesSpam-form" class="hidden"></div>
-							<input type="checkbox" name="showCheckboxes">
-							<select name="action">
-								{% code ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage") %}
-								{% if pos >= common.Moderator %}
-									{% code ids = append(ids, "ban") %}
-								{% endif %}
-								{% if pos == common.Admin %}
-									{% code ids = append(ids, "purgePost", "notification") %}
-								{% endif %}
-								<option value="handleSpam">
-									{%s= ln.UI["handleSpam"] %}
-								</option>
-								{% for _, id := range ids %}
-									<option value="{%s= id %}">
-										{%s= ln.UI[id] %}
-									</option>
+							{% if pos >= common.ActionPrivilege[common.BanPost] %}
+								<label><input type="checkbox" name="ban-poster">{%s= ln.UI["ban"] %}</label>
+								<br>
+								{% for _, id  := range [...]string{"day", "hour", "minute"} %}
+									<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
 								{% endfor %}
-							</select>
+								<br>
+								<input type="text" name="ban-reason" class="full-width" placeholder="{%s= ln.Common.UI["reason"] %}">
+								<br>
+								<label><input type="checkbox" name="shadow">{%s= ln.UI["shadow"] %}</label>
+								{% if pos == common.Admin %}
+									<label>
+										<input type="checkbox" name="global">
+										{%s= ln.UI["global"] %}
+									</label>
+								{% endif %}
+								<hr>
+							{% endif %}
+							<label><input type="checkbox" name="delete-post">{%s= ln.UI["deletePost"] %}</label>
+							<br>
+							<label><input type="checkbox" name="spoiler-image">{%s= ln.UI["spoilerImage"] %}</label>
+							<br>
+							<label><input type="checkbox" name="delete-image">{%s= ln.UI["deleteImage"] %}</label>
+							<br>
+							{% if pos >= common.ActionPrivilege[common.PurgePost] %}
+								<label><input type="checkbox" name="purge-post">{%s= ln.UI["purgePost"] %}</label>
+								<br>
+								<input type="text" name="purge-reason" class="full-width" placeholder="{%s= ln.Common.UI["purgeReason"] %}">
+								<br>
+							{% endif %}
+							<label><input type="checkbox" name="all">{%s= ln.Common.UI["applyAll"] %}</label>
+							<hr>
+							<input type="checkbox" name="showCheckboxes">
 							<input type="button" value="{%s= ln.UI["clear"] %}" name="clear">
 							{%= submit(false) %}
 						</form>

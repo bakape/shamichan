@@ -1232,10 +1232,10 @@ var migrations = []func(tx *sql.Tx) error{
 		if err != nil {
 			return
 		}
-		return registerFunctions(tx, "delete_posts_by_ip", "assert_can_perform")
+		return registerFunctions(tx, "assert_can_perform")
 	},
 	func(tx *sql.Tx) (err error) {
-		return registerFunctions(tx, "is_deleted", "delete_posts_by_ip")
+		return registerFunctions(tx, "is_deleted")
 	},
 	func(tx *sql.Tx) (err error) {
 		err = execAll(tx,
@@ -1253,7 +1253,7 @@ var migrations = []func(tx *sql.Tx) error{
 		}
 
 		// Reload functions
-		err = registerFunctions(tx, "post_board", "delete_posts_by_ip")
+		err = registerFunctions(tx, "post_board")
 		if err != nil {
 			return
 		}
@@ -1281,8 +1281,8 @@ var migrations = []func(tx *sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) (err error) {
-		// Load new versions
-		return registerFunctions(tx, "delete_posts_by_ip")
+		// Moved
+		return nil
 	},
 	func(tx *sql.Tx) (err error) {
 		// Moved
@@ -1300,10 +1300,6 @@ var migrations = []func(tx *sql.Tx) error{
 			return
 		}
 
-		err = registerFunctions(tx, "delete_posts_by_ip")
-		if err != nil {
-			return
-		}
 		return loadSQL(tx, "triggers/mod_log", "triggers/posts")
 	},
 	func(tx *sql.Tx) (err error) {
@@ -1322,7 +1318,8 @@ var migrations = []func(tx *sql.Tx) error{
 			"spoiler_images")
 	},
 	func(tx *sql.Tx) (err error) {
-		return registerFunctions(tx, "delete_posts_by_ip")
+		// Moved
+		return nil
 	},
 	func(tx *sql.Tx) (err error) {
 		return registerFunctions(tx, "delete_images", "spoiler_images")
@@ -1539,6 +1536,25 @@ var migrations = []func(tx *sql.Tx) error{
 		return registerTriggers(tx, map[string][]triggerDescriptor{
 			"posts": {{before, tableInsert}},
 		})
+	},
+	func(tx *sql.Tx) (err error) {
+		// Reload trigger and functions
+		err = registerTriggers(tx, map[string][]triggerDescriptor{
+			"posts": {{before, tableInsert}},
+		})
+		if err != nil {
+			return
+		}
+
+		err = registerFunctions(tx,
+			"delete_posts", "delete_images", "spoiler_images",
+		)
+		if err != nil {
+			return
+		}
+
+		// Drop legacy function
+		return dropFunctions(tx, "delete_posts_by_ip")
 	},
 }
 

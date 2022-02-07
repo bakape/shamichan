@@ -113,7 +113,7 @@ func flushSpamScores() (err error) {
 }
 
 func banForSpam(tx *sql.Tx, ip string) error {
-	return systemBanTx(tx, ip, "spam detected", time.Hour*48)
+	return systemBanTx(tx, ip, "all", "spam detected", time.Hour*48)
 }
 
 // This surely is not done by normal human interaction
@@ -301,7 +301,7 @@ func ValidateCaptcha(
 				return
 			}
 			if count >= incorrectCaptchaLimit {
-				err = systemBanTx(tx, ip, "bot detected", time.Hour*48)
+				err = systemBanTx(tx, ip, "all", "bot detected", time.Hour*48)
 				if err != nil {
 					return
 				}

@@ -276,8 +276,10 @@ export class Post {
             return false;
         }
         for (let { type } of this.moderation) {
-            if (type === ModerationAction.deletePost) {
-                return true;
+            switch (type) {
+                case ModerationAction.deletePost:
+                case ModerationAction.purgePost:
+                    return true;
             }
         }
 

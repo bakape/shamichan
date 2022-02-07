@@ -65,7 +65,8 @@ type Post struct {
 // Return if post has been deleted by staff
 func (p *Post) IsDeleted() bool {
 	for _, l := range p.Moderation {
-		if l.Type == DeletePost {
+		switch l.Type {
+		case DeletePost, PurgePost:
 			return true
 		}
 	}

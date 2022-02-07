@@ -1,272 +1,276 @@
 import { View } from "../base"
-import { postJSON, toggleHeadStyle, trigger } from "../util"
-import { Post } from "../posts"
-import { getModel, config } from "../state"
+import { postJSON, toggleHeadStyle, getClosestID } from "../util"
+import collectionView from "../posts/collectionView"
+import { ModerationLevel } from "../common"
+
+type ModerationData = {
+	id: number;
+	ban?: BanData;
+	censor?: CensorData;
+}
+
+type CensorData = {
+	byIP: boolean;
+	delPost?: boolean;
+	spoil?: boolean;
+	delImg?: boolean;
+	purge?: {
+		isSet: boolean;
+		reason: string;
+	};
+}
+
+type BanData = {
+	isSet: boolean;
+	global: boolean;
+	shadow: boolean;
+	duration: number;
+	reason: string;
+}
 
 let displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
 
 // Moderation panel with various post moderation and other controls
 export default class ModPanel extends View<null> {
-	constructor() {
+	constructor(position: ModerationLevel) {
 		checkboxStyler = toggleHeadStyle(
 			"mod-checkboxes",
 			".mod-checkbox{ display: inline; }"
-		)
+		);
 
-		super({ el: document.getElementById("moderation-panel") })
-		new BanForm()
-		new NotificationForm()
-		new PostPurgeForm();
-		new SpamHandlerForm();
+		super({ el: document.getElementById("moderation-panel") });
 
-		this.el.querySelector("form").addEventListener("submit", e =>
-			this.onSubmit(e))
+		document.getElementById("meidovision").addEventListener("click", () => {
+			this.viewAllByIP();
+		});
 
-		this.el
-			.querySelector("select[name=action]")
-			.addEventListener("change", () => this.onSelectChange(), {
-				passive: true
-			})
-		this.inputElement("clear")
-			.addEventListener("click", () => {
-				for (let el of this.getChecked()) {
-					el.checked = false
-				}
-			},
-				{ passive: true })
+		if (position == ModerationLevel.admin) {
+			document.getElementById("redirect-ip").addEventListener("click", () => {
+				this.redirectIP();
+			});
 
-		const checkboxToggle = this.inputElement("showCheckboxes")
-		checkboxToggle.checked = displayCheckboxes
-		checkboxToggle.addEventListener(
-			"change",
-			e =>
-				this.setVisibility((event.target as HTMLInputElement).checked),
-			{ passive: true },
-		)
+			document.getElementById("notification").addEventListener("click", () => {
+				this.sendNotification();
+			});
+		}
 
-		this.setVisibility(displayCheckboxes)
+		this.el.querySelector("form").addEventListener("submit", e => {
+			this.onSubmit(e);
+		});
+
+		this.inputElement("clear").addEventListener("click", () => {
+			this.clear();
+		});
+
+		const checkboxToggle = this.inputElement("showCheckboxes");
+		checkboxToggle.checked = displayCheckboxes;
+		checkboxToggle.addEventListener("change", e => {
+			this.setVisibility((e.target as HTMLInputElement).checked);
+		}, { passive: true });
+
+		this.setVisibility(displayCheckboxes);
+	}
+
+	// Returns a reference to the post marked for moderation
+	private getChecked(): HTMLInputElement {
+		return document.querySelector(".mod-checkbox:checked") as HTMLInputElement;
 	}
 
 	private setVisibility(on: boolean) {
-		localStorage.setItem("hideModCheckboxes", (!on).toString())
-		this.setSlideOut(on)
-		checkboxStyler(on)
+		localStorage.setItem("hideModCheckboxes", (!on).toString());
+		this.setSlideOut(on);
+		checkboxStyler(on);
 	}
 
+	// Create display of all posts made by selected post's author
+	private async viewAllByIP() {
+		const checked = this.getChecked();
+		if (!checked) {
+			return;
+		}
+		const id = getClosestID(checked);
+
+		const res = await postJSON(`/api/same-IP/${id}`, null);
+		if (res.status !== 200) {
+			this.el.querySelector(".form-response").textContent =
+				await res.text();
+			return;
+		}
+
+		const posts = await res.json();
+		if (posts) {
+			new collectionView(posts);
+		}
+	}
+
+	// Redirect a poster to a specified URL
+	private async redirectIP() {
+		const checked = this.getChecked();
+		if (!checked) {
+			return;
+		}
+		const id = getClosestID(checked);
+
+		const url = (document
+			.getElementById("redirect-location") as HTMLInputElement).value;
+		await this.postJSON("/api/redirect/by-ip", { id, url });
+	}
+
+	// Send a notification to all connected clients
+	private async sendNotification() {
+		const text = (document
+			.getElementById("notification-text") as HTMLInputElement).value;
+		await this.postJSON("/api/notification", text);
+	}
+
+	// Parse and send moderation data to server
 	private async onSubmit(e: Event) {
-		e.preventDefault()
-		e.stopImmediatePropagation()
+		e.preventDefault();
+		e.stopImmediatePropagation();
 
-		const checked = this.getChecked(),
-			models = [...checked].map(getModel)
+		const errlog = this.el.querySelector(".form-response");
+		errlog.textContent = "";
 
-		// Send multiple requests with post ID to server
-		const sendIDRequests = async (formID: string, url: string) => {
-			if (!checked.length) {
+		const checked = this.getChecked();
+		if (!checked) {
+			return;
+		}
+		const id = getClosestID(checked);
+		let data: ModerationData = {
+			id: id,
+		}
+
+		const banform = this.inputElement("ban-poster");
+		if (banform && banform.checked) {
+			const ban = this.parseBan();
+			if (ban.err) {
+				errlog.textContent = ban.err;
 				return;
 			}
-			const args = HidableForm.forms[formID].vals();
-			for (let id of mapToIDs(models)) {
-				args["id"] = id;
-				await this.postJSON(url, args);
+			if (ban.data) {
+				data.ban = ban.data;
 			}
 		}
 
-		// Send request with post IDs to server
-		const sendMultiIDRequest = async (
-			path: string,
-			withImages: boolean,
-		) => {
-			if (checked.length) {
-				await this.postJSON(
-					"/api" + path,
-					mapToIDs(
-						withImages
-							? models.filter(m => !!m.image)
-							: models
-					),
-				);
+		const censor = this.parseCensor();
+		if (censor.err) {
+			errlog.textContent = censor.err;
+			return;
+		}
+		if (censor.data) {
+			data.censor = censor.data;
+		}
+
+		if (data.ban || data.censor) {
+			await this.postJSON("/api/moderate", data);
+		}
+
+		checked.checked = false;
+	}
+
+	private parseBan(): { data: BanData, err: string } {
+		const dur = this.extractDuration();
+		if (!dur) {
+			return { data: null, err: "No ban duration" };
+		}
+
+		const r = this.inputElement("ban-reason").value;
+		if (r === "") {
+			return { data: null, err: "No ban reason" };
+		}
+
+		const data: BanData = {
+			isSet: true,
+			global: false,
+			shadow: this.inputElement("shadow").checked,
+			duration: dur,
+			reason: r,
+		}
+
+		// Global checkbox doesn't always exist
+		const g = this.inputElement("global");
+		if (g) {
+			data.global = g.checked;
+		}
+
+		return { data: data, err: null }
+	}
+
+	private parseCensor(): { data: CensorData, err: string } {
+		let data: CensorData = {
+			byIP: this.inputElement("all").checked,
+		}
+		let set = false;
+
+		// Only send most powerful request.
+		// For example, no need to spoiler an image if it will be purged
+		// Purge deletes the post and deletes attached file, if any
+		const purge = this.inputElement("purge-post");
+		if (purge && purge.checked) {
+			const r = this.inputElement("purge-reason").value;
+			if (!r) {
+				return { data: null, err: "Missing purge reason" };
 			}
-		};
+			data.purge = { isSet: true, reason: r }
+			set = true;
+		}
+		else {
+			if (this.inputElement("delete-post").checked) {
+				data.delPost = true;
+				set = true;
+			}
 
-		switch (this.getMode()) {
-			case "deletePost":
-				await sendMultiIDRequest("/delete-posts", false);
-				break;
-			case "spoilerImage":
-				await sendMultiIDRequest("/spoiler-image", true);
-				break;
-			case "deleteImage":
-				await sendMultiIDRequest("/delete-image", true);
-				break;
-			case "ban":
-				if (checked.length) {
-					const args = HidableForm.forms["ban"].vals();
-					args["ids"] = mapToIDs(models);
-					this.postJSON("/api/ban", args);
-				}
-				break;
-			case "purgePost":
-				await sendIDRequests("purgePost", "/api/purge-post");
-				break;
-			case "handleSpam":
-				for (let p of this.getChecked().map(getModel)) {
-					await postJSON("/api/delete-posts/by-ip", {
-						id: p.id,
-						duration: 60 * 24 * 30, // 30 days
-						reason: "spam",
-					});
-				}
-				break;
-			case "notification":
-				const f = HidableForm.forms["notification"]
-				await this.postJSON("/api/notification", f.vals())
-				f.clear()
-				break
+			if (this.inputElement("delete-image").checked) {
+				data.delImg = true;
+				set = true;
+			}
+			else if (this.inputElement("spoiler-image").checked) {
+				data.spoil = true;
+				set = true;
+			}
+		}
+		if (!set) {
+			data = null;
 		}
 
-		for (let el of checked) {
-			el.checked = false
-		}
+		return { data: data, err: null }
 	}
 
-	// Get selected post checkboxes
-	private getChecked(): HTMLInputElement[] {
-		const query = document.querySelectorAll(".mod-checkbox:checked")
-		var els = new Array(query.length)
-
-		for (let i = 0; i < query.length; i++) {
-			els[i] = query[i]
+	// Restore panel to its default state
+	private clear() {
+		const checked = this.getChecked();
+		if (checked) {
+			checked.checked = false;
 		}
-
-		return els
-	}
-
-	// Return current action mode
-	private getMode(): string {
-		return (this.el
-			.querySelector(`select[name="action"]`) as HTMLInputElement)
-			.value
+		for (const e of this.el.querySelectorAll("input")) {
+			switch (e.type) {
+				case "number":
+				case "text":
+					e.value = "";
+					break;
+				case "checkbox":
+					if (e.name === "showCheckboxes") {
+						continue;
+					}
+					e.checked = false;
+					break;
+			}
+		}
+		this.el.querySelector(".form-response").textContent = "";
 	}
 
 	// Post JSON to server and handle errors
 	private async postJSON(url: string, data: {}) {
-		const res = await postJSON(url, data)
+		const res = await postJSON(url, data);
 		this.el.querySelector(".form-response").textContent =
 			res.status === 200
 				? ""
-				: await res.text()
-	}
-
-	// Change additional input visibility on action change
-	private onSelectChange() {
-		HidableForm.show(this.getMode())
+				: await res.text();
 	}
 
 	// Force panel to stay visible
 	public setSlideOut(on: boolean) {
-		this.el.classList.toggle("keep-visible", on)
+		this.el.classList.toggle("keep-visible", on);
 	}
-}
-
-abstract class HidableForm extends View<null> {
-	public static forms: { [id: string]: HidableForm } = {}
-	public abstract vals(): any
-
-	constructor(id: string) {
-		super({ el: document.getElementById(id + "-form") })
-		HidableForm.forms[id] = this
-		this.toggleDisplay(false)
-	}
-
-	public toggleDisplay(on: boolean) {
-		for (let el of this.el.getElementsByTagName("input")) {
-			el.disabled = !on
-		}
-		this.el.classList.toggle("hidden", !on)
-	}
-
-	// Hide all displayed forms
-	public static hideAll() {
-		for (let id in HidableForm.forms) {
-			HidableForm.forms[id].toggleDisplay(false)
-		}
-	}
-
-	// Show a form by ID, if any
-	public static show(id: string) {
-		HidableForm.hideAll()
-		const f = HidableForm.forms[id]
-		if (f) {
-			f.toggleDisplay(true)
-		}
-	}
-
-	// Clear any text inputs
-	public clear() {
-		for (let el of this.el.querySelectorAll("input[type=text]")) {
-			(el as HTMLInputElement).value = ""
-		}
-	}
-}
-
-// Ban input fields
-class BanForm extends HidableForm {
-	constructor() {
-		super("ban")
-	}
-
-	// Get input field values
-	public vals(): { [key: string]: any } {
-		const data = {
-			duration: this.extractDuration(),
-			reason: this.inputElement("reason").value,
-		}
-		const g = this.inputElement("global")
-		if (g) {
-			data["global"] = g.checked
-		}
-		return data
-	}
-}
-
-class PostPurgeForm extends HidableForm {
-	constructor() {
-		super("purgePost");
-	}
-
-	// Get input field values
-	public vals(): { [key: string]: any } {
-		return {
-			reason: this.inputElement("purge-reason").value,
-		};
-	}
-}
-
-// Form for sending notifications to all connected clients
-class NotificationForm extends HidableForm {
-	constructor() {
-		super("notification")
-	}
-
-	public vals(): string {
-		return this.inputElement("notification").value
-	}
-}
-
-// Shorthand to handle spam
-class SpamHandlerForm extends HidableForm {
-	constructor() {
-		super("handlesSpam")
-	}
-
-	public vals(): string {
-		return null;
-	}
-}
-
-function mapToIDs(models: Post[]): number[] {
-	return models.map(m =>
-		m.id)
 }
