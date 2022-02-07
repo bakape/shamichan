@@ -22,8 +22,8 @@ type rowScanner interface {
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
 //
 // TODO: Get rid off readOnly param, once reader ported to output JSON
-func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
-	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+func InTransaction(readOnly bool, fn func(tx *sql.Tx) (err error)) (err error) {
+	tx, err := sqlDB.BeginTx(context.Background(), &sql.TxOptions{
 		ReadOnly: readOnly,
 	})
 	if err != nil {

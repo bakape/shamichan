@@ -2,7 +2,7 @@ package db
 
 // WriteBitChuteTitle creates a new bitchute title row.
 func WriteBitChuteTitle(id string, title string) error {
-	_, err := db.Exec(
+	_, err := sqlDB.Exec(
 		`insert into bitchute_videos (id, title)
 		values ($1, $2)
 		on conflict (id) do nothing`,

@@ -353,7 +353,6 @@ func TestPostCreation(t *testing.T) {
 		time:        stdPost.Time,
 		board:       "a",
 		len:         1,
-		hasImage:    true,
 		isSpoilered: true,
 		body:        []byte("Δ"),
 	})
@@ -411,9 +410,6 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	}
 	if hasImage {
 		t.Error("DB post has image")
-	}
-	if cl.post.hasImage {
-		t.Error("openPost has image")
 	}
 }
 

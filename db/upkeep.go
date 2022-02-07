@@ -41,7 +41,12 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	if config.Server.ImagerMode != config.ImagerOnly {
 		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "failed_captchas", "attempted_logins")
+		expireRows(
+			"image_tokens",
+			"bans",
+			"failed_captchas",
+			"attempted_logins",
+		)
 	}
 }
 
@@ -63,7 +68,7 @@ func runHourTasks() {
 		logError("board cleanup", deleteUnusedBoards())
 		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
 		logError("decrement all login attempts", decrementAllLoginAttempts())
-		_, err := db.Exec(`vacuum`)
+		_, err := sqlDB.Exec(`vacuum`)
 		logError("vacuum database", err)
 	}
 	if config.Server.ImagerMode != config.NoImager {
@@ -141,7 +146,14 @@ func closeDanglingPosts() error {
 			return err
 		}
 
-		links, com, err := common.ParseBody([]byte(body), p.board, p.op, p.id, p.ip.String, true)
+		links, com, err := common.ParseBody(
+			[]byte(body),
+			p.board,
+			p.op,
+			p.id,
+			p.ip.String,
+			true,
+		)
 		// Still close posts on invalid input
 		switch err.(type) {
 		case nil:

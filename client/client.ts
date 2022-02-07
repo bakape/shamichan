@@ -5,7 +5,7 @@ import { posts, page } from './state'
 import { Post, FormModel, PostView, lightenThread } from './posts'
 import { PostLink, Command, PostData, ImageData, ModerationEntry } from "./common"
 import { postAdded } from "./ui"
-import { incrementPostCount } from "./page"
+import { decrementImageCount, incrementPostCount } from "./page"
 import { getPostName } from "./options"
 import { OverlayNotification } from "./ui"
 import { setCookie } from './util';
@@ -140,6 +140,39 @@ export default () => {
 	handlers[message.moderatePost] = (msg: ModerationMessage) =>
 		handle(msg.id, m =>
 			m.applyModeration(msg))
+
+	handlers[message.stoleImageFrom] = (id: number) =>
+		handle(id, m => {
+			if (m.image) {
+				m.image = null;
+
+				m.view.removeImage();
+				if (m instanceof FormModel) {
+					m.allocatingImage = false;
+
+					if (m.view && (m.view as any).upload) {
+						(m.view as any).upload.reset();
+					}
+				}
+				decrementImageCount();
+			}
+		})
+
+	interface StolenImage {
+		id: number;
+		image: ImageData;
+	}
+
+	handlers[message.stoleImageTo] = ({ id, image }: StolenImage) =>
+		handle(id, m => {
+			if (m.image) {
+				m.image = null;
+				m.view.removeImage();
+			} else {
+				incrementPostCount(false, true);
+			}
+			m.insertImage(image);
+		})
 
 	handlers[message.redirect] = (msg: string) => {
 		const url = new URL(msg, location.origin)

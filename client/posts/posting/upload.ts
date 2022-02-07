@@ -193,9 +193,17 @@ export default class UploadForm extends View<Post> {
             if (this.inputElement("mask").checked && file["pasted"] != true) {
                 uploadName = sha1;
             }
+
+            const headers = {};
+            const bypass = localStorage.getItem("upload_bypass");
+            if (bypass) {
+                headers["Authorization"] = "Bearer " + bypass;
+            }
+
             const res = await fetch("/api/upload-hash", {
                 method: "POST",
                 body: sha1,
+                headers,
             });
             const text = await res.text();
             if (this.handleResponse(res.status, text)) {
@@ -274,6 +282,12 @@ export default class UploadForm extends View<Post> {
         this.xhr.open("POST", "/api/upload");
         this.xhr.upload.onprogress = e =>
             this.renderProgress(e);
+
+        const bypass = localStorage.getItem("upload_bypass");
+        if (bypass) {
+            this.xhr.setRequestHeader("Authorization", "Bearer " + bypass);
+        }
+
         this.xhr.onabort = () =>
             this.reset();
         this.xhr.send(formData);
@@ -395,8 +409,8 @@ async function maskFile(input: HTMLInputElement) {
     if (name === "") {
         return;
     }
-    const newfile = new File([blob], name, {type: blob.type});
-    const data  = new DataTransfer();
+    const newfile = new File([blob], name, { type: blob.type });
+    const data = new DataTransfer();
     data.items.add(newfile);
     input.files = data.files;
 }

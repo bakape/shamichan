@@ -2,11 +2,12 @@
 package parser
 
 import (
+	"regexp"
+	"unicode"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"regexp"
-	"unicode"
 )
 
 var (
@@ -20,7 +21,14 @@ func init() {
 
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
-func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, internal bool) (
+func ParseBody(
+	body []byte,
+	board string,
+	thread uint64,
+	id uint64,
+	ip string,
+	internal bool,
+) (
 	links []common.Link, com []common.Command, err error,
 ) {
 	err = IsPrintableString(string(body), true)
@@ -87,7 +95,8 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 			}
 		case '#':
 			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
-			if body[lineStart] == '>' || (len(word) > 1 && word[1] == 'p' && !pyu) {
+			if body[lineStart] == '>' ||
+				(len(word) > 1 && word[1] == 'p' && !pyu) {
 				goto next
 			}
 			m := common.CommandRegexp.FindSubmatch(word)

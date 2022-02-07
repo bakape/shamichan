@@ -33,7 +33,7 @@ func assertTableClear(t *testing.T, tables ...string) {
 
 func assertExec(t *testing.T, q string, args ...interface{}) {
 	t.Helper()
-	_, err := db.Exec(q, args...)
+	_, err := sqlDB.Exec(q, args...)
 	if err != nil {
 		t.Fatal(err)
 	}

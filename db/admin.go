@@ -111,7 +111,7 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 
 // DeleteImage permanently deletes an image from a post
 func DeleteImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_images($1::bigint[], $2::text)",
+	_, err = sqlDB.Exec("select delete_images($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
@@ -130,7 +130,7 @@ func DeleteBoard(board, by string) error {
 
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select spoiler_images($1::bigint[], $2::text)",
+	_, err = sqlDB.Exec("select spoiler_images($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
@@ -275,7 +275,7 @@ func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
 	if keepDeleting != 0 {
 		seconds = int(keepDeleting / time.Second)
 	}
-	_, err = db.Exec(
+	_, err = sqlDB.Exec(
 		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint, $4::text)",
 		id, account, seconds, reason)
 	castPermissionError(&err)
@@ -290,7 +290,7 @@ func castPermissionError(err *error) {
 
 // DeletePost marks the target post as deleted
 func DeletePosts(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_posts($1::bigint[], $2::text)",
+	_, err = sqlDB.Exec("select delete_posts($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return

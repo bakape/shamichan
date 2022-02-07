@@ -631,9 +631,8 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:       1,
-		time:     time.Now().Unix(),
-		hasImage: true,
+		id:   1,
+		time: time.Now().Unix(),
 	}
 	AssertEquals(t, cl.insertImage(nil), nil)
 }
@@ -709,10 +708,6 @@ func TestInsertImage(t *testing.T) {
 	}
 	if err := cl.insertImage(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
-	}
-
-	if !cl.post.hasImage {
-		t.Error("no image flag on openPost")
 	}
 }
 
