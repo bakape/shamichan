@@ -53,13 +53,6 @@ jobs:
           psql
           postgres://postgres:postgres@localhost:5432/postgres
           -c "create database shamichan;"
-      - name: Build dev image
-        run: >
-          DOCKER_BUILDKIT=1 docker build
-          --cache-from ghcr.io/${{ github.repository }}-dev
-          -t shamichan
-          -f Dockerfile.dev
-          .
       - name: Run Rust tests
         run: >
           docker run
@@ -68,7 +61,7 @@ jobs:
           -e CI=true
           -e TEST_DB="postgres://postgres:postgres@localhost:5432/shamichan"
           --entrypoint=""
-          shamichan
+          ghcr.io/${{ github.repository }}-dev:${{ github.sha }}
           cargo test
       # TODO: move to imager workflow
       # - name: Run Go tests
