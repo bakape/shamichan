@@ -56,7 +56,7 @@ jobs:
       - name: Build dev image
         run: >
           DOCKER_BUILDKIT=1 docker build
-          --cache-from bakape/shamichan-dev
+          --cache-from ghcr.io/${{ github.repository }}-dev
           -t shamichan
           -f Dockerfile.dev
           .
