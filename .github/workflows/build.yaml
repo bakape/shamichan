@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
 name: Build
 on: [push, pull_request]
 
@@ -19,20 +20,25 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Log into ghcr.io
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push image
-        uses: docker/build-push-action@v2
-        with:
-          tags: ${{ steps.meta.outputs.tags }}
-          pull: true
-          push: true
-          cache-from: type=registry,ref=bakape/shamichan-dev
-          cache-to: type=inline
-          file: Dockerfile.dev
+        run: |
+          export DOCKER_BUILDKIT=1
+          REPO=ghcr.io/${{ github.repository }}-dev
+          REF=${{ github.ref }}
+          BRANCH=`echo ${REF#refs/heads/} | tr '/' '-'`
+          COMMAND="docker build -f Dockerfile.dev --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $REPO --cache-from $REPO:$BRANCH -t $REPO:${{ github.sha }} -t $REPO:$BRANCH"
+          if [ ${{ github.ref }} == refs/heads/dev ]; then
+            COMMAND+=" -t $REPO:latest"
+          fi
+          COMMAND+=" ."
+          eval $COMMAND
+          docker push -a $REPO
   test:
     name: Run tests
     runs-on: ubuntu-latest
@@ -107,18 +113,23 @@ jobs:
             master
             latest
             type=sha
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Log into ghcr.io
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push image
-        uses: docker/build-push-action@v2
-        with:
-          tags: ${{ steps.meta.outputs.tags }}
-          pull: true
-          push: true
-          cache-from: |
-            type=registry,ref=bakape/shamichan-dev
-            type=registry,ref=bakape/shamichan
-          file: Dockerfile
+        run: |
+          export DOCKER_BUILDKIT=1
+          REPO=ghcr.io/${{ github.repository }}
+          REPO_DEV=${REPO}-dev
+          REF=${{ github.ref }}
+          BRANCH=`echo ${REF#refs/heads/} | tr '/' '-'`
+          COMMAND="docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $REPO --cache-from $REPO:$BRANCH --cache-from $REPO_DEV --cache-from $REPO_DEV:$BRANCH -t $REPO:${{ github.sha }} -t $REPO:$BRANCH"
+          if [ ${{ github.ref }} == refs/heads/dev ]; then
+            COMMAND+=" -t $REPO:latest"
+          fi
+          COMMAND+=" ."
+          eval $COMMAND
+          docker push -a $REPO
