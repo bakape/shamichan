@@ -15,6 +15,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/websockets/feeds"
 )
@@ -453,6 +454,28 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		return db.PurgePost(msg.ID, userID, msg.Reason)
+	}()
+	if err != nil {
+		httpError(w, r, err)
+	}
+}
+
+func blacklistImage(w http.ResponseWriter, r *http.Request) {
+	err := func() (err error) {
+		var msg struct {
+			Sha1 string `json:"sha1"`
+		}
+		err = decodeJSON(r, &msg)
+		if err != nil {
+			return
+		}
+
+		_, err = canPerform(w, r, "all", common.Admin, false)
+		if err != nil {
+			return
+		}
+
+		return imager.Blacklist(msg.Sha1)
 	}()
 	if err != nil {
 		httpError(w, r, err)

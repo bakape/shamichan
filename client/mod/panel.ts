@@ -2,6 +2,7 @@ import { View } from "../base"
 import { postJSON, toggleHeadStyle, trigger } from "../util"
 import { Post } from "../posts"
 import { getModel, config } from "../state"
+import { ModerationLevel } from "../common"
 
 let displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
@@ -111,12 +112,21 @@ export default class ModPanel extends View<null> {
 				await sendIDRequests("purgePost", "/api/purge-post");
 				break;
 			case "handleSpam":
+				const isAdmin = (window as any).position as ModerationLevel
+					== ModerationLevel.admin;
+
 				for (let p of this.getChecked().map(getModel)) {
 					await postJSON("/api/delete-posts/by-ip", {
 						id: p.id,
 						duration: 60 * 24 * 30, // 30 days
 						reason: "spam",
 					});
+
+					if (isAdmin && p.image) {
+						await postJSON("/api/blacklist-image", {
+							sha1: p.image.sha1,
+						});
+					}
 				}
 				break;
 			case "notification":

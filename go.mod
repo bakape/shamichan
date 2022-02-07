@@ -13,6 +13,7 @@ require (
 	github.com/bakape/captchouli/v2 v2.2.1
 	github.com/bakape/thumbnailer/v2 v2.6.6
 	github.com/chai2010/webp v1.1.0
+	github.com/corona10/goimagehash v1.0.3 // indirect
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect

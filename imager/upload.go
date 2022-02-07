@@ -373,6 +373,12 @@ func processFile(f multipart.File, img *common.ImageCommon,
 			return
 		}
 		thumb = w.Bytes()
+
+		// Only works on thumbnails, but good enough
+		err = propagateBlacklistedPerceptual(img.SHA1, thumbImage)
+		if err != nil {
+			return
+		}
 	}
 
 	return

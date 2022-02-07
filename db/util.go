@@ -23,7 +23,7 @@ type rowScanner interface {
 //
 // TODO: Get rid off readOnly param, once reader ported to output JSON
 func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
-	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+	tx, err := DB.BeginTx(context.Background(), &sql.TxOptions{
 		ReadOnly: readOnly,
 	})
 	if err != nil {

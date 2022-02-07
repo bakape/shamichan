@@ -1540,6 +1540,18 @@ var migrations = []func(tx *sql.Tx) error{
 			"posts": {{before, tableInsert}},
 		})
 	},
+	func(tx *sql.Tx) error {
+		_, err := tx.Exec(
+			`create table blacklisted_images (
+				perceptual_hash bigint not null,
+				sha1 text not null,
+				primary (perceptual_hash, sha1),
+
+				created_on timestamptz not null default now()
+			)`,
+		)
+		return err
+	},
 }
 
 func createIndex(table string, columns ...string) string {

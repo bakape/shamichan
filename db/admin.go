@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
@@ -82,6 +83,49 @@ func PurgePost(id uint64, by, reason string) (err error) {
 	})
 }
 
+func BlacklistImage(perceptualHash uint64, sha1 string) (err error) {
+	_, err = DB.Exec(
+		`insert into blacklisted_images (perceptual_hash, sha1)
+		values ($1, $2)
+		on conflict (blacklisted_images_pkey) do nothing`,
+		// Postgers (and SQL) does not support uint64 but we want to retain all
+		// the bits
+		*(*int64)(unsafe.Pointer(&perceptualHash)),
+	)
+	return
+}
+
+func LoadBlacklistedImages() (
+	perceptual map[uint64]struct{},
+	sha1 map[string]struct{},
+	err error,
+) {
+	perceptual = make(map[uint64]struct{})
+	sha1 = make(map[string]struct{})
+
+	r, err := DB.Query(`select perceptual_hash, sha1 from blacklisted_images`)
+	if err != nil {
+		return
+	}
+	defer r.Err()
+
+	for r.Next() {
+		var (
+			p int64
+			s string
+		)
+		err = r.Scan(&p, &s)
+		if err != nil {
+			return
+		}
+
+		perceptual[*(*uint64)(unsafe.Pointer(&p))] = struct{}{}
+		sha1[s] = struct{}{}
+	}
+	err = r.Err()
+	return
+}
+
 // Apply post moderation, log and propagate to connected clients.
 // query: optional query to execute on the post
 func moderatePost(id uint64, entry common.ModerationEntry,
@@ -111,7 +155,7 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 
 // DeleteImage permanently deletes an image from a post
 func DeleteImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_images($1::bigint[], $2::text)",
+	_, err = DB.Exec("select delete_images($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
@@ -130,7 +174,7 @@ func DeleteBoard(board, by string) error {
 
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select spoiler_images($1::bigint[], $2::text)",
+	_, err = DB.Exec("select spoiler_images($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
@@ -275,7 +319,7 @@ func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
 	if keepDeleting != 0 {
 		seconds = int(keepDeleting / time.Second)
 	}
-	_, err = db.Exec(
+	_, err = DB.Exec(
 		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint, $4::text)",
 		id, account, seconds, reason)
 	castPermissionError(&err)
@@ -290,7 +334,7 @@ func castPermissionError(err *error) {
 
 // DeletePost marks the target post as deleted
 func DeletePosts(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_posts($1::bigint[], $2::text)",
+	_, err = DB.Exec("select delete_posts($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
