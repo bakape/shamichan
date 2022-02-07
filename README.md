@@ -1,5 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
-[![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca)
+[![Build](https://github.com/bakape/shamichan/actions/workflows/build.yaml/badge.svg?branch=v6)](https://github.com/bakape/shamichan/actions/workflows/build.yaml)
 
 # meguca
 anonymous realtime imageboard with user-created boards focused on high
