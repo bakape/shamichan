@@ -1,4 +1,3 @@
-[![GoDoc](https://godoc.org/github.com/bakape/shamichan?status.svg)](https://godoc.org/github.com/bakape/shamichan)
 [![Build](https://github.com/bakape/shamichan/workflows/Build/badge.svg?branch=master)](https://github.com/bakape/shamichan/actions?query=workflow%3ABuild+branch%3Amaster)
 
 # shamichan
