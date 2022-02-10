@@ -51,11 +51,11 @@ func propagateBans(tx *sql.Tx, board string, ip string) (err error) {
 // Automatically bans an IP
 func SystemBan(ip, board, reason string, length time.Duration) (err error) {
 	return InTransaction(false, func(tx *sql.Tx) error {
-		return systemBanTx(tx, ip, board, reason, length)
+		return systemBanTx(tx, ip, reason, length)
 	})
 }
 
-func systemBanTx(tx *sql.Tx, ip, board, reason string, length time.Duration,
+func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
 ) (
 	err error,
 ) {
@@ -66,12 +66,12 @@ func systemBanTx(tx *sql.Tx, ip, board, reason string, length time.Duration,
 			By:     "system",
 			Length: uint64(length / time.Second),
 		},
-		Board: board,
+		Board: "all",
 	})
 	if err != nil {
 		return
 	}
-	err = propagateBans(tx, board, ip)
+	err = propagateBans(tx, "all", ip)
 	return
 }
 
