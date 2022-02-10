@@ -484,7 +484,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:370
 			qw422016.N().S(ln.UI["notification"] + ": ")
 //line index.html:370
-			qw422016.N().S(`<input type="button" id="notification" value="`)
+			qw422016.N().S(`<input type="button" id="admin-notification" value="`)
 //line index.html:371
 			qw422016.N().S(ln.Common.UI["submit"])
 //line index.html:371
