@@ -1556,6 +1556,15 @@ var migrations = []func(tx *sql.Tx) error{
 		// Drop legacy function
 		return dropFunctions(tx, "delete_posts_by_ip")
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`alter table last_solved_captchas add column ip inet`)
+		if err != nil {
+			return
+		}
+		return registerTriggers(tx, map[string][]triggerDescriptor{
+			"bans":{{after, tableInsert}},
+		})		
+	},
 }
 
 func createIndex(table string, columns ...string) string {

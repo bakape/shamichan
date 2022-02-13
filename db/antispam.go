@@ -266,8 +266,8 @@ func ValidateCaptcha(
 	case nil:
 		return InTransaction(false, func(tx *sql.Tx) (err error) {
 			_, err = sq.Insert("last_solved_captchas").
-				Columns("token").
-				Values(session[:]).
+				Columns("token", "ip").
+				Values(session[:], ip).
 				Suffix(
 					`on conflict (token) do
 					update set time = now()`,
