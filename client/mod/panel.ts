@@ -50,7 +50,7 @@ export default class ModPanel extends View<null> {
 				this.redirectIP();
 			});
 
-			document.getElementById("notification").addEventListener("click", () => {
+			document.getElementById("admin-notification").addEventListener("click", () => {
 				this.sendNotification();
 			});
 		}

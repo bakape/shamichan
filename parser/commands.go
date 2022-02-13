@@ -103,8 +103,9 @@ func parseCommand(
 
 					if !*isSlut {
 						*isSlut = true
-						err = db.SystemBan(
-							ip, board, "stop being such a slut", time.Hour,
+						err = db.Ban(
+							tx, board, "stop being such a slut", "system",
+							time.Hour, id, common.BanPost,
 						)
 					}
 
@@ -152,9 +153,12 @@ func parseCommand(
 		com.Type = common.Autobahn
 		if !*isDead {
 			*isDead = true
-			err = db.SystemBan(
-				ip, board, "brum brum", time.Hour,
-			)
+			err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+				return db.Ban(
+					tx, board, "brum brum", "system", time.Hour,
+					id, common.BanPost,
+				)
+			})
 		}
 
 	default:
