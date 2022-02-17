@@ -213,11 +213,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:71
 	qw422016.N().S(url)
 //line article.html:71
-	qw422016.N().S(`">No.</a><a class="quote" href="`)
-//line article.html:74
-	qw422016.N().S(url)
-//line article.html:74
-	qw422016.N().S(`">`)
+	qw422016.N().S(`">No.</a><a class="quote">`)
 //line article.html:75
 	qw422016.N().S(id)
 //line article.html:75

@@ -175,7 +175,7 @@ export default class PostView extends ImageHandler {
         if (!page.thread && !page.catalog) {
             url = `/all/${id}?last=100` + url
         }
-        quote.href = link.href = url
+        link.href = url
         quote.textContent = id.toString()
 
         // Render country flag, if any
