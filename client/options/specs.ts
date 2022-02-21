@@ -204,7 +204,7 @@ export const specs: { [id: string]: OptionSpec } = {
 			document
 				.getElementById('theme-css')
 				.setAttribute('href', `/assets/css/${theme}.css`)
-			// The server needs the theme cookie when nagivating from
+			// The server needs the theme cookie when navigating from
 			// a third party website, so we set SameSite=Lax.
 			setCookie("theme", theme, 365 * 10, "lax")
 		},

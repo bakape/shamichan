@@ -47,8 +47,15 @@
 				position = {%d int(pos) %},
 				{% code videosJSON, _ := json.Marshal(assets.GetVideoNames()) %}
 				bgVideos = {%z= videosJSON %};
-			if (localStorage.theme !== config.DefaultCSS) {
-				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
+
+			const loaded = document.getElementById("theme-css").getAttribute("href");
+			const i = loaded.lastIndexOf("/");
+			if (localStorage.theme && localStorage.theme !== loaded.slice(i + 1, -4)) {
+				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css';
+
+				const date = new Date();
+				date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+				document.cookie = `$theme=${localStorage.theme}; expires=${date.toUTCString()}; path=/;`;
 			}
 		</script>
 		{% comment %}
