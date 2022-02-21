@@ -49,6 +49,7 @@ func checkClientEtag(
 		w.WriteHeader(304)
 		return true
 	}
+	w.Header().Set("ETag", etag)
 	return false
 }
 
