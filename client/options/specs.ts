@@ -139,7 +139,10 @@ export const specs: { [id: string]: OptionSpec } = {
 						text: song,
 					},
 				},
-			}) => ({ listeners, song, streamer: streamer_name || "Eden Radio" }),
+				station: {
+					name: station_name,
+				},
+			}) => ({ listeners, song, streamer: streamer_name || station_name }),
 		),
 	},
 	shamiradio: {
