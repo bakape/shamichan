@@ -126,7 +126,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	eden: {
 		exec: toggleNowPlaying(
 			"https://www.edenofthewest.com/",
-			"https://www.edenofthewest.com/api/live/nowplaying/eden_radio",
+			"https://www.edenofthewest.com/api/nowplaying/eden-radio",
 			({
 				listeners: {
 					current: listeners,
