@@ -387,11 +387,11 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:156
 			qw422016.N().S(file)
 //line article.html:156
-			qw422016.N().S(`.png" width="150" height="150">`)
+			qw422016.N().S(`.png" width="150" height="150" loading="lazy">`)
 //line article.html:157
 		case img.Spoiler:
 //line article.html:160
-			qw422016.N().S(`<img src="/assets/spoil/default.jpg" width="150" height="150">`)
+			qw422016.N().S(`<img src="/assets/spoil/default.jpg" width="150" height="150" loading="lazy">`)
 //line article.html:162
 		default:
 //line article.html:162
@@ -407,7 +407,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:163
 			qw422016.N().D(int(img.Dims[3]))
 //line article.html:163
-			qw422016.N().S(`">`)
+			qw422016.N().S(`" loading="lazy">`)
 //line article.html:164
 		}
 //line article.html:164

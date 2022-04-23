@@ -416,6 +416,7 @@ export default class ImageHandler extends View<Post> {
 				setAttrs(el, {
 					src,
 					class: cls,
+					loading: "lazy",
 				})
 				imgEl.replaceWith(el)
 		}

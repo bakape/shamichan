@@ -135,7 +135,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:101
 	}
 //line index.html:101
-	qw422016.N().S(`</span><span class="fileinfo"><span class="media-artist"></span><span class="media-title"></span><span hidden class="has-audio">♫</span><span class="media-length"></span><span class="filesize"></span><span class="dims"></span></span><a></a></figcaption></template><template name="figure"><figure><a target="_blank"><img></a></figure></template><template name="post-controls"><div id="post-controls"><input name="done" type="button" value="`)
+	qw422016.N().S(`</span><span class="fileinfo"><span class="media-artist"></span><span class="media-title"></span><span hidden class="has-audio">♫</span><span class="media-length"></span><span class="filesize"></span><span class="dims"></span></span><a></a></figcaption></template><template name="figure"><figure><a target="_blank"><img loading="lazy"></a></figure></template><template name="post-controls"><div id="post-controls"><input name="done" type="button" value="`)
 //line index.html:123
 	qw422016.N().S(ln.Common.UI["done"])
 //line index.html:123
