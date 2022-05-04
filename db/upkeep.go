@@ -305,7 +305,7 @@ func deleteOldThreads() (err error) {
 		var q *sql.Stmt
 		if len(toDel) != 0 {
 			// Deleted any matched threads
-			q, err = tx.Prepare(`delete from threads where id = $1`)
+			q, err = tx.Prepare(`delete from threads where id = $1 and sticky = false`)
 			if err != nil {
 				return
 			}
