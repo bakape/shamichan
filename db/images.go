@@ -205,10 +205,12 @@ func TransferImage(fromPost, toPost, thread uint64) (
 				`select p.imageName, p.spoiler, i.*
 				from posts p
 				join images i on i.sha1 = p.sha1
+				join threads t on t.id = p.op
 				where
 					p.id = $1
 					and p.op = $2
 					and p.id != p.op
+					and t.sticky = false
 				for update of p`,
 				fromPost,
 				thread,
