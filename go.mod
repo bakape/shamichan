@@ -10,7 +10,7 @@ require (
 	github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20190827161153-36995ce6b19f
-	github.com/bakape/captchouli/v2 v2.2.1
+	github.com/bakape/captchouli/v2 v2.2.2
 	github.com/bakape/thumbnailer/v2 v2.7.1
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
@@ -37,7 +37,6 @@ require (
 	github.com/valyala/quicktemplate v1.7.0
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
