@@ -34,7 +34,7 @@ async function onDrop(e: DragEvent) {
 	}
 
 	let file: File;
-	if (files.length) {
+	if (files.length && !url) {
 		file = files[0];
 	} else if (url) {
 		// Fetch file from link
