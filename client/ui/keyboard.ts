@@ -32,7 +32,7 @@ function handleShortcut(event: KeyboardEvent) {
 		}
 	}
 
-	if (event.altKey && !altGr) {
+        if (event.altKey && (!altGr || navigator.platform == "MacIntel")) {
 		caught = true
 
 		switch (event.which) {
