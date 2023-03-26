@@ -131,8 +131,8 @@ function insertMascot() {
 	if (mascot) {
 
 		let img = <HTMLElement>mascot.cloneNode();
-		img.style.top = document.body.clientHeight * Math.random() + 'px';
-		img.style.left = document.body.clientWidth * Math.random() + 'px';
+		img.style.top = window.innerHeight * Math.random() + 'px';
+		img.style.left = window.innerWidth * Math.random() + 'px';
 		document.body.appendChild(img);
 	} 
 }
