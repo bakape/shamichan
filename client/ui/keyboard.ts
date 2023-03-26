@@ -27,6 +27,12 @@ function handleShortcut(event: KeyboardEvent) {
 			case "ArrowRight":
 				navigatePost(false)
 				break
+			case "Home":
+				location.hash = "#top";
+				break
+			case "End":
+				location.hash = "#bottom";
+				break
 			default:
 				caught = false
 		}
