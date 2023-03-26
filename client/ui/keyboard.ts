@@ -33,12 +33,15 @@ function handleShortcut(event: KeyboardEvent) {
 			case "End":
 				location.hash = "#bottom";
 				break
+			case "Insert":
+				insertMascot();
+				break
 			default:
 				caught = false
 		}
 	}
 
-        if (event.altKey && (!altGr || navigator.platform == "MacIntel")) {
+	if (event.altKey && (!altGr || navigator.platform == "MacIntel")) {
 		caught = true
 
 		switch (event.which) {
@@ -121,4 +124,15 @@ function navigatePost(reverse: boolean) {
 	if (current) {
 		window.location.hash = current.id
 	}
+}
+
+function insertMascot() {
+	let mascot = document.getElementById("mascot-image");
+	if (mascot) {
+
+		let img = <HTMLElement>mascot.cloneNode();
+		img.style.top = document.body.clientHeight * Math.random() + 'px';
+		img.style.left = document.body.clientWidth * Math.random() + 'px';
+		document.body.appendChild(img);
+	} 
 }
