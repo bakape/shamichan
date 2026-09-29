@@ -382,8 +382,8 @@ function bufferToHex(buf: ArrayBuffer): string {
 // Return the hex-encoded SHA-1 hash of a file, or an empty string
 // if the crypto API is unavailable
 async function getSHA(file: File): Promise<string> {
-    // Detect, if the crypto API can be used
-    if (location.protocol === "https:" || location.hostname === "localhost") {
+    // crypto.subtle is available in a secure context, including loopback
+    if (window.isSecureContext) {
         const r = new FileReader();
         r.readAsArrayBuffer(file);
         const { target: { result } }
