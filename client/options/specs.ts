@@ -5,6 +5,7 @@ import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import { toggle as toggleNowPlaying } from "./nowPlaying"
+import { toggle as toggleFun } from "./fun"
 import initTV from "./meguTV"
 import options from "."
 
@@ -110,6 +111,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	funAllowed: {
 		default: true,
+		exec: toggleFun,
 	},
 	radio: {
 		exec: toggleNowPlaying(
