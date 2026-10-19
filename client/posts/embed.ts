@@ -274,9 +274,9 @@ async function toggleExpansion(e: MouseEvent) {
 	const html = decodeURIComponent(el.getAttribute("data-html")),
 		frag = makeFrag(html)
 
-	// Restrict embedded iframe access to the page. Improves privacy.
+	// Restrict embedded iframe access to the page. Improves privacy. Youtube requires a referrer or else it returns 404 TODO Spoff referrer
 	for (let el of frag.querySelectorAll("iframe")) {
-		el.setAttribute("referrerpolicy", "no-referrer")
+		el.setAttribute("referrerpolicy", "strict-origin-when-cross-origin")
 		el.setAttribute(
 			"sandbox",
 			"allow-scripts allow-same-origin allow-popups allow-modals",

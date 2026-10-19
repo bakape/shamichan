@@ -148,6 +148,10 @@
 			"Anonymat forcé",
 			"Désactive les informations personnelles des publications"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"Mode galerie",
 			"Affiche uniquement les publications avec des images"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"URL",
 			"Racine du site"
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"Règles",

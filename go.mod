@@ -6,8 +6,8 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.1
-	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa
+	github.com/adl-golang/quicktemplate v1.0.3 // indirect
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20190827161153-36995ce6b19f
 	github.com/bakape/captchouli/v2 v2.2.2
@@ -41,3 +41,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
+
+replace github.com/bakape/thumbnailer/v2 v2.7.1 => github.com/zkm2/thumbnailer/v2 v2.7.2

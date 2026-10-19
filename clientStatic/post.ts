@@ -42,7 +42,7 @@ export class Post {
         this.el.id = `p${this.id}`;
         this.el.append(importTemplate("article"));
 
-        this.el.querySelector("blockquote").innerHTML = this.body;
+        this.el.querySelector("blockquote").textContent = this.body;
         if (this.moderation && this.moderation.length) {
             this.renderModerationLog();
         }

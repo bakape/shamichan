@@ -594,6 +594,18 @@ func (c *bodyContext) parseCommands(bit string) {
 		default:
 			c.writeInvalidCommand(bit)
 		}
+
+	case "roulette":
+		inner = strconv.AppendUint(inner, uint64(val.Roulette[0]), 10)
+		inner = append(inner, "/"...)
+		inner = strconv.AppendUint(inner, uint64(val.Roulette[1]), 10)
+
+		// set formatting if the poster died
+		if val.Roulette[0] == 1 {
+			formatting = "<strong class=\"dead\">"
+		}
+		c.state.iDice++
+
 	case "autobahn":
 		c.string("<strong class=\"dead\">#")
 		c.string(bit)

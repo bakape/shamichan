@@ -5,6 +5,21 @@ import { page, boardConfig } from "../../state";
 import FormModel from "./model";
 import { expandThreadForm } from "./threads";
 
+// A copied image keeps its name. A file: URI, or any other filename, is a file.
+function isClipboardImage(file: File, data: DataTransfer): boolean {
+	if (!file.type.startsWith("image/")) {
+		return false
+	}
+	const raw = (data.getData("text")
+		+ "\n" + data.getData("text/uri-list")
+		+ "\n" + data.getData("text/x-moz-url"))
+		.replace(/\0/g, "")
+	if (raw.split("\n").some(line => line.trim().toLowerCase().startsWith("file:"))) {
+		return false
+	}
+	return /^(blob|image\.(png|jpe?g|gif|webp))?$/i.test(file.name)
+}
+
 // Handle file or text paste
 function onPaste(e: ClipboardEvent) {
 	const text = e.clipboardData.getData("text"),
@@ -76,7 +91,9 @@ function onPaste(e: ClipboardEvent) {
 			return
 		}
 
-		files[0]["pasted"] = true;
+		if (isClipboardImage(files[0], e.clipboardData)) {
+			files[0]["pasted"] = true
+		}
 		if (threadForm) {
 			(threadForm.querySelector("input[type=file]") as any).files = files
 			return

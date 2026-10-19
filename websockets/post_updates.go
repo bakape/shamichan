@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/common"
@@ -226,8 +227,30 @@ func (c *Client) closePost() (err error) {
 	if err != nil {
 		return
 	}
+
+	err = CheckRouletteBan(com, c.post.board, c.post.op, c.post.id)
+
 	c.post = openPost{}
 	return
+}
+
+
+// CheckRouletteBan meme bans if the poster lost at #roulette
+func CheckRouletteBan(commands []common.Command, board string, thread uint64, id uint64) error {
+	for _, command := range commands {
+		if command.Type == common.Roulette {
+			if command.Roulette[0] == 1 {
+				err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+					return db.Ban(
+						tx, board, "lost at #roulette", "system", time.Hour *3,
+						id, common.BanPost,
+					)
+				})
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Splice the text in the open post

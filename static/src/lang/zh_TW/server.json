@@ -148,6 +148,10 @@
 			"強制匿名",
 			"禁用貼文上的用戶名、tripcodes 和電子郵件"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"圖庫模式",
 			"僅顯示包含圖片的貼文"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"根 URL",
 			"貼圖討論版的根 URL. 有些圖片搜尋提供商需要它才可以運作。"
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"規則",

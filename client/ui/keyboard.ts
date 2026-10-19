@@ -27,12 +27,21 @@ function handleShortcut(event: KeyboardEvent) {
 			case "ArrowRight":
 				navigatePost(false)
 				break
+			case "Home":
+				location.hash = "#top";
+				break
+			case "End":
+				location.hash = "#bottom";
+				break
+			case "Insert":
+				insertMascot();
+				break
 			default:
 				caught = false
 		}
 	}
 
-	if (event.altKey && !altGr) {
+	if (event.altKey && (!altGr || navigator.platform == "MacIntel")) {
 		caught = true
 
 		switch (event.which) {
@@ -115,4 +124,15 @@ function navigatePost(reverse: boolean) {
 	if (current) {
 		window.location.hash = current.id
 	}
+}
+
+function insertMascot() {
+	let mascot = document.getElementById("mascot-image");
+	if (mascot) {
+
+		let img = <HTMLElement>mascot.cloneNode();
+		img.style.top = window.innerHeight * Math.random() + 'px';
+		img.style.left = window.innerWidth * Math.random() + 'px';
+		document.body.appendChild(img);
+	} 
 }

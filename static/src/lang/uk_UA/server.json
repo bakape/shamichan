@@ -148,6 +148,10 @@
 			"Насильно Анонімно",
 			"Вимикає імя користувачів, тріпкоди та емейли для постах"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"Gallery Mode",
 			"Only show posts containing images"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"Правила",

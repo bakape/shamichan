@@ -52,18 +52,26 @@ class WatcherPanel extends BannerModal {
 			let tc = tr.insertCell(i);
 			switch (i) {
 				// Board
-				case 0:
-					tc.innerHTML = `<a href="../${thread.board}">/${thread.board}/</a>`;
-					break;
-				// Subject
-				case 1:
-					if (thread.unseen > 100) {
-						tc.innerHTML = `<a class="thread-link" href="../all/${thread.id}">${thread.subject}</a>`;
-					}
-					else {
-						tc.innerHTML = `<a class="thread-link" href="../all/${thread.id}?last=100">${thread.subject}</a>`;
-					}
-					break;
+					case 0:
+                                        let boardLink = document.createElement('a');
+                                        boardLink.href = `../${thread.board}`;
+                                        boardLink.textContent = `/${thread.board}/`;
+                                        tc.appendChild(boardLink);
+                                        break;
+                                // Subject
+                                case 1:
+                                        let threadLink = document.createElement('a');
+                                        threadLink.textContent = `${thread.subject}`;
+                                        threadLink.className = "thread-link";
+
+                                        if (thread.unseen > 100) {
+                                              threadLink.href = `../all/${thread.id}`;
+                                        }
+                                        else {
+                                              threadLink.href = `../all/${thread.id}?last=100`;
+                                        }
+                                        tc.appendChild(threadLink);
+                                        break;
 				// Status
 				case 2:
 					if (thread.unseen === 0) {

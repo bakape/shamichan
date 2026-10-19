@@ -70,15 +70,24 @@ class Banner {
 	}
 
 	async fetch() {
-		const response = await fetch(this.api)
+		let response
+		const defaults = {listeners: 0, song: "ded", streamer: this.url.split('/')[2]}
+		try {
+			response = await fetch(this.api)
+		}catch(err) {
+			return defaults
+		}
 		if (!response.ok) {
-			throw Error(await response.text())
-		}
-		const data = this.unmarshal(await response.json())
-		if (!RadioData.is(data)) {
-			throw Error("Unexpected response")
-		}
-		return data
+			return defaults
+		}               
+        let rawData = await response.text()
+        let cleanData = rawData.replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+        const data = this.unmarshal(JSON.parse(cleanData))
+		
+       	if (!RadioData.is(data)) {
+               return defaults
+        }
+        return data
 	}
 
 	async update() {

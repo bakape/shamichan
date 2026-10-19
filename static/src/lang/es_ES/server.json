@@ -148,6 +148,10 @@
 			"Forced Anonymous",
 			"Disable user names, tripcodes and emails on posts"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"Gallery Mode",
 			"Only show posts containing images"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"Rules",

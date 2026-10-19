@@ -5,6 +5,7 @@ import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import { toggle as toggleNowPlaying } from "./nowPlaying"
+import { toggle as toggleFun } from "./fun"
 import initTV from "./meguTV"
 import options from "."
 
@@ -108,6 +109,10 @@ export const specs: { [id: string]: OptionSpec } = {
 			"#banner-center > div:not(.hidden) { display: inline; margin: 0.5em; }"
 		),
 	},
+	funAllowed: {
+		default: true,
+		exec: toggleFun,
+	},
 	radio: {
 		exec: toggleNowPlaying(
 			"https://r-a-d.io/",
@@ -149,12 +154,14 @@ export const specs: { [id: string]: OptionSpec } = {
 		exec: toggleNowPlaying(
 			"https://shamiradio.imgoodatth.is/",
 			"https://shamiradio.imgoodatth.is/status-json.xsl",
-			({ icestats: { source } }) => {
-				const [fallback, main] = Array.isArray(source) ? source : [source]
-				const { listeners, server_name: streamer, title: song = "oh dear, tags aren't set" }
-					= main?.stream_start ? main : fallback
-				return { listeners, song, streamer }
-			},
+			({ icestats: { source } }) => icecastNowPlaying(source),
+		),
+	},
+	roriradio: {
+		exec: toggleNowPlaying(
+			"https://strim.box.loli.attorney/",
+			"https://strim.box.loli.attorney/status-json.xsl",
+			({ icestats: { source } }) => icecastNowPlaying(source),
 		),
 	},
 	// User-specified video in the background
@@ -355,6 +362,53 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: 71,
 		type: optionType.shortcut,
 	},
+}
+
+// While a /main mount is on the air, it is the banner. Another mount must not replace it.
+function icecastNowPlaying(source: any) {
+	if (source === undefined || source === null) {
+		return null
+	}
+	const sources = (Array.isArray(source) ? source : [source])
+		.filter(s => s !== undefined && s !== null)
+	if (sources.length === 0) {
+		return null
+	}
+	// Smaller number wins. The first mount of equal rank stays.
+	const chosen = sources.reduce((best, s) =>
+		mountRank(s) < mountRank(best) ? s : best)
+	const { listeners, server_name: streamer, title: song = "oh dear, tags aren't set" } = chosen
+	return { listeners, song, streamer }
+}
+
+function isMainMount(source: any): boolean {
+	const url = source?.listenurl
+	if (typeof url !== "string") {
+		return false
+	}
+	const path = url.split("?")[0].split("#")[0].replace(/\/+$/, "")
+	const name = path.slice(path.lastIndexOf("/") + 1)
+	return name.split(".")[0].toLowerCase() === "main"
+}
+
+function mountRank(source: any): number {
+	if (isMainMount(source) && isPlaying(source)) {
+		return 0
+	}
+	if (isPlaying(source)) {
+		return 1
+	}
+	if (!isMainMount(source)) {
+		return 2
+	}
+	return 3
+}
+
+function isPlaying(source: any): boolean {
+	if (!source) {
+		return false
+	}
+	return Boolean(source.stream_start || source.stream_start_iso8601)
 }
 
 // Create a function that toggles the visibility of an image search link

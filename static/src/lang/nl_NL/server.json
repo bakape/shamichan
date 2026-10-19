@@ -148,6 +148,10 @@
 			"Geforceerd Anoniem",
 			"Schakel gebruikersnamen, tripcodes en e-mails op berichten uit"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"Galerij Mode",
 			"Toon alleen berichten met afbeeldingen"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"Root URL",
 			"Root URL van de imageboard. Vereist voor sommige image search-providers om te werken."
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"Regels",

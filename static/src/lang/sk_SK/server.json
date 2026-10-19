@@ -148,6 +148,10 @@
 			"Vynútená anonymita",
 			"Zruš uživateľské mená, výletokódy a emaily v plagátoch"
 		],
+		"funAllowed": [
+			"Allow fun",
+			"Fun is the enemy of the state"
+		],
 		"galleryMode": [
 			"Režim galérie",
 			"Zobrazí len príspevky s obrázkami"
@@ -351,6 +355,10 @@
 		"rootURL": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"roriradio": [
+			"Roriradio",
+			"Not a breakfast machine"
 		],
 		"rules": [
 			"Pravítka",

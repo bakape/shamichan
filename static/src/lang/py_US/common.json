@@ -1,0 +1,153 @@
+{
+	"format": {
+		"banned": "FUCKING MURDERED BY '%s' FOR %s FOR \"%s\"",
+		"deleted": "NUKED BY '%s'",
+		"deletedReason": "DELETED BY '%s' FOR '%s'",
+		"imageDeleted": "IMAGE STOLEN BY '%s'",
+		"imageSpoilered": "IMAGE KINSHI’D BY '%s'",
+		"newPostsInThread": "%d new post(s) in thread.",
+		"postsAndImagesOmitted": "%d pyu(s) and %d kanpai(s) omitted",
+		"postsOmitted": "%d post(s) omitted",
+		"purgedPost": "IP ADDRESS SENT TO THE FBI BY '%s' FOR \"%s\"",
+		"redirectIP": "POSTER WARPED TO \"%s\" BY '%s'",
+		"redirectThread": "THREAD WARPED TO \"%s\" BY '%s'",
+		"shadowBinned": "SENT TO THE BIN BY '%s' FOR %s FOR \"%s\"",
+		"threadLockToggled": "THREAD LOCKED %s BY '%s'",
+		"unbanned": "RAISED AS A SKELETON BY '%s'",
+		"viewedSameIP": "PANTSU INSPECTED BY '%s'"
+	},
+	"plurals": {
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"second": [
+			"second",
+			"seconds"
+		],
+		"year": [
+			"year",
+			"years"
+		]
+	},
+	"posts": {
+		"admin": "Top slut",
+		"ago": "ago",
+		"anon": "Nonomy-tan",
+		"contract": "Contract",
+		"contractImages": "Mini",
+		"expand": "Expand",
+		"expandImages": "Wumbo",
+		"hide": "Hide",
+		"in": "in",
+		"janitors": "Meido",
+		"justNow": "just now",
+		"locked": "locked",
+		"mask": "Who is that handsome stranger",
+		"maskTT": "Replace file's name with its hash value",
+		"moderators": "Meido++",
+		"owners": "Head Meido",
+		"seeAll": "Click here to destroy your PC",
+		"show": "Show my everything",
+		"spoiler": "Too lewd for 12 year old girls",
+		"toggleSticky": "Toggle sticky~",
+		"unlocked": "unlocked",
+		"you": "(Kimi)"
+	},
+	"sync": [
+		"Hecking DEAD",
+		"Finding the sluts",
+		"Joining the sluts",
+		"Synced to the sluts",
+		"Desynced from the sluts"
+	],
+	"time": {
+		"calendar": [
+			"１月",
+			"２月",
+			"３月",
+			"４月",
+			"５月",
+			"６月",
+			"７月",
+			"８月",
+			"９月",
+			"１０月",
+			"１１月",
+			"KURISUMASU"
+		],
+		"week": [
+			"日",
+			"月",
+			"火",
+			"水",
+			"木",
+			"金",
+			"土"
+		]
+	},
+	"ui": {
+		"applyAll": "Apply to all posts",
+		"board": "Board",
+		"bottom": "Neko",
+		"cancel": "やめる",
+		"catalog": "Yuri Collection",
+		"clickToCancel": "Click to cancel",
+		"deleteBoard": "Delete board",
+		"done": "おわった",
+		"fileTooLarge": "I-it’s too big!",
+		"finished": "＼(^o^)／ｵﾜﾀ",
+		"googleSong": "(~˘▾˘)~ Click to google song",
+		"importCorrupt": "Import failed. File corrupt. Baka.",
+		"importDone": "Import successful. The page will now reload. Yoshi yoshi.",
+		"ipHash": "IP hash",
+		"last": "Last ",
+		"location": "Location",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Don’t leave me　(´・ω・`)",
+		"markSeen": "Mark as seen",
+		"meidoVisionPost": "Meido vision",
+		"meidovisionTT": "View all posts from the same IP as the selected post",
+		"mustMatch": "Passwords must match",
+		"newThread": "New ERP session",
+		"pointToCatalog": "Point to Catalog",
+		"postsImages": "Slutposts/Boy Images/Bomb Timer",
+		"purgeReason": "Reason for purge",
+		"quoted": "Here’s your (Kimi)",
+		"reason": "Name the bully",
+		"redirectByThread": "Redirect all by thread",
+		"redirectPoster": "Redirect poster",
+		"redirectTT": "Redirects target to the specified url",
+		"refresh": "Reset this twisted game",
+		"reply": "(ﾉ◕ヮ◕)ﾉ*:･ﾟ Confess your love!",
+		"report": "Tell Okaa-san",
+		"return": "GO BACK",
+		"rules": ">rules",
+		"search": "Search",
+		"sessionExpired": "Account deleted forever",
+		"showNotice": "Notice",
+		"status": "(づ｡◕‿‿◕｡)づ Status",
+		"submit": "Submit~",
+		"thread": "Thread",
+		"thumbnailing": "Please wait warmly...",
+		"top": "Tachi",
+		"unfinishedPost": "Finish the post.",
+		"unwatch": "Unflen",
+		"unwatchThread": "Unflen thread",
+		"uploadFile": "Upload yuri",
+		"uploadProgress": "gay girls..",
+		"watchThread": "Flen thread"
+	}
+}

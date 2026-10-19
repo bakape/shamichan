@@ -142,6 +142,14 @@ func parseCommand(
 		} else {
 			com.Pyu, err = db.GetPcount(board)
 		}
+	// Roulette
+	case bytes.Equal(match, []byte("roulette")):
+		var max uint8
+		max = 6
+		com.Type = common.Roulette
+		roll := uint8(randInt(int(max)) + 1)
+		com.Roulette = [2]uint8{roll, max}
+		return
 
 	// Return current pyu count
 	case bytes.Equal(match, []byte("pcount")):

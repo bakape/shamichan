@@ -378,7 +378,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn|roulette)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -540,6 +540,16 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             break
         case "autobahn":
             return `<strong class=\"dead\">#${bit}</strong>`
+        case "roulette":
+            let val = commands[state.iDice++].val
+            inner = val[0].toString() + "/" + val[1].toString()
+
+            // set formatting if the poster died
+            if (val[0] == 1) {
+                formatting = "<strong class=\"dead\">"
+            }
+
+            break
         case "pyu":
         case "pcount":
             // Protect from index shifts on boardConfig.pyu toggle
@@ -594,6 +604,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         flip: commandType.flip,
         "8ball": commandType.eightBall,
         pyu: commandType.pyu,
+        roulette: commandType.roulette,
         pcount: commandType.pcount
     }
     if (literalMatching
